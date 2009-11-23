@@ -347,11 +347,6 @@
         ldr r1, [r0, #CLKCTL_CGR0]
         orr r1, r1, #0x00300000
         str r1, [r0, #CLKCTL_CGR0]
-
-        ldr r1, [r0, #CLKCTL_CGR1]
-        orr r1, r1, #0x00000C00
-        orr r1, r1, #0x00000003
-        str r1, [r0, #CLKCTL_CGR1]
 .endm /* init_clock */
 
 .macro init_sdram
