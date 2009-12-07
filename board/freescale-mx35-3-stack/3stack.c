@@ -133,6 +133,29 @@ static struct fb_videomode CTP_CLAA070LC0ACW = {
 	.flag		= 0,
 };
 
+#if 0
+/*
+ * Customers display
+ */
+static struct fb_videomode NEC_NL8048BC19 = {
+	/* 800x480 @ 60 Hz */
+	.name		= "NEC-NL8048BC19",
+	.refresh	= 60,
+	.xres		= 800,
+	.yres		= 480,
+	.pixclock	= KHZ2PICOS(32256),
+	.left_margin	= 112,
+	.right_margin	= 112,	/* whole line should have 1024 clocks */
+	.upper_margin	= 23,
+	.lower_margin	= 23,	/* whole frame should have 525 lines */
+	.hsync_len	= 1,	/* note: DE only display */
+	.vsync_len	= 1,	/* note: DE only display */
+	.sync		= FB_SYNC_OE_ACT_HIGH,
+	.vmode		= FB_VMODE_NONINTERLACED,
+	.flag		= 0,
+};
+#endif
+
 static struct imx_ipu_fb_platform_data ipu_fb_data = {
 	.mode		= &CTP_CLAA070LC0ACW,
 	.bpp		= 16,
