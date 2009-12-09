@@ -427,6 +427,21 @@ static int f3s_pmic_init_all(struct mc9sdz60 *mc9sdz60)
 	return err;
 }
 
+static int f3s_enable_usbhost(struct mc9sdz60 *mc9sdz60)
+{
+	int err = 0;
+
+	/* MUX3_CTR to be low for USB Host2 DP & DM */
+	err |= mc9sdz60_set_bits(mc9sdz60, MC9SDZ60_REG_GPIO_2, 0x1 << 6, 0);
+	/* CAN_PWDN to be high for USB Host2 Power & OC */
+	err |= mc9sdz60_set_bits(mc9sdz60, MC9SDZ60_REG_GPIO_2, 0x1 << 1, 0x1 << 1);
+
+	if (err)
+		dev_err(&mc9sdz60->client->dev, "Failed to enable USB Host!\n");
+
+	return err;
+}
+
 static int f3s_pmic_init(void)
 {
 	struct mc13892 *mc13892;
@@ -459,6 +474,10 @@ static int f3s_pmic_init(void)
 	}
 
 	f3s_pmic_init_all(mc9sdz60);
+
+	/* HACK: enable usb host here, should be moved to linux */
+	if (rev == 20)
+		f3s_enable_usbhost(mc9sdz60);
 
 	return 0;
 }
