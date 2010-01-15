@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
-# U-Boot version: 2.0.0-rc10
-# Thu Dec  3 13:06:04 2009
+# U-Boot version: 2.0.0-rc10-ptx-pdk5
+# Fri Jan 15 11:44:06 2010
 #
 # CONFIG_BOARD_LINKER_SCRIPT is not set
 CONFIG_GENERIC_LINKER_SCRIPT=y
@@ -40,6 +40,7 @@ CONFIG_ARCH_HAS_FEC_IMX=y
 # CONFIG_ARCH_IMX31 is not set
 CONFIG_ARCH_IMX35=y
 CONFIG_MACH_FREESCALE_MX35_3STACK=y
+# CONFIG_MACH_SIEMENS_OMICRON is not set
 # CONFIG_MACH_PCM043 is not set
 
 #
@@ -110,7 +111,7 @@ CONFIG_DEFAULT_ENVIRONMENT_PATH="board/freescale-mx35-3-stack/env/"
 #
 # Debugging                     
 #
-# CONFIG_DEBUG_INFO is not set
+CONFIG_DEBUG_INFO=y
 # CONFIG_ENABLE_FLASH_NOISE is not set
 # CONFIG_ENABLE_PARTITION_NOISE is not set
 # CONFIG_ENABLE_DEVICE_NOISE is not set
