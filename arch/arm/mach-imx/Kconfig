@@ -8,6 +8,7 @@ config ARCH_TEXT_BASE
 	default 0xa0000000 if MACH_IMX27ADS
 	default 0x87f00000 if MACH_FREESCALE_MX25_3STACK
 	default 0x87f00000 if MACH_FREESCALE_MX35_3STACK
+	default 0x87f00000 if MACH_SIEMENS_OMICRON
 	default 0xa7f00000 if MACH_PCA100
 	default 0xa0000000 if MACH_PCM038
 	default 0x87f00000 if MACH_PCM037
@@ -19,6 +20,7 @@ config BOARDINFO
 	default "Freescale i.MX21 ADS" if MACH_IMX21ADS
 	default "Freescale i.MX27 ADS" if MACH_IMX27ADS
 	default "Freescale MX35 3Stack" if MACH_FREESCALE_MX35_3STACK
+	default "Siemens Omicron" if MACH_SIEMENS_OMICRON
 	default "Freescale MX25 3Stack" if MACH_FREESCALE_MX25_3STACK
 	default "Phytec phyCard-i.MX27" if MACH_PCA100
 	default "Phytec phyCORE-i.MX27" if MACH_PCM038
@@ -217,6 +219,12 @@ config MACH_FREESCALE_MX35_3STACK
 	help
 	  Say Y here if you are using the Freescale MX35 3stack board equipped
 	  with a Freescale i.MX35 Processor
+
+config MACH_SIEMENS_OMICRON
+	bool "Siemens Omicron"
+	select MACH_HAS_LOWLEVEL_INIT
+	help
+	  Say Y here if you are using the Siemens Omicron Board
 
 config MACH_PCM043
         bool "phyCORE-i.MX35"
