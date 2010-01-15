@@ -1,7 +1,7 @@
 VERSION = 2
 PATCHLEVEL = 0
 SUBLEVEL = 0
-EXTRAVERSION =-rc10-ptx-pdk5
+EXTRAVERSION =-rc10-ptx-pdk6
 NAME = Amissive Actinocutious Kiwi
 
 # *DOCUMENTATION*
