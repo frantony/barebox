@@ -77,28 +77,6 @@ static struct device_d nand_dev = {
 };
 
 /*
- * Generic display, shipped with the PDK
- */
-static struct fb_videomode CTP_CLAA070LC0ACW = {
-	/* 800x480 @ 60 Hz */
-	.name		= "CTP-CLAA070LC0ACW",
-	.refresh	= 60,
-	.xres		= 800,
-	.yres		= 480,
-	.pixclock	= KHZ2PICOS(27000),
-	.left_margin	= 50,
-	.right_margin	= 50,	/* whole line should have 900 clocks */
-	.upper_margin	= 10,
-	.lower_margin	= 10,	/* whole frame should have 500 lines */
-	.hsync_len	= 1,	/* note: DE only display */
-	.vsync_len	= 1,	/* note: DE only display */
-	.sync		= FB_SYNC_CLK_IDLE_EN | FB_SYNC_OE_ACT_HIGH,
-	.vmode		= FB_VMODE_NONINTERLACED,
-	.flag		= 0,
-};
-
-#if 0
-/*
  * Customers display
  */
 static struct fb_videomode NEC_NL8048BC19 = {
@@ -118,11 +96,10 @@ static struct fb_videomode NEC_NL8048BC19 = {
 	.vmode		= FB_VMODE_NONINTERLACED,
 	.flag		= 0,
 };
-#endif
 
 static struct imx_ipu_fb_platform_data ipu_fb_data = {
-	.mode		= &CTP_CLAA070LC0ACW,
-	.bpp		= 16,
+	.mode		= &NEC_NL8048BC19,
+	.bpp		= 32,
 };
 
 static struct device_d imxfb_dev = {
@@ -231,6 +208,12 @@ static struct pad_desc f3s_pads[] = {
 	MX35_PAD_LD15__IPU_DISPB_DAT_15,
 	MX35_PAD_LD16__IPU_DISPB_DAT_16,
 	MX35_PAD_LD17__IPU_DISPB_DAT_17,
+	MX35_PAD_LD18__IPU_DISPB_DAT_18,
+	MX35_PAD_LD19__IPU_DISPB_DAT_19,
+	MX35_PAD_LD20__IPU_DISPB_DAT_20,
+	MX35_PAD_LD21__IPU_DISPB_DAT_21,
+	MX35_PAD_LD22__IPU_DISPB_DAT_22,
+	MX35_PAD_LD23__IPU_DISPB_DAT_23,
 	MX35_PAD_D3_HSYNC__IPU_DISPB_D3_HSYNC,
 	MX35_PAD_D3_FPSHIFT__IPU_DISPB_D3_CLK,
 	MX35_PAD_D3_DRDY__IPU_DISPB_D3_DRDY,
