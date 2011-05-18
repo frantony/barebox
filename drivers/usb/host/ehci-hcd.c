@@ -33,6 +33,7 @@
 #include "ehci.h"
 
 struct ehci_priv {
+	struct device_d *dev;
 	int rootdev;
 	struct ehci_hccr *hccr;
 	struct ehci_hcor *hcor;
@@ -610,7 +611,10 @@ ehci_submit_root(struct usb_device *dev, unsigned long pipe, void *buffer,
 				 * usb 2.0 specification say 50 ms resets on
 				 * root
 				 */
+				ehci_powerup_fixup(ehci->dev, &reg);
+
 				wait_ms(50);
+
 				ehci->portreset |= 1 << le16_to_cpu(req->index);
 				/* terminate the reset */
 				ehci_writel(status_reg, reg & ~EHCI_PS_PR);
@@ -816,6 +820,8 @@ int ehci_register(struct device_d *dev, struct ehci_data *data)
 	ehci = xzalloc(sizeof(struct ehci_priv));
 	host = &ehci->host;
 	dev->priv = ehci;
+	ehci->dev = dev;
+
 	ehci->flags = data->flags;
 	ehci->hccr = data->hccr;
 	ehci->hcor = data->hcor;

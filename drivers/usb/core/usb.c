@@ -454,13 +454,13 @@ static struct usb_device *usb_alloc_new_device(void)
 	if (!usbdev)
 		return NULL;
 
-	usbdev->devnum = dev_index + 1;
+	dev_index++;
+
+	usbdev->devnum = dev_index;
 	usbdev->maxchild = 0;
 	usbdev->dev.bus = &usb_bus_type;
 	usbdev->setup_packet = dma_alloc(sizeof(*usbdev->setup_packet));
 	usbdev->descriptor = dma_alloc(sizeof(*usbdev->descriptor));
-
-	dev_index++;
 
 	return usbdev;
 }
@@ -494,7 +494,7 @@ void usb_rescan(void)
 		usb_new_device(dev);
 	}
 
-	printf("%d USB Device(s) found\n", dev_index);
+	printf("%d USB Device(s) found\n", dev_index - 1);
 }
 
 /*
