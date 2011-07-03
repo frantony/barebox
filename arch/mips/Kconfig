@@ -44,6 +44,7 @@ config MACH_MIPS_MALTA
 	select SYS_SUPPORTS_32BIT_KERNEL
 	select SYS_SUPPORTS_BIG_ENDIAN
 	select HAS_DEBUG_LL
+	select HW_HAS_PCI
 
 config MACH_MIPS_AR231X
 	bool "Atheros ar231x-based boards"
@@ -326,6 +327,27 @@ config NMON_HELP
 	help
 	  Say yes here to get the nmon commands message on
 	  every nmon start.
+
+endmenu
+
+menu "Bus options (PCI)"
+
+config HW_HAS_PCI
+	bool
+
+config PCI
+	bool "Support for PCI controller"
+	depends on HW_HAS_PCI
+	select PCI_DOMAINS
+	help
+	  Find out whether you have a PCI motherboard. PCI is the name of a
+	  bus system, i.e. the way the CPU talks to the other stuff inside
+	  your box. If you have PCI, say Y, otherwise N.
+
+config PCI_DOMAINS
+	bool
+
+source "drivers/pci/Kconfig"
 
 endmenu
 
