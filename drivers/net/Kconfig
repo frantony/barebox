@@ -139,6 +139,14 @@ config DRIVER_NET_GIANFAR
 	depends on ARCH_MPC85XX
 	select PHYLIB
 
+config 8139
+	depends on PCI
+	bool "RealTek RTL-8139 PCI Fast Ethernet Adapter support"
+	select MIIDEV
+	help
+	  This is a driver for the Fast Ethernet PCI network cards based on
+	  the RTL 8139 chips.
+
 source "drivers/net/usb/Kconfig"
 
 config DRIVER_NET_MICREL
