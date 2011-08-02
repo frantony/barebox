@@ -49,6 +49,14 @@ config DRIVER_NET_CPSW
 	depends on ARCH_OMAP
 	select PHYLIB
 
+config 8139
+	depends on PCI
+	bool "RealTek RTL-8139 PCI Fast Ethernet Adapter support"
+	select PHYLIB
+	help
+	  This is a driver for the Fast Ethernet PCI network cards based on
+	  the RTL 8139 chips.
+
 config DRIVER_NET_DAVINCI_EMAC
 	bool "TI Davinci/OMAP EMAC ethernet driver"
 	depends on ARCH_OMAP3
