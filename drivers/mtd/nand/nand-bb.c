@@ -74,7 +74,7 @@ static ssize_t nand_bb_read(struct cdev *cdev, void *buf, size_t count,
 		}
 
 		now = min(count, (size_t)(bb->info.erasesize -
-				(bb->offset % bb->info.erasesize)));
+				((size_t)bb->offset % bb->info.erasesize)));
 		ret = cdev_read(parent, buf, now, bb->offset, 0);
 		if (ret < 0)
 			return ret;
