@@ -298,14 +298,14 @@ unsigned int pci_scan_bus(struct pci_bus *bus)
 			if (mask & 0x01) { /* IO */
 				size = -(mask & 0xfffffffe);
 				DBG("  PCI: pbar%d: mask=%08x io %d bytes\n", bar, mask, size);
-				DBG("       mapped to 0x%08x (0x%08x)\n", last_io, bus->ops->res_start(bus, last_io));
+//				DBG("       mapped to 0x%08x (0x%08x)\n", last_io, bus->ops->res_start(bus, last_io));
 				pci_write_config_dword(dev, PCI_BASE_ADDRESS_0 + bar * 4, last_io);
 				last_io += size;
 
 			} else { /* MEM */
 				size = -(mask & 0xfffffff0);
 				DBG("  PCI: pbar%d: mask=%08x memory %d bytes\n", bar, mask, size);
-				DBG("       mapped to 0x%08x (0x%08x)\n", last_mem, bus->ops->res_start(bus, last_mem));
+//				DBG("       mapped to 0x%08x (0x%08x)\n", last_mem, bus->ops->res_start(bus, last_mem));
 				pci_write_config_dword(dev, PCI_BASE_ADDRESS_0 + bar * 4, last_mem);
 				last_mem += size;
 			}
