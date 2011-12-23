@@ -10,9 +10,106 @@
 #include <common.h>
 #include <asm/io.h>
 #include <asm/mipsregs.h>
+#include <asm/cache.h>
 #include <asm/cpu.h>
 #include <asm/cpu-info.h>
 #include <asm/bitops.h>
+#include <asm/r4kcache.h>
+
+/*
+
+Linux                      Barebox
+_dma_cache_wback_inv    => dma_flush_range
+_dma_cache_wback        => dma_clean_range
+_dma_cache_inv          => dma_inv_range
+*/
+
+#define cache_op(op,addr)						\
+	__asm__ __volatile__(						\
+	"	.set	push					\n"	\
+	"	.set	noreorder				\n"	\
+	"	.set	mips3\n\t				\n"	\
+	"	cache	%0, %1					\n"	\
+	"	.set	pop					\n"	\
+	:								\
+	: "i" (op), "R" (*(unsigned char *)(addr)))
+
+void flush_cache_all(void)
+{
+	struct cpuinfo_mips *c = &current_cpu_data;
+	unsigned long lsize;
+	unsigned long addr;
+	unsigned long aend;
+	unsigned int icache_size, dcache_size;
+
+	dcache_size = c->dcache.waysize * c->dcache.ways;
+	lsize = c->dcache.linesz;
+	aend = (KSEG0 + dcache_size - 1) & ~(lsize - 1);
+	for (addr = KSEG0; addr <= aend; addr += lsize) {
+		cache_op(Index_Writeback_Inv_D, addr);
+	}
+
+	icache_size = c->icache.waysize * c->icache.ways;
+	lsize = c->icache.linesz;
+	aend = (KSEG0 + icache_size - 1) & ~(lsize - 1);
+	for (addr = KSEG0; addr <= aend; addr += lsize) {
+		cache_op(Index_Invalidate_I, addr);
+	}
+
+	/* secondatory cache skipped */
+}
+
+void flush_dcache_all(void)
+{
+	flush_cache_all();
+}
+
+void flush_icache_all(void)
+{
+	flush_cache_all();
+}
+
+void dma_clean_range(unsigned long start, unsigned long end)
+{
+	struct cpuinfo_mips *c = &current_cpu_data;
+	unsigned long lsize = c->dcache.linesz;
+	unsigned long addr = start & ~(lsize - 1);
+	unsigned long aend = (end - 1) & ~(lsize - 1);
+
+	for (; addr <= aend; addr += lsize)
+		cache_op(Hit_Invalidate_D, addr);
+
+	/* secondatory cache skipped */
+}
+
+void dma_flush_range(unsigned long start, unsigned long end)
+{
+	struct cpuinfo_mips *c = &current_cpu_data;
+	unsigned long lsize = c->dcache.linesz;
+	unsigned long addr = start & ~(lsize - 1);
+	unsigned long aend = (end - 1) & ~(lsize - 1);
+
+	for (; addr <= aend; addr += lsize) {
+		cache_op(Hit_Writeback_Inv_D, addr);
+	}
+
+	/* secondatory cache skipped */
+}
+
+/*
+ *	r4k_dma_inv_range(start,end)
+ *
+ *	Invalidate the data cache within the specified region; we will
+ *	be performing a DMA operation in this region and we want to
+ *	purge old data in the cache.
+ *
+ *	- start   - virtual start address of region
+ *	- end     - virtual end address of region
+ */
+void dma_inv_range(unsigned long start, unsigned long end)
+{
+	dma_clean_range(start, end);
+}
 
 void r4k_cache_init(void);
 

@@ -13,6 +13,7 @@
 #define __ASM_CPU_INFO_H
 
 #include <linux/types.h>
+#include <asm/cache.h>
 
 /*
  * Descriptor for a cache

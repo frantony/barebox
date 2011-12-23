@@ -12,7 +12,73 @@
 
 #include <linux/compiler.h>
 #include <asm/types.h>
+#include <asm/addrspace.h>
 #include <asm/byteorder.h>
+#include <linux/const.h>
+
+void *dma_alloc_coherent(size_t size);
+void dma_free_coherent(void *mem, size_t size);
+
+void dma_clean_range(unsigned long, unsigned long);
+void dma_flush_range(unsigned long, unsigned long);
+void dma_inv_range(unsigned long, unsigned long);
+
+#ifdef CONFIG_32BIT
+#define CAC_BASE		_AC(0x80000000, UL)
+#define UNCAC_BASE		_AC(0xa0000000, UL)
+#endif
+
+/*
+ * This gives the physical RAM offset.
+ */
+#ifndef PHYS_OFFSET
+#define PHYS_OFFSET		_AC(0, UL)
+#endif
+
+/*
+ * This handles the memory map.
+ */
+#ifndef PAGE_OFFSET
+#define PAGE_OFFSET		(CAC_BASE + PHYS_OFFSET)
+#endif
+
+#define UNCAC_ADDR(addr)	((addr) - PAGE_OFFSET + UNCAC_BASE + 	\
+								PHYS_OFFSET)
+#define CAC_ADDR(addr)		((addr) - UNCAC_BASE + PAGE_OFFSET -	\
+								PHYS_OFFSET)
+/*
+ *     virt_to_phys    -       map virtual addresses to physical
+ *     @address: address to remap
+ *
+ *     The returned physical address is the physical (CPU) mapping for
+ *     the memory address given. It is only valid to use this function on
+ *     addresses directly mapped or allocated via kmalloc.
+ *
+ *     This function does not give bus mappings for DMA transfers. In
+ *     almost all conceivable cases a device driver should not be using
+ *     this function
+ */
+static inline unsigned long virt_to_phys(volatile const void *address)
+{
+	return (unsigned long)address - PAGE_OFFSET + PHYS_OFFSET;
+}
+
+/*
+ *     phys_to_virt    -       map physical address to virtual
+ *     @address: address to remap
+ *
+ *     The returned virtual address is a current CPU mapping for
+ *     the memory address given. It is only valid to use this function on
+ *     addresses that have a kernel mapping
+ *
+ *     This function does not handle bus mappings for DMA transfers. In
+ *     almost all conceivable cases a device driver should not be using
+ *     this function
+ */
+static inline void * phys_to_virt(unsigned long address)
+{
+	return (void *)(address + PAGE_OFFSET - PHYS_OFFSET);
+}
 
 /*****************************************************************************/
 /*
