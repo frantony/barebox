@@ -6,6 +6,7 @@ obj-y += ashrdi3.o
 obj-y += cpu-probe.o
 obj-y += traps.o
 obj-y += genex.o
+obj-y += dma.o
 
 obj-$(CONFIG_CPU_MIPS32) += c-r4k.o
 obj-$(CONFIG_CPU_MIPS64) += c-r4k.o
