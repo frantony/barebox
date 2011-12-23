@@ -14,6 +14,10 @@
 #include <asm/types.h>
 #include <asm/byteorder.h>
 
+void dma_clean_range(unsigned long, unsigned long);
+void dma_flush_range(unsigned long, unsigned long);
+void dma_inv_range(unsigned long, unsigned long);
+
 #define	IO_SPACE_LIMIT	0
 
 /*****************************************************************************/
