@@ -138,6 +138,13 @@ config DRIVER_NET_GIANFAR
 	depends on ARCH_MPC85XX
 	select PHYLIB
 
+config DRIVER_NET_21143
+	bool "DECchip Tulip (dc21143) Fast Ethernet Adapter support"
+	select PHYLIB
+	help
+	  This is a driver for the Fast Ethernet network cards based on
+	  the DEC 21143 chips (common code, no PCI support).
+
 source "drivers/net/usb/Kconfig"
 
 config DRIVER_NET_MICREL
