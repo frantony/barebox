@@ -19,6 +19,21 @@
 #ifndef _ASM_MIPS_MODULE_H_
 #define _ASM_MIPS_MODULE_H_
 
-/* nothing special yet */
+struct mod_arch_specific
+{
+};
+
+#ifdef CONFIG_32BIT
+#define Elf_Shdr	Elf32_Shdr
+#define Elf_Sym		Elf32_Sym
+#define Elf_Ehdr	Elf32_Ehdr
+#define Elf_Addr	Elf32_Addr
+
+#define Elf_Mips_Rel	Elf32_Rel
+#define Elf_Mips_Rela	Elf32_Rela
+
+#define ELF_MIPS_R_SYM(rel) ELF32_R_SYM(rel.r_info)
+#define ELF_MIPS_R_TYPE(rel) ELF32_R_TYPE(rel.r_info)
+#endif
 
 #endif /* _ASM_MIPS_MODULE_H_ */
