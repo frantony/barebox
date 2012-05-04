@@ -33,6 +33,7 @@ static void flash_unlock_seq (struct flash_info *info)
 */
 static void amd_read_jedec_ids (struct flash_info *info)
 {
+	printf("amd_read_jedec_ids()\n");
 	info->cmd_reset		= AMD_CMD_RESET;
 	info->manufacturer_id = 0;
 	info->device_id       = 0;

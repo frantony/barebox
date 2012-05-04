@@ -9,6 +9,7 @@
 */
 static void intel_read_jedec_ids (struct flash_info *info)
 {
+	printf("intel_read_jedec_ids()\n");
 	info->cmd_reset		= FLASH_CMD_RESET;
 	info->manufacturer_id = 0;
 	info->device_id       = 0;

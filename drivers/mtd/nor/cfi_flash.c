@@ -60,12 +60,144 @@
 static uint flash_offset_cfi[2]={FLASH_OFFSET_CFI,FLASH_OFFSET_CFI_ALT};
 
 /*
+ * Unlock address sets for AMD command sets.
+ * Intel command sets use the MTD_UADDR_UNNECESSARY.
+ * Each identifier, except MTD_UADDR_UNNECESSARY, and
+ * MTD_UADDR_NO_SUPPORT must be defined below in unlock_addrs[].
+ * MTD_UADDR_NOT_SUPPORTED must be 0 so that structure
+ * initialization need not require initializing all of the
+ * unlock addresses for all bit widths.
+ */
+enum uaddr {
+	MTD_UADDR_NOT_SUPPORTED = 0,	/* data width not supported */
+	MTD_UADDR_0x0555_0x02AA,
+	MTD_UADDR_0x0555_0x0AAA,
+	MTD_UADDR_0x5555_0x2AAA,
+	MTD_UADDR_0x0AAA_0x0554,
+	MTD_UADDR_0x0AAA_0x0555,
+	MTD_UADDR_0xAAAA_0x5555,
+	MTD_UADDR_DONT_CARE,		/* Requires an arbitrary address */
+	MTD_UADDR_UNNECESSARY,		/* Does not require any address */
+};
+
+struct unlock_addr {
+	u32 addr1;
+	u32 addr2;
+};
+
+/*
+ * I don't like the fact that the first entry in unlock_addrs[]
+ * exists, but is for MTD_UADDR_NOT_SUPPORTED - and, therefore,
+ * should not be used.  The  problem is that structures with
+ * initializers have extra fields initialized to 0.  It is _very_
+ * desireable to have the unlock address entries for unsupported
+ * data widths automatically initialized - that means that
+ * MTD_UADDR_NOT_SUPPORTED must be 0 and the first entry here
+ * must go unused.
+ */
+static const struct unlock_addr  unlock_addrs[] = {
+	[MTD_UADDR_NOT_SUPPORTED] = {
+		.addr1 = 0xffff,
+		.addr2 = 0xffff
+	},
+
+	[MTD_UADDR_0x0555_0x02AA] = {
+		.addr1 = 0x0555,
+		.addr2 = 0x02aa
+	},
+
+	[MTD_UADDR_0x0555_0x0AAA] = {
+		.addr1 = 0x0555,
+		.addr2 = 0x0aaa
+	},
+
+	[MTD_UADDR_0x5555_0x2AAA] = {
+		.addr1 = 0x5555,
+		.addr2 = 0x2aaa
+	},
+
+	[MTD_UADDR_0x0AAA_0x0555] = {
+		.addr1 = 0x0AAA,
+		.addr2 = 0x0555
+	},
+
+	[MTD_UADDR_DONT_CARE] = {
+		.addr1 = 0x0000,      /* Doesn't matter which address */
+		.addr2 = 0x0000       /* is used - must be last entry */
+	},
+
+	[MTD_UADDR_UNNECESSARY] = {
+		.addr1 = 0x0000,
+		.addr2 = 0x0000
+	}
+};
+
+#define P_ID_AMD_STD            0x0002
+
+/*
  * Check if chip width is defined. If not, start detecting with 8bit.
  */
 #ifndef CFG_FLASH_CFI_WIDTH
 #define CFG_FLASH_CFI_WIDTH	FLASH_CFI_8BIT
 #endif
 
+/* NB: these values must represents the number of bytes needed to meet the
+ *     device type (x8, x16, x32).  Eg. a 32 bit device is 4 x 8 bytes.
+ *     These numbers are used in calculations.
+ */
+#define CFI_DEVICETYPE_X8  (8 / 8)
+#define CFI_DEVICETYPE_X16 (16 / 8)
+#define CFI_DEVICETYPE_X32 (32 / 8)
+#define CFI_DEVICETYPE_X64 (64 / 8)
+
+#define CFI_MFR_AMD		0x0001
+
+/* AMD */
+#define AM29LV040B	0x004F
+
+struct amd_flash_info {
+	const char *name;
+	const uint16_t mfr_id;
+	const uint16_t dev_id;
+	const uint8_t dev_size;
+	const uint8_t nr_regions;
+	const uint16_t cmd_set;
+	const uint32_t regions[6];
+	const uint8_t devtypes;		/* Bitmask for x8, x16 etc. */
+	const uint8_t uaddr;		/* unlock addrs for 8, 16, 32, 64 */
+};
+
+#define ERASEINFO(size,blocks) (size<<8)|(blocks-1)
+
+#define SIZE_64KiB  16
+#define SIZE_128KiB 17
+#define SIZE_256KiB 18
+#define SIZE_512KiB 19
+#define SIZE_1MiB   20
+#define SIZE_2MiB   21
+#define SIZE_4MiB   22
+#define SIZE_8MiB   23
+
+/*
+ * Please keep this list ordered by manufacturer!
+ * Fortunately, the list isn't searched often and so a
+ * slow, linear search isn't so bad.
+ */
+static const struct amd_flash_info jedec_table[] = {
+	{
+		.mfr_id		= CFI_MFR_AMD,
+		.dev_id		= AM29LV040B,
+		.name		= "AMD AM29LV040B",
+		.devtypes	= CFI_DEVICETYPE_X8,
+		.uaddr		= MTD_UADDR_0x0555_0x02AA,
+		.dev_size	= SIZE_512KiB,
+		.cmd_set	= P_ID_AMD_STD,
+		.nr_regions	= 1,
+		.regions	= {
+			ERASEINFO(0x10000,8),
+		}
+	},
+};
 
 /*
  * Functions
@@ -951,6 +1083,160 @@ static void cfi_init_mtd(struct flash_info *info)
 	add_mtd_device(mtd, "nor");
 }
 
+static inline void fill_info(struct flash_info *info, const struct amd_flash_info *jedec_entry, ulong base)
+{
+	int i,j;
+	int sect_cnt;
+	int size_ratio;
+	int total_size;
+	enum uaddr uaddr_idx;
+
+	size_ratio = info->portwidth / info->chipwidth;
+
+	debug("Found JEDEC Flash: %s\n", jedec_entry->name);
+	info->vendor = jedec_entry->cmd_set;
+	/* Todo: do we need device-specific timeouts? */
+	info->erase_blk_tout = 30000;
+	info->buffer_write_tout = 1000;
+	info->write_tout = 100;
+//	info->name = jedec_entry->name;
+
+#if 0
+	/* copy unlock addresses from device table to CFI info struct. This
+	   is just here because the addresses are in the table anyway - if
+	   the flash is not detected due to wrong unlock addresses,
+	   flash_detect_legacy would have to try all of them before we even
+	   get here. */
+	switch(info->chipwidth) {
+	case FLASH_CFI_8BIT:
+		uaddr_idx = jedec_entry->uaddr[0];
+		break;
+	case FLASH_CFI_16BIT:
+		uaddr_idx = jedec_entry->uaddr[1];
+		break;
+	case FLASH_CFI_32BIT:
+		uaddr_idx = jedec_entry->uaddr[2];
+		break;
+	default:
+		uaddr_idx = MTD_UADDR_NOT_SUPPORTED;
+		break;
+	}
+
+	debug("unlock address index %d\n", uaddr_idx);
+	info->addr_unlock1 = unlock_addrs[uaddr_idx].addr1;
+	info->addr_unlock2 = unlock_addrs[uaddr_idx].addr2;
+	debug("unlock addresses are 0x%lx/0x%lx\n",
+		info->addr_unlock1, info->addr_unlock2);
+#endif
+
+	sect_cnt = 0;
+	total_size = 0;
+	for (i = 0; i < jedec_entry->nr_regions; i++) {
+		ulong erase_region_size = jedec_entry->regions[i] >> 8;
+		ulong erase_region_count = (jedec_entry->regions[i] & 0xff) + 1;
+
+		total_size += erase_region_size * erase_region_count;
+		debug("erase_region_count = %ld erase_region_size = %ld\n",
+		       erase_region_count, erase_region_size);
+#define CONFIG_SYS_MAX_FLASH_SECT 128
+		for (j = 0; j < erase_region_count; j++) {
+			if (sect_cnt >= CONFIG_SYS_MAX_FLASH_SECT) {
+				printf("ERROR: too many flash sectors\n");
+				break;
+			}
+//			info->start[sect_cnt] = base;
+			base += (erase_region_size * size_ratio);
+			sect_cnt++;
+		}
+	}
+	info->sector_count = sect_cnt;
+	info->size = total_size * size_ratio;
+}
+
+
+static int jedec_flash_match(struct flash_info *info, ulong base)
+{
+	int ret = 0;
+	int i;
+
+	ulong mask = 0xFFFF;
+	if (info->chipwidth == 1)
+		mask = 0xFF;
+
+	for (i = 0; i < ARRAY_SIZE(jedec_table); i++) {
+		if ((jedec_table[i].mfr_id & mask) == (info->manufacturer_id & mask) &&
+		    (jedec_table[i].dev_id & mask) == (info->device_id & mask)) {
+			printf("jedec_flash_match: got %s\n", jedec_table[i].name);
+			fill_info(info, &jedec_table[i], base);
+			ret = 1;
+			break;
+		}
+	}
+
+	return ret;
+}
+
+static int flash_detect_legacy(struct flash_info *info)
+{
+	int modes[] = {
+		CFI_CMDSET_AMD_STANDARD,
+		CFI_CMDSET_INTEL_STANDARD
+	};
+
+	int i;
+
+	printf("## flash_detect_legacy()\n");
+	/* FIXME */
+	info->portwidth = FLASH_CFI_8BIT;
+	info->chipwidth = FLASH_CFI_BY8;
+//	info->interface = FLASH_CFI_X8X16;
+	info->interface = FLASH_CFI_X8;
+
+#if 1
+	for (i = 0; i < sizeof(modes) / sizeof(modes[0]); i++) {
+		info->vendor = modes[i];
+	//	info->start[0] =
+	//		(ulong)map_physmem(base,
+	//				   info->portwidth,
+	//				   MAP_NOCACHE);
+
+		//flash_read_jedec_ids(info);
+		switch (info->vendor) {
+#ifdef CONFIG_DRIVER_CFI_INTEL
+		case CFI_CMDSET_INTEL_EXTENDED:
+		case CFI_CMDSET_INTEL_STANDARD:
+			info->cfi_cmd_set = &cfi_cmd_set_intel;
+			break;
+#endif
+#ifdef CONFIG_DRIVER_CFI_AMD
+		case CFI_CMDSET_AMD_STANDARD:
+		case CFI_CMDSET_AMD_EXTENDED:
+			info->cfi_cmd_set = &cfi_cmd_set_amd;
+			break;
+#endif
+		default:
+			printf("unsupported vendor\n");
+			return 0;
+		}
+
+		info->cfi_cmd_set->flash_read_jedec_ids(info);
+		printf("JEDEC PROBE: ID %x %x %x\n",
+				info->manufacturer_id,
+				info->device_id,
+				info->device_id2);
+		if (jedec_flash_match(info, info->start[0]))
+			break;
+		//else
+		//	unmap_physmem((void *)info->start[0],
+		//		      MAP_NOCACHE);
+	}
+
+	info->flash_id = FLASH_MAN_CFI;
+#endif
+
+	return 1;
+}
+
 static int cfi_probe (struct device_d *dev)
 {
 	struct flash_info *info = xzalloc(sizeof(*info));
@@ -962,6 +1248,14 @@ static int cfi_probe (struct device_d *dev)
 	info->cmd_reset = FLASH_CMD_RESET;
 	info->base = dev_request_mem_region(dev, 0);
 	info->size = flash_get_size(info);
+
+	if (info->flash_id == FLASH_UNKNOWN) {
+		printf("## Unknown CFI FLASH on Bank at 0x%08x - Size = 0x%08lx = %ld MB\n",
+			dev->resource[0].start, info->size, info->size << 20);
+		printf("## Trying legacy probe\n");
+
+		flash_detect_legacy(info);
+	}
 
 	if (info->flash_id == FLASH_UNKNOWN) {
 		printf ("## Unknown FLASH on Bank at 0x%08x - Size = 0x%08lx = %ld MB\n",
