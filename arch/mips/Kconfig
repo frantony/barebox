@@ -36,6 +36,7 @@ config MACH_MIPS_MALTA
 	select SYS_SUPPORTS_32BIT_KERNEL
 	select SYS_SUPPORTS_BIG_ENDIAN
 	select HAS_DEBUG_LL
+	select MACH_HAS_LOWLEVEL_INIT
 
 config MACH_MIPS_BCM47XX
 	bool "Broadcom BCM47xx-based boards"
