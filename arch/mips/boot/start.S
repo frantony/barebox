@@ -74,6 +74,14 @@ __start:
 	and	k0, k1
 	mtc0	k0, CP0_STATUS
 
+#ifdef CONFIG_MACH_DO_LOWLEVEL_INIT
+	b	mach_init_lowlevel
+	 nop
+
+mach_init_lowlevel_return:
+EXPORT(mach_init_lowlevel_return)
+#endif
+
 	/* copy barebox to link location */
 	ADR	a0, _start, t1	/* a0 <- pc-relative position of _start */
 
