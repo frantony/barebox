@@ -50,7 +50,7 @@ _pc:	addiu	\rd, ra, \label - _pc		# label is assumed to be
 
 	.set noreorder
 	.text
-	.section ".text_bare_init"
+	.section ".text_entry"
 	.align 4
 
 EXPORT(_start)
