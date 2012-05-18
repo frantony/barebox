@@ -6,6 +6,7 @@
 #include <binfmt.h>
 
 #include <asm/byteorder.h>
+#include <asm/cache.h>
 
 static int do_bootm_barebox(struct image_data *data)
 {
@@ -16,6 +17,8 @@ static int do_bootm_barebox(struct image_data *data)
 		return -EINVAL;
 
 	shutdown_barebox();
+
+	flush_cache_all();
 
 	barebox();
 
