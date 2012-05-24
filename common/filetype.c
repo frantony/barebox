@@ -81,6 +81,9 @@ enum filetype file_detect_type(void *_buf)
 	if (strncmp(buf8 + 0x10, "barebox", 7) == 0)
 		return filetype_mips_barebox;
 
+	if (buf[0] == 0)
+		return filetype_mips_barebox;
+
 	return filetype_unknown;
 }
 
