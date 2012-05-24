@@ -19,6 +19,15 @@
 
 #include <asm/pbl_macros.h>
 
+#define GT_PCI0IOLD_OFS		0x048
+#define GT_PCI0IOHD_OFS		0x050
+#define GT_PCI0M0LD_OFS		0x058
+#define GT_PCI0M0HD_OFS		0x060
+#define GT_ISD_OFS		0x068
+
+#define GT_PCI0M1LD_OFS		0x080
+#define GT_PCI0M1HD_OFS		0x088
+
 	.macro	board_pbl_start
 	.set	push
 	.set	noreorder
@@ -38,6 +47,39 @@
 __start:
 
 	mips_disable_interrupts
+
+	/*
+	 * Load BAR registers of GT64120 as done by YAMON
+	 *
+	 * based on write_bootloader() in qemu.git/hw/mips_malta.c
+	 * see GT64120 manual and qemu.git/hw/gt64xxx.c for details
+	 *
+	 * This is big-endian version of code!
+	 */
+
+	/* move GT64120 registers to 0x1be00000 */
+	li	t1, 0xb4000000
+	li	t0, 0xdf000000
+	sw	t0, GT_ISD_OFS(t1)
+
+	/* setup MEM-to-PCI0 mapping */
+	li	t1, 0xbbe00000
+
+	/* setup PCI0 io window to 0x18000000-0x181fffff */
+	li	t0, 0xc0000000
+	sw	t0, GT_PCI0IOLD_OFS(t1)
+	li	t0, 0x40000000
+	sw	t0, GT_PCI0IOHD_OFS(t1)
+
+	/* setup PCI0 mem windows */
+	li	t0, 0x80000000
+	sw	t0, GT_PCI0M0LD_OFS(t1)
+	li	t0, 0x3f000000
+	sw	t0, GT_PCI0M0HD_OFS(t1)
+	li	t0, 0xc1000000
+	sw	t0, GT_PCI0M1LD_OFS(t1)
+	li	t0, 0x5e000000
+	sw	t0, GT_PCI0M1HD_OFS(t1)
 
 	/* cpu specific setup ... */
 	/* ... absent */
