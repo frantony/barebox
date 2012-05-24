@@ -23,6 +23,20 @@
 	.set	push
 	.set	noreorder
 
+	b       __start
+	 nop
+
+	/*
+	   MIPS_REVISION_REG located at 0x1fc00010
+	   see the MIPS_REVISION_CORID macro in linux kernel sources
+	   set up it to 0x420 (Malta Board with CoreLV) as qemu does
+	*/
+	.org    0x10
+	.word   0x00000420
+
+	.align 4
+__start:
+
 	mips_disable_interrupts
 
 	/* cpu specific setup ... */
