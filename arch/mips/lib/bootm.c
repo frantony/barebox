@@ -9,7 +9,7 @@
 
 static int do_bootm_barebox(struct image_data *data)
 {
-	void (*barebox)(void);
+	void (*barebox)(int a0, int a1, int a2, int a3);
 
 	barebox = read_file(data->os_file, NULL);
 	if (!barebox)
@@ -17,7 +17,20 @@ static int do_bootm_barebox(struct image_data *data)
 
 	shutdown_barebox();
 
-	barebox();
+	if (data->os_address != UIMAGE_INVALID_ADDRESS) {
+		char *dest_addr;
+
+		dest_addr = (char *)data->os_address;
+		/* FIXME: very dirty HACK */
+		memcpy(dest_addr, barebox, 8 * 1024 * 1024);
+		barebox = (void *)dest_addr;
+	}
+
+	barebox(2,		/* number of arguments? */
+		0x80002000,
+		0x80002008,
+		0x10000000	/* no matter */
+		);
 
 	reset_cpu(0);
 }
