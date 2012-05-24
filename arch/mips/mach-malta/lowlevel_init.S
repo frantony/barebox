@@ -29,7 +29,38 @@
 
 LEAF(mach_init_lowlevel)
 
-	/* nothing special yet */
+	/*
+	 * Load BAR registers of GT64120 as done by YAMON
+	 *
+	 * based on write_bootloader() in qemu.git/hw/mips_malta.c
+	 * see GT64120 manual and qemu.git/hw/gt64xxx.c for details
+	 *
+	 * This is big-endian version of code!
+	 */
+
+	/* move GT64120 registers to 0x1be00000 */
+	lui	t1, 0xb400
+	lui	t0, 0xdf00
+	sw	t0, 104(t1)
+
+	/* setup MEM-to-PCI0 mapping */
+	lui	t1, 0xbbe0
+
+	/* setup PCI0 io window to 18000000-181fffff */
+	lui	t0, 0xc000
+	sw	t0, 72(t1) /* GT_PCI0IOLD */
+	lui	t0, 0x4000
+	sw	t0, 80(t1) /* GT_PCI0IOHD */
+
+	/* setup PCI0 mem windows */
+	lui	t0, 0x8000
+	sw	t0, 88(t1) /* GT_PCI0M0LD */
+	lui	t0, 0x3f00
+	sw	t0, 96(t1) /* GT_PCI0M0HD */
+	lui	t0, 0xc100
+	sw	t0, 128(t1) /* GT_PCI0M1LD */
+	lui	t0, 0x5e00
+	sw	t0, 136(t1) /* GT_PCI0M1HD */
 
 	/* return */
 	b	mach_init_lowlevel_return
