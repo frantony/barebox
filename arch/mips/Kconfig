@@ -55,6 +55,7 @@ config MACH_MIPS_XBURST
 	select HAS_DEBUG_LL
 	select CLKDEV_LOOKUP
 	select COMMON_CLK
+	select GPIOLIB
 endchoice
 
 source arch/mips/mach-malta/Kconfig
