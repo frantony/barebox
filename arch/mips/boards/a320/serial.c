@@ -26,6 +26,7 @@
 #include <mach/jz4740_regs.h>
 #include <io.h>
 #include <asm/common.h>
+#include <mach/jz4740_fb.h>
 
 #define JZ4740_UART_SHIFT	2
 
@@ -55,12 +56,55 @@ static struct NS16550_plat serial_plat = {
 	.reg_write = &jz4740_serial_reg_write,
 };
 
+#include <fb.h>
+
+static struct fb_videomode a320_fb_modes[] = {
+	{
+		.name		= "A320",
+		.refresh	= 60,
+		.xres		= 320,
+		.left_margin	= 21,
+		.right_margin	= 38,
+		.hsync_len	= 6,
+		.yres		= 240,
+		.upper_margin	= 4,
+		.lower_margin	= 4,
+		.vsync_len	= 2,
+		.pixclock	= 115913,
+		.sync		= 0,
+		.vmode		= FB_VMODE_NONINTERLACED,
+		.flag		= 0,
+	},
+};
+
+static struct jz4740_fb_platform_data a320_fb_data = {
+	.mode		= a320_fb_modes,
+};
+
 static int a320_console_init(void)
 {
 	/* Register the serial port */
 	add_ns16550_device(-1, UART0_BASE, 8 << JZ4740_UART_SHIFT,
 			IORESOURCE_MEM_8BIT, &serial_plat);
 
+#ifdef CONFIG_DRIVER_VIDEO_FB_JZ4740
+	add_generic_device("jz4740_fb", -1, NULL,
+		(resource_size_t)JZ4740_LCD_BASE_ADDR,
+		(resource_size_t)JZ4740_LCD_BASE_ADDR + 0x1000 - 1,
+		IORESOURCE_MEM, &a320_fb_data);
+#endif
+
 	return 0;
 }
 console_initcall(a320_console_init);
+
+static int a320_devices_init(void)
+{
+	add_generic_device("jz4740_fb", -1, NULL,
+		(resource_size_t)JZ4740_LCD_BASE_ADDR,
+		(resource_size_t)JZ4740_LCD_BASE_ADDR + 0x1000 - 1,
+		IORESOURCE_MEM, &a320_fb_data);
+
+	return 0;
+}
+device_initcall(a320_devices_init);

@@ -18,6 +18,7 @@
 #define	TCU_BASE	0xb0002000
 #define	WDT_BASE	0xb0002000
 #define	UART0_BASE	0xb0030000
+#define	JZ4740_LCD_BASE_ADDR	0xb3050000
 
 /*************************************************************************
  * TCU (Timer Counter Unit)

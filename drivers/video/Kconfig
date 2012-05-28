@@ -51,4 +51,9 @@ config DRIVER_VIDEO_PXA
 	  Add support for the frame buffer device found on the PXA270
 	  CPU.
 
+config DRIVER_VIDEO_JZ4740
+	bool "jz4740 framebuffer driver"
+	depends on MACH_MIPS_XBURST
+	help
+	  Framebuffer support for the JZ4740 SoC.
 endif
