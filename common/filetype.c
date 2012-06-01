@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <fs.h>
 #include <malloc.h>
+#include <elf.h>
 
 static const char *filetype_str[] = {
 	[filetype_unknown] = "unknown",
@@ -40,6 +41,7 @@ static const char *filetype_str[] = {
 	[filetype_aimage] = "Android boot image",
 	[filetype_sh] = "Bourne Shell",
 	[filetype_mips_barebox] = "MIPS barebox image",
+	[filetype_elf] = "ELF",
 };
 
 const char *file_type_to_string(enum filetype f)
@@ -81,6 +83,8 @@ enum filetype file_detect_type(void *_buf)
 		return filetype_aimage;
 	if (strncmp(buf8 + 0x10, "barebox", 7) == 0)
 		return filetype_mips_barebox;
+	if (strncmp(buf8, ELFMAG, 4) == 0)
+		return filetype_elf;
 
 	return filetype_unknown;
 }
