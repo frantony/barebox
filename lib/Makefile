@@ -37,3 +37,4 @@ obj-$(CONFIG_QSORT)	+= qsort.o
 obj-y			+= gui/
 obj-$(CONFIG_XYMODEM)	+= xymodem.o
 obj-y			+= unlink-recursive.o
+obj-$(CONFIG_KEXEC)	+= kexec/

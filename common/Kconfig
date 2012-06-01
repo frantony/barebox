@@ -674,3 +674,6 @@ endmenu
 
 config HAS_DEBUG_LL
 	bool
+
+config HAS_KEXEC
+	bool
