@@ -1171,3 +1171,6 @@ config HAS_DEBUG_LL
 config DDR_SPD
 	bool
 	select CRC16
+
+config HAS_KEXEC
+	bool
