@@ -30,6 +30,7 @@ enum filetype {
 	filetype_ubifs,
 	filetype_bpk,
 	filetype_barebox_env,
+	filetype_elf,
 	filetype_max,
 };
 
