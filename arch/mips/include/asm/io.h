@@ -14,6 +14,24 @@
 #include <asm/types.h>
 #include <asm/byteorder.h>
 
+/*
+ *     virt_to_phys    -       map virtual addresses to physical
+ *     @address: address to remap
+ *
+ *     The returned physical address is the physical (CPU) mapping for
+ *     the memory address given. It is only valid to use this function on
+ *     addresses directly mapped or allocated via kmalloc.
+ *
+ *     This function does not give bus mappings for DMA transfers. In
+ *     almost all conceivable cases a device driver should not be using
+ *     this function
+ */
+static inline unsigned long virt_to_phys(volatile const void *address)
+{
+	//return (unsigned long)address - PAGE_OFFSET + PHYS_OFFSET;
+	return (unsigned long)address & 0x1fffffff;
+}
+
 /*****************************************************************************/
 /*
  * readX/writeX() are used to access memory mapped devices. On some
