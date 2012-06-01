@@ -17,12 +17,18 @@
 
 #ifndef ELF_ARCH
 
+/* Legal values for e_machine (architecture).  */
+
+#define EM_MIPS		 8		/* MIPS R3000 big-endian */
+#define EM_MIPS_RS4_BE	10		/* MIPS R4000 big-endian */
+
 #ifdef CONFIG_32BIT
 
 /*
  * This is used to ensure we don't load something for the wrong architecture.
  */
-#define elf_check_arch(hdr)						\
+#define elf_check_arch(x) ((x)->e_machine == EM_MIPS)
+
 /*
  * These are used to set parameters in the core dumps.
  */
