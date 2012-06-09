@@ -31,8 +31,7 @@ static void __print_resources(struct resource *res, int indent)
 		printf("  ");
 
 	printf("0x%08x - 0x%08x (size 0x%08x) %s\n", res->start,
-			res->start + res->size - 1,
-			res->size, res->name);
+			res->end, resource_size(res), res->name);
 
 	list_for_each_entry(r, &res->children, sibling)
 		__print_resources(r, indent + 1);
