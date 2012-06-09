@@ -137,6 +137,7 @@ void cpu_probe(void)
 		cpu_probe_broadcom(c);
 		break;
 	case PRID_COMP_INGENIC:
+	case PRID_COMP_INGENIC_NEW:
 		cpu_probe_ingenic(c);
 		break;
 	}
