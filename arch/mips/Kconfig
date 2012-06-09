@@ -17,6 +17,15 @@ config SYS_SUPPORTS_LITTLE_ENDIAN
 config CSRC_R4K_LIB
 	bool
 
+config MIPS_MACH_ENTRY
+	bool
+	default n
+
+config MIPS_GENERIC_ENTRY
+	bool
+	default y
+	depends on !MIPS_MACH_ENTRY
+
 config GENERIC_LINKER_SCRIPT
 	bool
 	default y
