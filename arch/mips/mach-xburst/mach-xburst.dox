@@ -3,5 +3,6 @@
 @section xburst_boards XBurst-based boards
 
 @li @subpage rzx50
+@li @subpage a320
 
 */

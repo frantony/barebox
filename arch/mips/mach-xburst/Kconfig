@@ -13,12 +13,17 @@ config CPU_JZ4755
 choice
 	prompt "Board type"
 
+config BOARD_A320
+	bool "Dingoo A320"
+	select CPU_JZ4740
+
 config BOARD_RZX50
 	bool "Ritmix RZX-50"
 	select CPU_JZ4755
 
 endchoice
 
+source arch/mips/boards/a320/Kconfig
 source arch/mips/boards/rzx50/Kconfig
 
 endif

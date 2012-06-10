@@ -1,0 +1,6 @@
+if BOARD_A320
+
+config BOARDINFO
+	default "Dingoo A320"
+
+endif
