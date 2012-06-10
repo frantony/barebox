@@ -25,8 +25,9 @@ OUTPUT_ARCH(mips)
 ENTRY(_start)
 SECTIONS
 {
-	. = TEXT_BASE;
+	PRE_IMAGE
 
+	. = TEXT_BASE;
 	. = ALIGN(4);
 	.text      :
 	{
@@ -40,8 +41,6 @@ SECTIONS
 		*(.text*)
 	}
 	BAREBOX_BARE_INIT_SIZE
-
-	PRE_IMAGE
 
 	. = ALIGN(4);
 	.rodata : { *(.rodata*) }
