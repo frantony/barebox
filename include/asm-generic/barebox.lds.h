@@ -4,6 +4,7 @@
 	defined CONFIG_ARCH_IMX51 || \
 	defined CONFIG_ARCH_IMX53 || \
 	defined CONFIG_ARCH_IMX6 || \
+	defined CONFIG_MACH_MIPS_XBURST || \
 	defined CONFIG_X86
 #include <mach/barebox.lds.h>
 #endif
