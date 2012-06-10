@@ -69,6 +69,7 @@ board-$(CONFIG_BOARD_DLINK_DIR320)	:= dlink-dir-320
 machine-$(CONFIG_MACH_MIPS_XBURST)	:= xburst
 board-$(CONFIG_BOARD_A320)	:= a320
 board-$(CONFIG_BOARD_RZX50)	:= rzx50
+board-$(CONFIG_BOARD_AINOL_NOVO7_PALADIN)	:= ainol-novo7-paladin
 
 machdirs := $(patsubst %,arch/mips/mach-%/,$(machine-y))
 
