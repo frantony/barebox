@@ -9,11 +9,11 @@
 
 static int do_bootm_elf(struct image_data *data)
 {
-	Elf32_Ehdr *ehdr;
-
-	ehdr = (Elf32_Ehdr *)data;
+	extern int my_load(char *kernel, unsigned long kexec_flags);
 
 	printf("\ndo_bootm_elf()\n\n");
+
+	my_load(data->os_file, 0);
 
 	/* unreachable(); */
 	return -1;

@@ -1,0 +1,282 @@
+#ifndef KEXEC_H
+#define KEXEC_H
+
+#include <common.h>
+
+//#include <sys/types.h>
+#include <stdio.h>
+//#include <stdint.h>
+#include <string.h>
+#define USE_BSD
+//#include <byteswap.h>
+//#include <endian.h>
+#include <asm/byteorder.h>
+#define _GNU_SOURCE
+
+#include "kexec-elf.h"
+#include "unused.h"
+
+/*
+ * Document some of the reasons why crashdump may fail, so we can give
+ * better error messages
+ */
+#define EFAILED		-1	/* default error code */
+#define ENOCRASHKERNEL	-2	/* no memory reserved for crashkernel */
+
+/*
+ * This function doesn't actually exist.  The idea is that when someone
+ * uses the macros below with an unsupported size (datatype), the linker
+ * will alert us to the problem via an unresolved reference error.
+ */
+extern unsigned long bad_unaligned_access_length (void);
+
+#define get_unaligned(loc) \
+({ \
+	__typeof__(*(loc)) _v; \
+	size_t size = sizeof(*(loc)); \
+	switch(size) {  \
+	case 1: case 2: case 4: case 8: \
+		memcpy(&_v, (loc), size); \
+		break; \
+	default: \
+		_v = bad_unaligned_access_length(); \
+		break; \
+	} \
+	_v; \
+})
+
+#define put_unaligned(value, loc) \
+do { \
+	size_t size = sizeof(*(loc)); \
+	__typeof__(*(loc)) _v = value; \
+	switch(size) { \
+	case 1: case 2: case 4: case 8: \
+		memcpy((loc), &_v, size); \
+		break; \
+	default: \
+		bad_unaligned_access_length(); \
+		break; \
+	} \
+} while(0)
+
+extern unsigned long long mem_min, mem_max;
+extern int kexec_debug;
+
+#define dbgprintf(...) \
+do { \
+	if (kexec_debug) \
+		fprintf(stderr, __VA_ARGS__); \
+} while(0)
+
+struct kexec_segment {
+	const void *buf;
+	size_t bufsz;
+	const void *mem;
+	size_t memsz;
+};
+
+struct memory_range {
+	unsigned long long start, end;
+	unsigned type;
+#define RANGE_RAM	0
+#define RANGE_RESERVED	1
+#define RANGE_ACPI	2
+#define RANGE_ACPI_NVS	3
+#define RANGE_UNCACHED	4
+};
+
+struct kexec_info {
+	struct kexec_segment *segment;
+	int nr_segments;
+	struct memory_range *memory_range;
+	int memory_ranges;
+	void *entry;
+	struct mem_ehdr rhdr;
+	unsigned long backup_start;
+	unsigned long kexec_flags;
+	unsigned long backup_src_start;
+	unsigned long backup_src_size;
+};
+
+struct arch_map_entry {
+	const char *machine;
+	unsigned long arch;
+};
+
+extern const struct arch_map_entry arches[];
+long physical_arch(void);
+
+#define KERNEL_VERSION(major, minor, patch) \
+	(((major) << 16) | ((minor) << 8) | patch)
+long kernel_version(void);
+
+void usage(void);
+int get_memory_ranges(struct memory_range **range, int *ranges,
+						unsigned long kexec_flags);
+int valid_memory_range(struct kexec_info *info,
+		       unsigned long sstart, unsigned long send);
+//void print_segments(FILE *file, struct kexec_info *info);
+int sort_segments(struct kexec_info *info);
+unsigned long locate_hole(struct kexec_info *info,
+	unsigned long hole_size, unsigned long hole_align, 
+	unsigned long hole_min, unsigned long hole_max,
+	int hole_end);
+
+typedef int (probe_t)(const char *kernel_buf, off_t kernel_size);
+typedef int (load_t )(//int argc, char **argv,
+	const char *kernel_buf, off_t kernel_size, 
+	struct kexec_info *info);
+typedef void (usage_t)(void);
+struct kexec_file_type {
+	const char *name;
+	probe_t *probe;
+	load_t  *load;
+	usage_t *usage;
+};
+
+extern struct kexec_file_type kexec_file_type[];
+extern int kexec_file_types;
+
+#define OPT_HELP		'h'
+#define OPT_VERSION		'v'
+#define OPT_DEBUG		'd'
+#define OPT_FORCE		'f'
+#define OPT_NOIFDOWN		'x'
+#define OPT_EXEC		'e'
+#define OPT_LOAD		'l'
+#define OPT_UNLOAD		'u'
+#define OPT_TYPE		't'
+#define OPT_PANIC		'p'
+#define OPT_MEM_MIN             256
+#define OPT_MEM_MAX             257
+#define OPT_REUSE_INITRD	258
+#define OPT_LOAD_PRESERVE_CONTEXT 259
+#define OPT_LOAD_JUMP_BACK_HELPER 260
+#define OPT_ENTRY		261
+#define OPT_MAX			262
+#define KEXEC_OPTIONS \
+	{ "help",		0, 0, OPT_HELP }, \
+	{ "version",		0, 0, OPT_VERSION }, \
+	{ "force",		0, 0, OPT_FORCE }, \
+	{ "no-ifdown",		0, 0, OPT_NOIFDOWN }, \
+	{ "load",		0, 0, OPT_LOAD }, \
+	{ "unload",		0, 0, OPT_UNLOAD }, \
+	{ "exec",		0, 0, OPT_EXEC }, \
+	{ "load-preserve-context", 0, 0, OPT_LOAD_PRESERVE_CONTEXT}, \
+	{ "load-jump-back-helper", 0, 0, OPT_LOAD_JUMP_BACK_HELPER }, \
+	{ "entry",		1, 0, OPT_ENTRY }, \
+	{ "type",		1, 0, OPT_TYPE }, \
+	{ "load-panic",         0, 0, OPT_PANIC }, \
+	{ "mem-min",		1, 0, OPT_MEM_MIN }, \
+	{ "mem-max",		1, 0, OPT_MEM_MAX }, \
+	{ "reuseinitrd",	0, 0, OPT_REUSE_INITRD }, \
+	{ "debug",		0, 0, OPT_DEBUG }, \
+
+#define KEXEC_OPT_STR "hvdfxluet:p"
+
+extern void die(char *fmt, ...);
+extern void *xmalloc(size_t size);
+extern void *xrealloc(void *ptr, size_t size);
+extern char *slurp_file(const char *filename, off_t *r_size);
+extern char *slurp_file_len(const char *filename, off_t size);
+extern char *slurp_decompress_file(const char *filename, off_t *r_size);
+extern unsigned long virt_to_phys(unsigned long addr);
+extern void add_segment(struct kexec_info *info,
+	const void *buf, size_t bufsz, unsigned long base, size_t memsz);
+extern void add_segment_phys_virt(struct kexec_info *info,
+	const void *buf, size_t bufsz, unsigned long base, size_t memsz,
+	int phys);
+extern unsigned long add_buffer(struct kexec_info *info,
+	const void *buf, unsigned long bufsz, unsigned long memsz,
+	unsigned long buf_align, unsigned long buf_min, unsigned long buf_max,
+	int buf_end);
+extern unsigned long add_buffer_virt(struct kexec_info *info,
+	const void *buf, unsigned long bufsz, unsigned long memsz,
+	unsigned long buf_align, unsigned long buf_min, unsigned long buf_max,
+	int buf_end);
+extern unsigned long add_buffer_phys_virt(struct kexec_info *info,
+	const void *buf, unsigned long bufsz, unsigned long memsz,
+	unsigned long buf_align, unsigned long buf_min, unsigned long buf_max,
+	int buf_end, int phys);
+extern void arch_reuse_initrd(void);
+
+extern int ifdown(void);
+
+extern char purgatory[];
+extern size_t purgatory_size;
+
+#define BOOTLOADER "kexec"
+#define BOOTLOADER_VERSION PACKAGE_VERSION
+
+void arch_usage(void);
+int arch_process_options(int argc, char **argv);
+int arch_compat_trampoline(struct kexec_info *info);
+void arch_update_purgatory(struct kexec_info *info);
+int is_crashkernel_mem_reserved(void);
+char *get_command_line(void);
+
+int kexec_iomem_for_each_line(char *match,
+			      int (*callback)(void *data,
+					      int nr,
+					      char *str,
+					      unsigned long base,
+					      unsigned long length),
+			      void *data);
+int parse_iomem_single(char *str, uint64_t *start, uint64_t *end);
+const char * proc_iomem(void);
+
+extern int add_backup_segments(struct kexec_info *info,
+			       unsigned long backup_base,
+			       unsigned long backup_size);
+
+#define MAX_LINE	160
+
+char *concat_cmdline(const char *base, const char *append);
+
+/* Limits of integral types. */
+#ifndef INT8_MIN
+#define INT8_MIN               (-128)
+#endif
+#ifndef INT16_MIN
+#define INT16_MIN              (-32767-1)
+#endif
+#ifndef INT32_MIN
+#define INT32_MIN              (-2147483647-1)
+#endif
+#ifndef INT8_MAX
+#define INT8_MAX               (127)
+#endif
+#ifndef INT16_MAX
+#define INT16_MAX              (32767)
+#endif
+#ifndef INT32_MAX
+#define INT32_MAX              (2147483647)
+#endif
+#ifndef UINT8_MAX
+#define UINT8_MAX              (255U)
+#endif
+#ifndef UINT16_MAX
+#define UINT16_MAX             (65535U)
+#endif
+#ifndef UINT32_MAX
+#define UINT32_MAX             (4294967295U)
+#endif
+
+/* These values match the ELF architecture values. 
+ * Unless there is a good reason that should continue to be the case.
+ */
+#define KEXEC_ARCH_DEFAULT ( 0 << 16)
+#define KEXEC_ARCH_386     ( 3 << 16)
+#define KEXEC_ARCH_X86_64  (62 << 16)
+#define KEXEC_ARCH_PPC     (20 << 16)
+#define KEXEC_ARCH_PPC64   (21 << 16)
+#define KEXEC_ARCH_IA_64   (50 << 16)
+#define KEXEC_ARCH_ARM     (40 << 16)
+#define KEXEC_ARCH_S390    (22 << 16)
+#define KEXEC_ARCH_SH      (42 << 16)
+#define KEXEC_ARCH_MIPS_LE (10 << 16)
+#define KEXEC_ARCH_MIPS    ( 8 << 16)
+#define KEXEC_ARCH_CRIS    (76 << 16)
+
+
+#endif /* KEXEC_H */

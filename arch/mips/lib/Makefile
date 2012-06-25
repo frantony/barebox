@@ -13,3 +13,4 @@ obj-$(CONFIG_CMD_MIPS_CPUINFO) += cpuinfo.o
 obj-$(CONFIG_CMD_BOOTM)	+= bootm.o
 
 obj-y += elf.o
+obj-y += kexec-mips.o kexec-elf-mips.o
