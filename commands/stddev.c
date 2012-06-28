@@ -22,7 +22,7 @@
 #include <common.h>
 #include <init.h>
 
-static ssize_t zero_read(struct cdev *cdev, void *buf, size_t count, ulong offset, ulong flags)
+static ssize_t zero_read(struct cdev *cdev, void *buf, size_t count, loff_t offset, ulong flags)
 {
 	memset(buf, 0, count);
 	return count;
@@ -50,7 +50,7 @@ static int zero_init(void)
 
 device_initcall(zero_init);
 
-static ssize_t full_read(struct cdev *cdev, void *buf, size_t count, ulong offset, ulong flags)
+static ssize_t full_read(struct cdev *cdev, void *buf, size_t count, loff_t offset, ulong flags)
 {
 	memset(buf, 0xff, count);
 	return count;
@@ -78,7 +78,7 @@ static int full_init(void)
 
 device_initcall(full_init);
 
-static ssize_t null_write(struct cdev *cdev, const void *buf, size_t count, ulong offset, ulong flags)
+static ssize_t null_write(struct cdev *cdev, const void *buf, size_t count, loff_t offset, ulong flags)
 {
 	return count;
 }
