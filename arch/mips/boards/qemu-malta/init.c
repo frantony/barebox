@@ -34,6 +34,7 @@
 static int malta_mem_init(void)
 {
 	barebox_add_memory_bank("ram0", 0xa0000000, SZ_256M);
+	barebox_add_memory_bank("cram0", 0x80000000, SZ_256M);
 
 	return 0;
 }
