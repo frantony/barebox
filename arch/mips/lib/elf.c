@@ -9,11 +9,21 @@
 
 static int do_bootm_elf(struct image_data *data)
 {
+	void (*barebox)(int a0, int a1, int a2, int a3);
 	extern int my_load(char *kernel, unsigned long kexec_flags);
 
 	printf("\ndo_bootm_elf()\n\n");
 
 	my_load(data->os_file, 0);
+
+	barebox = (void *)0x8041acc0;
+
+	printf("\njumping to %p\n\n", barebox);
+	barebox(2,              /* number of arguments? */
+                0x80002000,
+                0x80002008,
+                0x10000000      /* no matter */
+                );
 
 	/* unreachable(); */
 	return -1;
