@@ -62,6 +62,10 @@ LEAF(mach_init_lowlevel)
 	lui	t0, 0x5e00
 	sw	t0, 136(t1) /* GT_PCI0M1HD */
 
+	/* make KSEG0 uncached */
+	li	t0, CONF_CM_UNCACHED
+	mtc0	t0, CP0_CONFIG
+
 	/* return */
 	b	mach_init_lowlevel_return
 	 nop
