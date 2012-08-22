@@ -5,7 +5,6 @@ export PATH=/env/bin
 global hostname=generic
 global user=none
 global autoboot_timeout=3
-global boot.default=net
 global allow_color=true
 global linux.bootargs.base
 #linux.bootargs.dyn.* will be clearer at the beginning of boot
