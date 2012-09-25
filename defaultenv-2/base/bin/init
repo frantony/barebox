@@ -5,11 +5,11 @@ export PATH=/env/bin
 global hostname=generic
 global user=none
 global autoboot_timeout=3
-global boot.default=net
 global allow_color=true
 global linux.bootargs.base
-global linux.bootargs.ip
-global linux.bootargs.root
+#linux.bootargs.dyn.* will be clearer at the beginning of boot
+global linux.bootargs.dyn.ip
+global linux.bootargs.dyn.root
 global editcmd=sedit
 
 /env/init/general

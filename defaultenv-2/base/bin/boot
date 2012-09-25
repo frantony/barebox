@@ -10,10 +10,27 @@ $0 [OPTIONS] [source]\n
  -l  list boot sources\n
  -h  help"
 
+. /env/data/ansi-colors
+
 for i in /env/boot/*; do
 	basename $i s
 	sources="$sources$s "
 done
+
+if [ -d /env/boot.d ]; then
+	sources="$sources\n\nboot sequence:"
+	for i in /env/boot.d/*; do
+		readlink -f $i s
+		basename $s link
+		basename $i s
+		sources="$sources\n ${YELLOW}${s}${NC} -> ${CYAN}${link}${NC}"
+	done
+	sequence=y
+else
+	sources="$sources\n\nboot sequence:\nnone"
+	echo -e "${RED}WARNING: boot sequence: none${NC}"
+	sequence=n
+fi
 
 while getopt "vdhl" opt; do
 	if [ ${opt} = v ]; then
@@ -23,7 +40,7 @@ while getopt "vdhl" opt; do
 			verbose="-v"
 		fi
 	elif [ ${opt} = d ]; then
-		dryrun=1
+		dryrun="-d"
 	elif [ ${opt} = l ]; then
 		echo -e "boot sources:\n$sources"
 		exit 0
@@ -33,18 +50,44 @@ while getopt "vdhl" opt; do
 	fi
 done
 
-if [ $# = 0 ]; then
-	scr="$global.boot.default"
-else
-	scr="$1"
+# clear linux.bootargs.dyn.* and bootm.*
+global -r linux.bootargs.dyn.
+global -r bootm.
+
+if [ $# != 0 ]; then
+	sequence=n
 fi
 
-if [ -n "$scr" ]; then
-	if [ ! -f /env/boot/$scr ]; then
-		echo -e "/env/boot/$scr does not exist.Valid choices:\n$sources"
+if [ "$sequence" = y ]; then
+	if [ ! -d /env/boot.d ]; then
+		echo -e "${GREEN}boot sequence ${RED}none${NC}"
+		exit 1
+	fi
+	echo -e "${GREEN}Start boot sequence${NC}"
+	for i in /env/boot.d/*; do
+		readlink -f $i s
+		basename $s link
+		basename $i s
+		msg="${GREEN}boot${NC} ${YELLOW}${s}${NC} -> ${CYAN}${link}${NC}"
+		echo -e "${msg}"
+		boot $dryrun $s
+		echo -e "${msg} ${RED}failled${NC}"
+		ret=$?
+	done
+	echo -e "${GREEN}boot sequence ${RED}failed${NC}"
+	exit $ret
+else
+	file=$1
+	scr=
+	echo -e "${GREEN}booting ${YELLOW}$file${NC}"
+	[ -f /env/boot.d/$file ] && scr=/env/boot.d/$file
+	[ -f /env/boot/$file ] && scr=/env/boot/$file
+
+	if [ -z "$scr" ]; then
+		echo -e "/env/boot/$file or /env/boot.d/$file does not exist. Valid choices:\n$sources"
 		exit
 	fi
-	/env/boot/$scr
+	$scr
 fi
 
 if [ -n "$dryrun" ]; then

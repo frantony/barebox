@@ -10,6 +10,3 @@ global.user=sha
 
 # timeout in seconds before the default boot entry is started
 global.autoboot_timeout=3
-
-# default boot entry (one of /env/boot/*)
-global.boot.default=net
