@@ -151,9 +151,13 @@ static const struct unlock_addr  unlock_addrs[] = {
 #define CFI_DEVICETYPE_X64 (64 / 8)
 
 #define CFI_MFR_AMD		0x0001
+#define CFI_MFR_ST		0x0020 /* STMicroelectronics */
 
 /* AMD */
 #define AM29LV040B	0x004F
+
+/* ST - www.st.com */
+#define M29W040B	0x00E3
 
 struct amd_flash_info {
 	const char *name;
@@ -188,6 +192,18 @@ static const struct amd_flash_info jedec_table[] = {
 		.mfr_id		= CFI_MFR_AMD,
 		.dev_id		= AM29LV040B,
 		.name		= "AMD AM29LV040B",
+		.devtypes	= CFI_DEVICETYPE_X8,
+		.uaddr		= MTD_UADDR_0x0555_0x02AA,
+		.dev_size	= SIZE_512KiB,
+		.cmd_set	= P_ID_AMD_STD,
+		.nr_regions	= 1,
+		.regions	= {
+			ERASEINFO(0x10000,8),
+		}
+	}, {
+		.mfr_id		= CFI_MFR_ST,
+		.dev_id		= M29W040B,
+		.name		= "ST M29W040B",
 		.devtypes	= CFI_DEVICETYPE_X8,
 		.uaddr		= MTD_UADDR_0x0555_0x02AA,
 		.dev_size	= SIZE_512KiB,
