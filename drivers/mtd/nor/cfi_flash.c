@@ -1175,13 +1175,11 @@ static inline void fill_info(struct flash_info *info, const struct amd_flash_inf
 		total_size += erase_region_size * erase_region_count;
 		debug("erase_region_count = %ld erase_region_size = %ld\n",
 		       erase_region_count, erase_region_size);
-#define CONFIG_SYS_MAX_FLASH_SECT 128
+		info->eraseregions = xzalloc(sizeof(*(info->eraseregions)) * erase_region_count);
+		info->start = xrealloc(info->start, sizeof(ulong) * (erase_region_count + sect_cnt));
+		info->protect = xrealloc(info->protect, sizeof(uchar) * (erase_region_count + sect_cnt));
 		for (j = 0; j < erase_region_count; j++) {
-			if (sect_cnt >= CONFIG_SYS_MAX_FLASH_SECT) {
-				printf("ERROR: too many flash sectors\n");
-				break;
-			}
-//			info->start[sect_cnt] = base;
+			info->start[sect_cnt] = base;
 			base += (erase_region_size * size_ratio);
 			sect_cnt++;
 		}
