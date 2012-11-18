@@ -38,6 +38,7 @@
 #endif /* CONFIG_DEBUG_LL */
 
 #define UART_THR	(0x0 << DEBUG_LL_UART_SHIFT)
+#define UART_RBR	(0x0 << DEBUG_LL_UART_SHIFT)
 #define UART_DLL	(0x0 << DEBUG_LL_UART_SHIFT)
 #define UART_DLM	(0x1 << DEBUG_LL_UART_SHIFT)
 #define UART_LCR	(0x3 << DEBUG_LL_UART_SHIFT)
@@ -46,6 +47,7 @@
 #define UART_LCR_W	0x07		/* Set UART to 8,N,2 & DLAB = 0 */
 #define UART_LCR_DLAB	0x87	/* Set UART to 8,N,2 & DLAB = 1 */
 
+#define UART_LSR_DR     0x01    /* UART received data present */
 #define UART_LSR_THRE	0x20	/* Xmit holding register empty */
 
 #ifndef __ASSEMBLY__
@@ -86,9 +88,8 @@ static __inline__ void PUTC_LL(char ch)
 /*
  * output a character in a0
  */
-.macro	debug_ll_ns16550_outc chr
+.macro	debug_ll_ns16550_outc_a0
 #ifdef CONFIG_DEBUG_LL
-	li	a0, \chr
 	la	t0, DEBUG_LL_UART_ADDR
 
 1:	lbu	t1, UART_LSR(t0)	/* get line status */
@@ -102,12 +103,104 @@ static __inline__ void PUTC_LL(char ch)
 .endm
 
 /*
+ * output a character
+ */
+.macro	debug_ll_ns16550_outc chr
+#ifdef CONFIG_DEBUG_LL
+	li	a0, \chr
+	debug_ll_ns16550_outc_a0
+#endif /* CONFIG_DEBUG_LL */
+.endm
+
+/*
  * output CR + NL
  */
 .macro	debug_ll_ns16550_outnl
 #ifdef CONFIG_DEBUG_LL
 	debug_ll_ns16550_outc '\r'
 	debug_ll_ns16550_outc '\n'
+#endif /* CONFIG_DEBUG_LL */
+.endm
+
+/*
+ * output a hex digit
+ */
+.macro debug_ll_ns16550_outhexd
+#ifdef CONFIG_DEBUG_LL
+	andi	a0, a0, 15
+
+	blt	a0, 10, 1f
+	 nop
+
+	addi	a0, a0, ('a' - '9' - 1)
+
+1:	addi	a0, a0, '0'
+
+	debug_ll_ns16550_outc_a0
+#endif /* CONFIG_DEBUG_LL */
+.endm
+
+/*
+ * output a 32-bit value in hex
+ */
+.macro debug_ll_ns16550_outhexw
+#ifdef CONFIG_DEBUG_LL
+	move	t6, a0
+
+	srl	a0, t6, 28
+	debug_ll_ns16550_outhexd
+
+	srl	a0, t6, 24
+	debug_ll_ns16550_outhexd
+
+	srl	a0, t6, 20
+	debug_ll_ns16550_outhexd
+
+	srl	a0, t6, 16
+	debug_ll_ns16550_outhexd
+
+	srl	a0, t6, 12
+	debug_ll_ns16550_outhexd
+
+	srl	a0, t6, 8
+	debug_ll_ns16550_outhexd
+
+	srl	a0, t6, 4
+	debug_ll_ns16550_outhexd
+
+	move	a0, t6
+	debug_ll_ns16550_outhexd
+#endif /* CONFIG_DEBUG_LL */
+.endm
+
+/*
+ * get character to v0
+ */
+.macro	debug_ll_ns16550_getc
+#ifdef CONFIG_DEBUG_LL
+	la      t0, DEBUG_LL_UART_ADDR
+
+1:	lbu	t1, UART_LSR(t0)	# get line status
+	andi	t1, t1, UART_LSR_DR # check for data present
+	beqz	t1, 1b			# try again
+	 nop
+
+	lbu	v0, UART_RBR(t0)	# read a character
+#endif /* CONFIG_DEBUG_LL */
+.endm
+
+/*
+ * check character in input buffer
+ * return value:
+ *  v0 = 0   no character in input buffer
+ *  v0 != 0  character in input buffer
+ */
+.macro	debug_ll_ns16550_check_char
+#ifdef CONFIG_DEBUG_LL
+	la      t0, DEBUG_LL_UART_ADDR
+
+	lbu	t1, UART_LSR(t0)	# get line status
+	andi	v0, t1, UART_LSR_DR # check for data present
 #endif /* CONFIG_DEBUG_LL */
 .endm
 #endif /* __ASSEMBLY__ */

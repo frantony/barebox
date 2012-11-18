@@ -245,7 +245,42 @@ config CMD_MIPS_CPUINFO
 	  Say yes here to get a cpuinfo command to show some
 	  information about the cpu model.
 
+config NMON
+	bool "nmon"
+	depends on HAS_NMON
+	depends on DEBUG_LL
+	help
+	  Say yes here to add the nmon to pbl.
+	  nmon -- nano-monitor program for the MIPS processors.
+	  It can operate with NO working RAM, using only
+	  the processor registers.
+
+config NMON_USER_START
+	bool "'press any key to start nmon' dialog"
+	depends on NMON
+	help
+	  Say yes here to get the 'press any key to start nmon'
+	  dialog on start.
+
+config NMON_USER_START_DELAY
+	prompt "'press any key to start nmon' dialog delay"
+	depends on NMON_USER_START
+	hex
+	default 3
+	help
+	  Select the delay interval for nmon 'press any key to start nmon' dialog.
+
+config NMON_HELP
+	bool "nmon help message"
+	depends on NMON
+	help
+	  Say yes here to get the nmon commands message on
+	  every nmon start.
+
 endmenu
+
+config HAS_NMON
+	bool
 
 source common/Kconfig
 source commands/Kconfig
