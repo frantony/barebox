@@ -818,8 +818,13 @@ static void cfi_info (struct device_d* dev)
 
 	printf ("CFI conformant FLASH (%d x %d)",
 		(info->portwidth << 3), (info->chipwidth << 3));
-	printf ("  Size: %ld MB in %d Sectors\n",
-		info->size >> 20, info->sector_count);
+	printf ("  Size: ");
+	if ((info->size >> 20) > 0) {
+		printf ("  %ld MB", info->size >> 20);
+	} else {
+		printf ("  %ld KB", info->size >> 10);
+	}
+	printf (" in %d Sectors\n", info->sector_count);
 	printf ("  ");
 	switch (info->vendor) {
 		case CFI_CMDSET_INTEL_STANDARD:
