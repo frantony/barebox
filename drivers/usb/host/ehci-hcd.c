@@ -33,6 +33,7 @@
 #include "ehci.h"
 
 struct ehci_priv {
+	struct device_d *dev;
 	int rootdev;
 	struct ehci_hccr *hccr;
 	struct ehci_hcor *hcor;
@@ -425,6 +426,27 @@ static inline int min3(int a, int b, int c)
 	return a;
 }
 
+#ifdef CONFIG_MACH_EFIKA_MX_SMARTBOOK
+#include <usb/ulpi.h>
+/*
+ * Add support for setting CHRGVBUS to workaround a hardware bug on efika mx/sb
+ * boards.
+ * See http://lists.infradead.org/pipermail/linux-arm-kernel/2011-January/037341.html
+ */
+void ehci_powerup_fixup(struct ehci_priv *ehci)
+{
+	void *viewport = (void *)ehci->hcor + 0x30;
+
+	if (ehci->dev->id > 0)
+		ulpi_write(ULPI_OTG_CHRG_VBUS, ULPI_OTGCTL + ULPI_REG_SET,
+				viewport);
+}
+#else
+static inline void ehci_powerup_fixup(struct ehci_priv *ehci)
+{
+}
+#endif
+
 static int
 ehci_submit_root(struct usb_device *dev, unsigned long pipe, void *buffer,
 		 int length, struct devrequest *req)
@@ -610,7 +632,10 @@ ehci_submit_root(struct usb_device *dev, unsigned long pipe, void *buffer,
 				 * usb 2.0 specification say 50 ms resets on
 				 * root
 				 */
+				ehci_powerup_fixup(ehci);
+
 				wait_ms(50);
+
 				ehci->portreset |= 1 << le16_to_cpu(req->index);
 				/* terminate the reset */
 				ehci_writel(status_reg, reg & ~EHCI_PS_PR);
@@ -816,6 +841,8 @@ int ehci_register(struct device_d *dev, struct ehci_data *data)
 	ehci = xzalloc(sizeof(struct ehci_priv));
 	host = &ehci->host;
 	dev->priv = ehci;
+	ehci->dev = dev;
+
 	ehci->flags = data->flags;
 	ehci->hccr = data->hccr;
 	ehci->hcor = data->hcor;
