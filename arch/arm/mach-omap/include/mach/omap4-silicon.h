@@ -92,7 +92,7 @@
 #define OMAP44XX_SCRM_AUXCLK3           (OMAP44XX_SCRM_BASE + 0x31c)
 
 /* 32KTIMER */
-#define OMAP_32KTIMER_BASE		(OMAP44XX_L4_WKUP_BASE + 0x4000)
+#define OMAP44XX_32KTIMER_BASE		(OMAP44XX_L4_WKUP_BASE + 0x4000)
 
 /* MMC */
 #define OMAP44XX_MMC1_BASE		(OMAP44XX_L4_PER_BASE + 0x09C100)
@@ -117,7 +117,7 @@
 #define OMAP44XX_GPIO6_BASE		(OMAP44XX_L4_PER_BASE  + 0x5D100)
 
 /* GPMC */
-#define OMAP_GPMC_BASE		0x50000000
+#define OMAP44XX_GPMC_BASE		0x50000000
 
 /* DMM */
 #define OMAP44XX_DMM_BASE		0x4E000000
@@ -147,20 +147,11 @@
  */
 
 /* PRM */
-#define PRM_BASE		0x4A306000
-#define PRM_DEVICE_BASE		(PRM_BASE + 0x1B00)
+#define OMAP44XX_PRM_BASE		0x4A306000
+#define OMAP44XX_PRM_DEVICE_BASE	(OMAP44XX_PRM_BASE + 0x1B00)
 
-#define PRM_RSTCTRL		PRM_DEVICE_BASE
-#define PRM_RSTCTRL_RESET	0x01
-
-#ifndef __ASSEMBLY__
-
-struct s32ktimer {
-	unsigned char res[0x10];
-	unsigned int s32k_cr;	/* 0x10 */
-};
-
-#endif /* __ASSEMBLY__ */
+#define OMAP44XX_PRM_RSTCTRL		OMAP44XX_PRM_DEVICE_BASE
+#define OMAP44XX_PRM_RSTCTRL_RESET	0x01
 
 /*
  * Non-secure SRAM Addresses
@@ -193,6 +184,8 @@ struct s32ktimer {
 #define OMAP4460_ES1_0	6
 #define OMAP4460_ES1_1	7
 
+#ifndef __ASSEMBLY__
+
 struct ddr_regs {
 	u32 tim1;
 	u32 tim2;
@@ -212,5 +205,7 @@ void omap4_ddr_init(const struct ddr_regs *, const struct dpll_param *);
 void omap4_power_i2c_send(u32);
 unsigned int omap4_revision(void);
 noinline int omap4_scale_vcores(unsigned vsel0_pin);
+
+#endif
 
 #endif

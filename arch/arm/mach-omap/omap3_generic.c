@@ -30,12 +30,13 @@
 #include <common.h>
 #include <init.h>
 #include <io.h>
-#include <mach/silicon.h>
+#include <mach/omap3-silicon.h>
 #include <mach/gpmc.h>
 #include <mach/sdrc.h>
 #include <mach/control.h>
 #include <mach/omap3-smx.h>
 #include <mach/clocks.h>
+#include <mach/omap3-clock.h>
 #include <mach/wdt.h>
 #include <mach/sys_info.h>
 #include <mach/syslib.h>
@@ -52,7 +53,7 @@
  */
 void __noreturn reset_cpu(unsigned long addr)
 {
-	writel(PRM_RSTCTRL_RESET, PRM_REG(RSTCTRL));
+	writel(OMAP3_PRM_RSTCTRL_RESET, PRM_REG(RSTCTRL));
 
 	while (1);
 }
@@ -201,25 +202,6 @@ EXPORT_SYMBOL(get_sdr_cs1_base);
 inline u32 get_sysboot_value(void)
 {
 	return (0x0000003F & readl(CONTROL_REG(STATUS)));
-}
-
-/**
- * @brief Return the current CS0 base address
- *
- * Return current address hardware will be
- * fetching from. The below effectively gives what is correct, its a bit
- * mis-leading compared to the TRM.  For the most general case the mask
- * needs to be also taken into account this does work in practice.
- *
- * @return  base address
- */
-u32 get_gpmc0_base(void)
-{
-	u32 b;
-	b = readl(GPMC_REG(CONFIG7_0));
-	b &= 0x1F;		/* keep base [5:0] */
-	b = b << 24;		/* ret 0x0b000000 */
-	return b;
 }
 
 /**

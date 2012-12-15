@@ -44,7 +44,7 @@
 #define OMAP_SMX_APE_BASE	0x68000000
 #define OMAP_SMS_BASE		0x6C000000
 #define OMAP_SDRC_BASE		0x6D000000
-#define OMAP_GPMC_BASE		0x6E000000
+#define OMAP3_GPMC_BASE		0x6E000000
 
 /** Peripheral Base Addresses */
 #define OMAP_CTRL_BASE		(OMAP_L4_CORE_BASE + 0x02000)
@@ -74,7 +74,7 @@
 #define OMAP_WDTIMER2_BASE	(OMAP_L4_WKUP_BASE + 0x14000)
 #define OMAP_WDTIMER3_BASE	(OMAP_L4_PER_BASE + 0x30000)
 
-#define OMAP_32KTIMER_BASE	(OMAP_L4_WKUP_BASE + 0x20000)
+#define OMAP3_32KTIMER_BASE	(OMAP_L4_WKUP_BASE + 0x20000)
 
 #define OMAP_MMC1_BASE		(OMAP_L4_CORE_BASE + 0x9C000)
 #define OMAP_MMC2_BASE		(OMAP_L4_CORE_BASE + 0xB4000)
@@ -128,7 +128,11 @@
 #define OMAP_SDRC_CS1		0xA0000000
 
 /* PRM */
-#define PRM_RSTCTRL_RESET       0x04
+#define OMAP3_PRM_RSTCTRL_RESET	0x04
+
+/* If Architecture specific init functions are present */
+#ifndef __ASSEMBLY__
+void omap3_core_init(void);
+#endif /* __ASSEMBLY__ */
 
 #endif /* __ASM_ARCH_OMAP3_H */
-
