@@ -113,3 +113,18 @@ struct resource *request_iomem_region(const char *name,
 {
 	return request_region(&iomem_resource, name, start, end);
 }
+
+struct resource *create_resource(const char *name,
+	resource_size_t start, resource_size_t end)
+{
+	struct resource *t;
+
+	t = xzalloc(sizeof *t);
+	INIT_LIST_HEAD(&t->children);
+	t->parent = NULL;
+	t->name = xstrdup(name);
+	t->start = start;
+	t->end = end;
+
+	return t;
+}

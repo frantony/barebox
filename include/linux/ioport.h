@@ -128,6 +128,8 @@ struct resource *request_region(struct resource *parent,
 		resource_size_t size);
 
 int release_region(struct resource *res);
+struct resource *create_resource(const char *name,
+	resource_size_t start, resource_size_t end);
 
 extern struct resource iomem_resource;
 
