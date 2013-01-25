@@ -48,4 +48,8 @@ config DRIVER_SPI_OMAP3
 
 endif
 
+config DRIVER_SPI_ATH933X
+	bool "Atheros 933x SPI bit-bang controller"
+	depends on SPI
+
 endmenu
