@@ -72,6 +72,9 @@ LDFLAGS_barebox += -nostdlib
 machine-$(CONFIG_MACH_MIPS_MALTA)	:= malta
 board-$(CONFIG_BOARD_QEMU_MALTA)	:= qemu-malta
 
+machine-$(CONFIG_MACH_MIPS_AR531X)	:= ar531x
+board-$(CONFIG_BOARD_NETGEAR_WG102)	:= netgear-wg102
+
 machine-$(CONFIG_MACH_MIPS_BCM47XX)	:= bcm47xx
 board-$(CONFIG_BOARD_DLINK_DIR320)	:= dlink-dir-320
 

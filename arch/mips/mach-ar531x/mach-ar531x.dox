@@ -1,0 +1,7 @@
+/** @page dev_ar531x_mach AR531x in barebox
+
+@section ar531x_boards AR531x-based boards
+
+@li @subpage netgear-wg102
+
+*/
