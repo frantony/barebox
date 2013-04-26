@@ -1,0 +1,6 @@
+if BOARD_AINOL_NOVO7_PALADIN
+
+config BOARDINFO
+	default "Ainol Novo7 Paladin"
+
+endif
