@@ -7,6 +7,9 @@ config ARCH_TEXT_BASE
 config CPU_JZ4755
 	bool
 
+config CPU_JZ4770
+	bool
+
 choice
 	prompt "Board type"
 
