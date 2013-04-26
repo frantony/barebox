@@ -18,8 +18,13 @@ config BOARD_RZX50
 	select HAS_POWEROFF
 	select CPU_JZ4755
 
+config BOARD_AINOL_NOVO7_PALADIN
+	bool "Ainol Novo7 Paladin"
+	select CPU_JZ4770
+
 endchoice
 
 source arch/mips/boards/rzx50/Kconfig
+source arch/mips/boards/ainol-novo7-paladin/Kconfig
 
 endif

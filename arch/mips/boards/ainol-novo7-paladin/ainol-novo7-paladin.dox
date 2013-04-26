@@ -1,0 +1,19 @@
+/** @page ainol_novo7_paladin Ainol Novo7 Paladin
+
+@li Ingenic JZ4770 SoC;
+@li 512 MiB SDRAM;
+@li GiB NAND type Flash Memory;
+@li RS232 serial interface (LV-TTL levels on the board!);
+@li touchscreen (800x480);
+@li 1xUSB interface;
+@li buttons.
+
+The tablet uses X-Boot (Ingenic's not interactive U-Boot) as bootloader.
+
+Ainol Novo7 Paladin links:
+
+FIXME: need datasheets
+@li ftp://ftp.ingenic.cn/2soc/4755/JZ4755_ds.pdf
+@li ftp://ftp.ingenic.cn/3sw/01linux/01loader/u-boot/u-boot-1.1.6-jz-20110719-r1728-add-jz4770.patch.bz2
+
+*/
