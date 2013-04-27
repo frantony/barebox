@@ -13,6 +13,7 @@
 #ifndef __JZ4750D_REGS_H__
 #define __JZ4750D_REGS_H__
 
+#define JZ4755_CPM_BASE_ADDR	0xb0000000
 #define TCU_BASE        0xb0002000
 #define WDT_BASE        0xb0002000
 #define RTC_BASE        0xb0003000
