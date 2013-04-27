@@ -53,6 +53,8 @@ config MACH_MIPS_XBURST
 	select SYS_SUPPORTS_32BIT_KERNEL
 	select DRIVER_SERIAL_NS16550
 	select HAS_DEBUG_LL
+	select CLKDEV_LOOKUP
+	select COMMON_CLK
 endchoice
 
 source arch/mips/mach-malta/Kconfig
