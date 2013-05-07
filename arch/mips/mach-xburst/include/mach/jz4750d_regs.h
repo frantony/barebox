@@ -15,7 +15,6 @@
 
 #define JZ4755_CPM_BASE_ADDR	0xb0000000
 #define TCU_BASE        0xb0002000
-#define TCU_OST_BASE	(TCU_BASE + 0xe0)
 #define WDT_BASE        0xb0002000
 #define RTC_BASE        0xb0003000
 #define UART1_BASE      0xb0031000
@@ -41,6 +40,22 @@
  #define TCU_TSCR_STPC2		(1 << 2)
  #define TCU_TSCR_STPC1		(1 << 1)
  #define TCU_TSCR_STPC0		(1 << 0)
+
+/* Operating System Timer */
+#define TCU_OSTDR	(TCU_BASE + 0xe0)
+#define TCU_OSTCNT      (TCU_BASE + 0xe8)
+#define TCU_OSTCSR	(TCU_BASE + 0xec)
+#define TCU_OSTCSR_PRESCALE_BIT		3
+#define TCU_OSTCSR_PRESCALE_MASK	(0x7 << TCU_OSTCSR_PRESCALE_BIT)
+ #define TCU_OSTCSR_PRESCALE1		(0x0 << TCU_OSTCSR_PRESCALE_BIT)
+ #define TCU_OSTCSR_PRESCALE4		(0x1 << TCU_OSTCSR_PRESCALE_BIT)
+ #define TCU_OSTCSR_PRESCALE16		(0x2 << TCU_OSTCSR_PRESCALE_BIT)
+ #define TCU_OSTCSR_PRESCALE64		(0x3 << TCU_OSTCSR_PRESCALE_BIT)
+ #define TCU_OSTCSR_PRESCALE256		(0x4 << TCU_OSTCSR_PRESCALE_BIT)
+ #define TCU_OSTCSR_PRESCALE1024	(0x5 << TCU_OSTCSR_PRESCALE_BIT)
+#define TCU_OSTCSR_EXT_EN		(1 << 2) /* select extal as the timer clock input */
+#define TCU_OSTCSR_RTC_EN		(1 << 1) /* select rtcclk as the timer clock input */
+#define TCU_OSTCSR_PCK_EN		(1 << 0) /* select pclk as the timer clock input */
 
 /*************************************************************************
  * WDT (WatchDog Timer)
