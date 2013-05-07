@@ -17,6 +17,7 @@
 #define TCU_BASE        0xb0002000
 #define WDT_BASE        0xb0002000
 #define RTC_BASE        0xb0003000
+#define JZ4755_GPIO_BASE_ADDR   0xb0010000
 #define UART1_BASE      0xb0031000
 
 /*************************************************************************
