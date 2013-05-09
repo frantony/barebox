@@ -1,16 +1,27 @@
-#define JZ4740_GPIO_BASE_A (32*0)
-#define JZ4740_GPIO_BASE_B (32*1)
-#define JZ4740_GPIO_BASE_C (32*2)
-#define JZ4740_GPIO_BASE_D (32*3)
+/*
+ * Copyright (C) 2013 Antony Pavlov <antonynpavlov@gmail.com>
+ *
+ * Based on Linux JZ4740 platform GPIO support:
+ * Copyright (C) 2009-2010, Lars-Peter Clausen <lars@metafoo.de>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
-#define JZ4740_GPIO_NUM_A 32
-#define JZ4740_GPIO_NUM_B 32
-#define JZ4740_GPIO_NUM_C 31
-#define JZ4740_GPIO_NUM_D 32
+#include <common.h>
+#include <init.h>
+#include <io.h>
+//#include <gpio.h>
+#include <mach/pinctrl.h>
 
-#define JZ_REG_GPIO_MASK		0x20
-#define JZ_REG_GPIO_MASK_SET		0x24
-#define JZ_REG_GPIO_MASK_CLEAR		0x28
 #define JZ_REG_GPIO_PULL		0x30
 #define JZ_REG_GPIO_PULL_SET		0x34
 #define JZ_REG_GPIO_PULL_CLEAR		0x38
@@ -23,30 +34,17 @@
 #define JZ_REG_GPIO_TRIGGER		0x70
 #define JZ_REG_GPIO_TRIGGER_SET		0x74
 #define JZ_REG_GPIO_TRIGGER_CLEAR	0x78
-#define JZ_REG_GPIO_FLAG		0x80
-#define JZ_REG_GPIO_FLAG_CLEAR		0x14
 
 #define GPIO_TO_BIT(gpio) BIT(gpio & 0x1f)
-#define GPIO_TO_REG(gpio, reg) (gpio_to_jz_gpio_chip(gpio)->base + (reg))
+#define GPIO_TO_REG(gpio, reg) (gpio_to_jz_gpio_base(gpio) + (reg))
 
-struct jz_gpio_chip {
-	uint32_t edge_trigger_both;
+static void __iomem *base;
+/* static int maxbank; */
+/* static int bank_reg_size; */
 
-	void __iomem *base;
-
-	struct gpio_chip gpio_chip;
-};
-
-static struct jz_gpio_chip jz4740_gpio_chips[];
-
-static inline struct jz_gpio_chip *gpio_to_jz_gpio_chip(unsigned int gpio)
+static inline void *gpio_to_jz_gpio_base(unsigned int gpio)
 {
-	return &jz4740_gpio_chips[gpio >> 5];
-}
-
-static inline struct jz_gpio_chip *gpio_chip_to_jz_gpio_chip(struct gpio_chip *gpio_chip)
-{
-	return container_of(gpio_chip, struct jz_gpio_chip, gpio_chip);
+	return base + 0x100 * (gpio >> 5);
 }
 
 static inline void jz_gpio_write_bit(unsigned int gpio, unsigned int reg)
@@ -90,15 +88,14 @@ void jz_gpio_disable_pullup(unsigned gpio)
 {
 	jz_gpio_write_bit(gpio, JZ_REG_GPIO_PULL_SET);
 }
-EXPORT_SYMBOL_GPL(jz_gpio_disable_pullup);
 
+#if 0
 int jz_gpio_port_direction_input(int port, uint32_t mask)
 {
 	writel(mask, GPIO_TO_REG(port, JZ_REG_GPIO_DIRECTION_CLEAR));
 
 	return 0;
 }
-EXPORT_SYMBOL(jz_gpio_port_direction_input);
 
 int jz_gpio_port_direction_output(int port, uint32_t mask)
 {
@@ -106,7 +103,6 @@ int jz_gpio_port_direction_output(int port, uint32_t mask)
 
 	return 0;
 }
-EXPORT_SYMBOL(jz_gpio_port_direction_output);
 
 void jz_gpio_port_set_value(int port, uint32_t value, uint32_t mask)
 {
@@ -120,18 +116,9 @@ uint32_t jz_gpio_port_get_value(int port, uint32_t mask)
 
 	return value & mask;
 }
+#endif
 
-#define JZ4740_GPIO_CHIP(_bank) { \
-	.gpio_chip = { \
-		.label = "Bank " # _bank, \
-		.base = JZ4740_GPIO_BASE_ ## _bank, \
-		.ngpio = JZ4740_GPIO_NUM_ ## _bank, \
-	}, \
+void jz_pinctrl_init(void __iomem *jz_base)
+{
+	base = jz_base;
 }
-
-static struct jz_gpio_chip jz4740_gpio_chips[] = {
-	JZ4740_GPIO_CHIP(A),
-	JZ4740_GPIO_CHIP(B),
-	JZ4740_GPIO_CHIP(C),
-	JZ4740_GPIO_CHIP(D),
-};
