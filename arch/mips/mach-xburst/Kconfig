@@ -17,6 +17,8 @@ config BOARD_RZX50
 	bool "Ritmix RZX-50"
 	select HAS_POWEROFF
 	select CPU_JZ4755
+	select HAVE_PBL_IMAGE
+	select HAVE_IMAGE_COMPRESSION
 
 config BOARD_AINOL_NOVO7_PALADIN
 	bool "Ainol Novo7 Paladin"
