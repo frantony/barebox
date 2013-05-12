@@ -1,0 +1,54 @@
+if ARCH_MVEBU
+
+config ARCH_TEXT_BASE
+	hex
+	default 0x2000000 if MACH_PLATHOME_OPENBLOCKS_AX3
+	default 0x2000000 if MACH_GLOBALSCALE_MIRABOX
+	default 0x2000000 if MACH_MARVELL_ARMADA_XP_GP
+
+config BOARDINFO
+	default "PlatHome OpenBlocks AX3" if MACH_PLATHOME_OPENBLOCKS_AX3
+	default "Globalscale Mirabox" if MACH_GLOBALSCALE_MIRABOX
+	default "Marvell Armada XP GP" if MACH_MARVELL_ARMADA_XP_GP
+
+choice
+	prompt "Marvell EBU Processor"
+
+config ARCH_ARMADA_370
+	bool "Armada 370"
+	select CPU_V7
+
+config ARCH_ARMADA_XP
+	bool "Armada XP"
+	select CPU_V7
+
+endchoice
+
+if ARCH_ARMADA_370
+
+choice
+	prompt "Armada 370 Board Type"
+
+config MACH_GLOBALSCALE_MIRABOX
+	bool "Globalscale Mirabox"
+
+endchoice
+
+endif # ARCH_ARMADA_370
+
+if ARCH_ARMADA_XP
+
+choice
+	prompt "Armada XP Board Type"
+
+config MACH_PLATHOME_OPENBLOCKS_AX3
+	bool "PlatHome OpenBlocks AX3"
+
+config MACH_MARVELL_ARMADA_XP_GP
+	bool "Marvell Armada XP GP"
+
+endchoice
+
+endif # ARCH_ARMADA_XP
+
+endif # ARCH_MVEBU

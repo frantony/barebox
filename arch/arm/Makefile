@@ -58,6 +58,7 @@ machine-$(CONFIG_ARCH_EP93XX)		:= ep93xx
 machine-$(CONFIG_ARCH_HIGHBANK)		:= highbank
 machine-$(CONFIG_ARCH_IMX)		:= imx
 machine-$(CONFIG_ARCH_MXS)		:= mxs
+machine-$(CONFIG_ARCH_MVEBU)		:= mvebu
 machine-$(CONFIG_ARCH_NOMADIK)		:= nomadik
 machine-$(CONFIG_ARCH_NETX)		:= netx
 machine-$(CONFIG_ARCH_OMAP)		:= omap
@@ -101,10 +102,12 @@ board-$(CONFIG_MACH_EUKREA_CPUIMX51SD)		:= eukrea_cpuimx51
 board-$(CONFIG_MACH_FREESCALE_MX25_3STACK)	:= freescale-mx25-3-stack
 board-$(CONFIG_MACH_FREESCALE_MX35_3STACK)	:= freescale-mx35-3-stack
 board-$(CONFIG_MACH_GE863)			:= telit-evk-pro3
+board-$(CONFIG_MACH_GLOBALSCALE_MIRABOX)        := globalscale-mirabox
 board-$(CONFIG_MACH_HIGHBANK)			:= highbank
 board-$(CONFIG_MACH_IMX21ADS)			:= imx21ads
 board-$(CONFIG_MACH_IMX27ADS)			:= imx27ads
 board-$(CONFIG_MACH_IMX233_OLINUXINO)	:= imx233-olinuxino
+board-$(CONFIG_MACH_MARVELL_ARMADA_XP_GP)	:= marvell-armada-xp-gp
 board-$(CONFIG_MACH_MIOA701)			:= mioa701
 board-$(CONFIG_MACH_MMCCPU)			:= mmccpu
 board-$(CONFIG_MACH_NOMADIK_8815NHK)		:= nhk8815
@@ -142,6 +145,7 @@ board-$(CONFIG_MACH_GUF_CUPID)			:= guf-cupid
 board-$(CONFIG_MACH_MINI2440)			:= friendlyarm-mini2440
 board-$(CONFIG_MACH_MINI6410)			:= friendlyarm-mini6410
 board-$(CONFIG_MACH_TINY6410)			:= friendlyarm-tiny6410
+board-$(CONFIG_MACH_PLATHOME_OPENBLOCKS_AX3)	:= plathome-openblocks-ax3
 board-$(CONFIG_MACH_QIL_A9260)			:= qil-a9260
 board-$(CONFIG_MACH_TNY_A9260)			:= tny-a926x
 board-$(CONFIG_MACH_TNY_A9263)			:= tny-a926x
@@ -260,6 +264,26 @@ barebox.zynq: $(KBUILD_BINARY)
 ifeq ($(machine-y),zynq)
 KBUILD_TARGET := barebox.zynq
 KBUILD_IMAGE := barebox.zynq
+endif
+
+KWBIMAGE_OPTS = \
+	-c -i $(srctree)/$(BOARD)/kwbimage.cfg -d $(TEXT_BASE) -e $(TEXT_BASE)
+
+quiet_cmd_kwbimage = KWB     $@
+      cmd_kwbimage = scripts/kwbimage -p $< $(KWBIMAGE_OPTS) -o $@
+
+quiet_cmd_kwbimage_uart = KWBUART $@
+      cmd_kwbimage_uart = scripts/kwbimage -m uart -p $< $(KWBIMAGE_OPTS) -o $@
+
+barebox.kwb: $(KBUILD_BINARY) FORCE
+	$(call if_changed,kwbimage)
+
+barebox.kwbuart: $(KBUILD_BINARY) FORCE
+	$(call if_changed,kwbimage_uart)
+
+ifeq ($(CONFIG_ARCH_MVEBU),y)
+KBUILD_TARGET := barebox.kwb barebox.kwbuart
+KBUILD_IMAGE  := barebox.kwb barebox.kwbuart
 endif
 
 pbl := arch/arm/pbl
