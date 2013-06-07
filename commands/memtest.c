@@ -27,6 +27,9 @@
 #include <getopt.h>
 #include <asm/mmu.h>
 #include <memory.h>
+#include <malloc.h>
+#include <common.h>
+#include <errno.h>
 
 #include <memtest.h>
 
