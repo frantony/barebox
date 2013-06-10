@@ -28,6 +28,16 @@
 #include <generated/compile.h>
 #include <generated/utsrelease.h>
 
+	.macro	pbl_sleep reg count
+	.set push
+	.set noreorder
+	li	\reg, \count
+1:
+	bgtz	\reg, 1b
+	 addi	\reg, -1
+	.set	pop
+	.endm
+
 	/*
 	 * ADR macro instruction (inspired by ARM)
 	 *
