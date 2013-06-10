@@ -316,6 +316,13 @@ static int ata_detect(struct device_d *dev)
 	return ata_port_detect(port);
 }
 
+static int ata_detect_hw(struct device_d *dev)
+{
+	struct ata_port *port = dev->priv;
+
+	return ata_port_detect(port);
+}
+
 /**
  * Register an ATA drive behind an IDE like interface
  * @param dev The interface device
@@ -334,6 +341,9 @@ int ata_port_register(struct ata_port *port)
 	ret = register_device(&port->class_dev);
 	if (ret)
 		return ret;
+
+	port->dev->priv = port;
+	port->dev->detect = ata_detect_hw;
 
 	dev_add_param_bool(&port->class_dev, "probe", ata_set_probe,
 			NULL, &port->probe, port);
