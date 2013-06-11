@@ -20,6 +20,8 @@
 
 #include <mach/debug_ll.h>
 
+#include <asm/pbl_nmon.h>
+
 	.macro	board_pbl_start
 	.set	push
 	.set	noreorder
@@ -35,6 +37,8 @@
 
 	debug_ll_ns16550_outc 'a'
 	debug_ll_ns16550_outnl
+
+	mips_nmon
 
 	pbl_ar2312_x16_sdram
 	debug_ll_ns16550_outc 'b'
