@@ -53,6 +53,7 @@ config MACH_MIPS_AR231X
 	select CSRC_R4K_LIB
 	select DRIVER_SERIAL_NS16550
 	select HAS_DEBUG_LL
+	select HAS_NMON
 
 config MACH_MIPS_BCM47XX
 	bool "Broadcom BCM47xx-based boards"
