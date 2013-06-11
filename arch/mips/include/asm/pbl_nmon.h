@@ -78,12 +78,7 @@
 	move	s1, s0
 
 1:
-	/* delay_loop */
-	li	s2, 0x400000
-2:
-	bnez	s2, 2b
-	 addi	s2, s2, -1
-	/* /delay_loop */
+	pbl_sleep	s2 0x400000
 
 	nmon_outs msg_bsp
 
