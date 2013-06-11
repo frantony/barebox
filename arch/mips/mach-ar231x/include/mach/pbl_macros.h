@@ -14,7 +14,6 @@
 	bnez	k1, pllskip
 	 nop
 
-
 	/* Clear any prior AHB errors by reading both addr registers */
 	li	t0, KSEG1 | AR2312_PROCADDR
 	lw	zero, 0(t0)
@@ -27,7 +26,6 @@
 	lw	t1, (t0)
 	bgez	t1, pllskip	/* upper bit guaranteed non-0 at reset */
 	 nop
-
 
 	/* For Viper 0xbc003064 register has to be programmed with 0x91000 to
 	 * get 180Mhz Processor clock
@@ -46,8 +44,9 @@
 1:	b	1b		/* NOTREACHED */
 	 nop
 pllskip:
-.endm
 
+	.set	pop
+.endm
 
 .macro  pbl_ar2312_rst_uart0
 	.set	push
@@ -70,6 +69,8 @@ pllskip:
 	lw	t0, 0(a0)
 	and	t0, ~AR2312_CLOCKCTL_UART0
 	sw	t0, 0(a0)
+
+	.set	pop
 .endm
 
 .macro	pbl_ar2312_x16_sdram
@@ -155,6 +156,7 @@ make_beefsteak:
 	or	t2, t1, MEM_CFG1_E0
 	sw	t2, 0(a0)	/* AR2312_MEM_CFG1 */
 
+	.set	pop
 .endm
 
 #endif /* __ASM_MACH_AR2312_PBL_MACROS_H */
