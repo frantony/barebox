@@ -125,9 +125,9 @@ pllskip:
 
 	pbl_sleep	t2, 10
 
-	/* Now we need to set size of ram to prewent some wired errors.
-	 * Since i do not have access to any board with two sdram chips, or
-	 * any was registred in th wild - we will support only one. */
+	/* Now we need to set size of ram to prevent some wired errors.
+	 * Since I do not have access to any board with two sdram chips, or
+	 * any was registered in the wild - we will support only one. */
 	/* So, lets find the beef */
 	li	a0, KSEG1 | AR2312_MEM_CFG1
 	li	a1, KSEG1 | AR2312_SDRAM0
@@ -135,8 +135,8 @@ pllskip:
 	li	t0, 0x20000
 	li	t1, MEM_CFG1_AC_2
 
-	/* We will write some magick word to the beginning of ram,
-	 * and see if it apears some where else. If yes, we made
+	/* We will write some magic word to the beginning of ram,
+	 * and see if it apears somewhere else. If yes, we made
 	 * a travel around the world. */
 	sw	a2, 0(a1)
 
