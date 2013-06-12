@@ -48,7 +48,7 @@ pllskip:
 	.set	pop
 .endm
 
-.macro  pbl_ar2312_rst_uart0
+.macro pbl_ar2312_rst_uart0
 	.set	push
 	.set	noreorder
 
@@ -65,7 +65,7 @@ pllskip:
 	lw	zero, 0(a0)	/* flush */
 
 1:	/* Use internal clocking */
-	li	a0, KSEG1|AR2312_CLOCKCTL0
+	li	a0, KSEG1 | AR2312_CLOCKCTL0
 	lw	t0, 0(a0)
 	and	t0, ~AR2312_CLOCKCTL_UART0
 	sw	t0, 0(a0)
