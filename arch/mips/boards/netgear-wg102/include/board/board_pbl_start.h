@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2013 Antony Pavlov <antonynpavlov@gmail.com>
+ * Copyright (C) 2013 Oleksij Rempel <linux@rempel-privat.de>
  *
  * This file is part of barebox.
  * See file CREDITS for list of people who contributed to this project.
@@ -40,20 +41,30 @@
 
 	mips_nmon
 
+	/* check if sdram is already configured,
+	 * if yes, we are probably starting
+	 * as seconmd stage and can skip configuration */
+	pbl_probe_mem t0, t1, 0xa0000000
+	beq t0, t1, sdram_configured
+	 nop
+
+	/* start sdram configureation */
 	pbl_ar2312_x16_sdram
-	debug_ll_ns16550_outc 'b'
+
+	/* check one more time. if some thing wrong,
+	 * we don't need to continue */
+	pbl_probe_mem t0, t1, 0xa0000000
+	beq t0, t1, sdram_configured
+	 nop
+	debug_ll_ns16550_outc '#'
 	debug_ll_ns16550_outnl
 
-	li t0, 0xa0000000
-	li t1, 0x12345678
-	sw t1, 0(t0)
-	lw t2, 0(t0)
-	beq t1, t2, oki
+1:
+	b	1b /* dead end */
 	 nop
-	debug_ll_ns16550_outc 'c'
-	debug_ll_ns16550_outnl
-oki:
-	debug_ll_ns16550_outc 'd'
+
+sdram_configured:
+	debug_ll_ns16550_outc 'b'
 	debug_ll_ns16550_outnl
 
 	copy_to_link_location	pbl_start
