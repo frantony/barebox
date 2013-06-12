@@ -52,7 +52,6 @@ pllskip:
 	.set	push
 	.set	noreorder
 
-	nop
 	li	a0, KSEG1 | AR2312_RESET
 	lw	t0, 0(a0)
 	and	t0, ~AR2312_RESET_APB
