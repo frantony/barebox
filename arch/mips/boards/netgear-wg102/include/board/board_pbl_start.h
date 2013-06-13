@@ -42,12 +42,12 @@
 
 	/* check if sdram is already configured,
 	 * if yes, we are probably starting
-	 * as seconmd stage and can skip configuration */
+	 * as second stage loader and can skip configuration */
 	pbl_probe_mem t0, t1, 0xa0000000
 	beq t0, t1, sdram_configured
 	 nop
 
-	/* start sdram configureation */
+	/* start sdram configuration */
 	pbl_ar2312_x16_sdram
 
 	/* check one more time. if some thing wrong,

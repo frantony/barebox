@@ -135,7 +135,7 @@ pllskip:
 	li	t1, MEM_CFG1_AC_2
 
 	/* We will write some magic word to the beginning of ram,
-	 * and see if it apears somewhere else. If yes, we made
+	 * and see if it appears somewhere else. If yes, we made
 	 * a travel around the world. */
 	sw	a2, 0(a1)
 
