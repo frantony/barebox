@@ -40,14 +40,14 @@
 
 	mips_nmon
 
-	/* check if sdram is already configured,
+	/* check if SDRAM is already configured,
 	 * if yes, we are probably starting
 	 * as second stage loader and can skip configuration */
 	pbl_probe_mem t0, t1, 0xa0000000
 	beq t0, t1, sdram_configured
 	 nop
 
-	/* start sdram configuration */
+	/* start SDRAM configuration */
 	pbl_ar2312_x16_sdram
 
 	/* check one more time. if some thing wrong,
