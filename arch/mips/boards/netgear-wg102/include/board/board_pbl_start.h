@@ -20,6 +20,7 @@
 #include <mach/pbl_macros.h>
 
 #include <mach/debug_ll.h>
+#include <asm/pbl_nmon.h>
 
 	.macro	board_pbl_start
 	.set	push
