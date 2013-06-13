@@ -124,8 +124,8 @@ pllskip:
 
 	pbl_sleep	t2, 10
 
-	/* Now we need to set size of ram to prevent some wired errors.
-	 * Since I do not have access to any board with two sdram chips, or
+	/* Now we need to set size of RAM to prevent some wired errors.
+	 * Since I do not have access to any board with two SDRAM chips, or
 	 * any was registered in the wild - we will support only one. */
 	/* So, lets find the beef */
 	li	a0, KSEG1 | AR2312_MEM_CFG1
@@ -134,11 +134,11 @@ pllskip:
 	li	t0, 0x20000
 	li	t1, MEM_CFG1_AC_2
 
-	/* We will write some magic word to the beginning of ram,
+	/* We will write some magic word to the beginning of RAM,
 	 * and see if it appears somewhere else. If yes, we made
 	 * a travel around the world. */
 
-	/* But first of all save original state of the first ram word. */
+	/* But first of all save original state of the first RAM word. */
 	lw	a3, 0(a1)
 	sw	a2, 0(a1)
 
@@ -167,7 +167,7 @@ make_beefsteak:
 	or	t2, t1, MEM_CFG1_E0
 	sw	t2, 0(a0)	/* AR2312_MEM_CFG1 */
 
-	/* restore original state of the first ram word */
+	/* restore original state of the first RAM word */
 	sw	a3, 0(a1)
 
 	.set	pop
