@@ -137,6 +137,9 @@ pllskip:
 	/* We will write some magic word to the beginning of ram,
 	 * and see if it appears somewhere else. If yes, we made
 	 * a travel around the world. */
+
+	/* But first of all save original state of the first ram word. */
+	lw	a3, 0(a1)
 	sw	a2, 0(a1)
 
 find_the_beef:
@@ -163,6 +166,9 @@ make_beefsteak:
 	sll	t1, MEM_CFG1_AC0_S
 	or	t2, t1, MEM_CFG1_E0
 	sw	t2, 0(a0)	/* AR2312_MEM_CFG1 */
+
+	/* restore original state of the first ram word */
+	sw	a3, 0(a1)
 
 	.set	pop
 .endm
