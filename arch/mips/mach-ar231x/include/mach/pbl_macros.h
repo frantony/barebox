@@ -141,8 +141,8 @@ pllskip:
 
 find_the_beef:
 	or	t2, a1, t0
-	lw	t3, 0(a1)
-	beq	t1, t3, make_beefsteak
+	lw	t3, 0(t2)
+	beq	a2, t3, make_beefsteak
 	 nop
 	sll	t0, 1
 	add	t1, 1
