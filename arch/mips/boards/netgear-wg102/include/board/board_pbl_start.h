@@ -37,6 +37,8 @@
 	debug_ll_ns16550_outc 'a'
 	debug_ll_ns16550_outnl
 
+	mips_nmon
+
 	/* check if sdram is already configured,
 	 * if yes, we are probably starting
 	 * as seconmd stage and can skip configuration */
