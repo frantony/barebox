@@ -142,13 +142,22 @@ pllskip:
 find_the_beef:
 	or	t2, a1, t0
 	lw	t3, 0(t2)
-	beq	a2, t3, make_beefsteak
+	beq	a2, t3, 1f
 	 nop
 	sll	t0, 1
 	add	t1, 1
 	/* we should have some limit here. */
 	blt	t1, MEM_CFG1_AC_64, find_the_beef
 	 nop
+	b	make_beefsteak
+	 nop
+
+	/* additional paranoid check */
+1:
+	sw	zero, 0(a1)
+	lw	t3, 0(a1)
+	bne	zero, t3, find_the_beef
+
 make_beefsteak:
 	/* create new config for AR2312_MEM_CFG1 and overwrite it */
 	sll	t1, MEM_CFG1_AC0_S
