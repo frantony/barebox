@@ -158,8 +158,9 @@ find_the_beef:
 	/* additional paranoid check */
 1:
 	sw	zero, 0(a1)
-	lw	t3, 0(a1)
+	lw	t3, 0(t2)
 	bne	zero, t3, find_the_beef
+	 nop
 
 make_beefsteak:
 	/* create new config for AR2312_MEM_CFG1 and overwrite it */
