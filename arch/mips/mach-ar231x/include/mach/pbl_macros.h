@@ -48,7 +48,7 @@ pllskip:
 	.set	pop
 .endm
 
-.macro pbl_ar2312_rst_uart0
+.macro	pbl_ar2312_rst_uart0
 	.set	push
 	.set	noreorder
 
