@@ -38,7 +38,6 @@
 	debug_ll_ns16550_outc 'a'
 	debug_ll_ns16550_outnl
 
-
 	/* check if SDRAM is already configured,
 	 * if yes, we are probably starting
 	 * as second stage loader and can skip configuration */
@@ -51,6 +50,7 @@
 	pbl_probe_mem t0, t1, KSEG1
 	beq t0, t1, sdram_configured
 	 nop
+
 1:
 	/* start SDRAM configuration */
 	pbl_ar2312_x16_sdram
