@@ -48,7 +48,7 @@
 	beq	zero, t0, 1f
 	 nop
 
-	pbl_probe_mem t0, t1, 0xa0000000
+	pbl_probe_mem t0, t1, KSEG1
 	beq t0, t1, sdram_configured
 	 nop
 1:
@@ -57,7 +57,7 @@
 
 	/* check one more time. if some thing wrong,
 	 * we don't need to continue */
-	pbl_probe_mem t0, t1, 0xa0000000
+	pbl_probe_mem t0, t1, KSEG1
 	beq t0, t1, sdram_configured
 	 nop
 	debug_ll_ns16550_outc '#'
