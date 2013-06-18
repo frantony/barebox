@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Antony Pavlov <antonynpavlov@gmail.com>
+ * Copyright (C) 2013 Oleksij Rempel <linux@rempel-privat.de>
  *
  * This file is part of barebox.
  * See file CREDITS for list of people who contributed to this project.
@@ -30,4 +30,4 @@
 #define DEBUG_LL_UART_BPS   CONFIG_BAUDRATE
 #define DEBUG_LL_UART_DIVISOR   (DEBUG_LL_UART_CLK / DEBUG_LL_UART_BPS)
 
-#endif  /* __NETGEAR_WG102_DEBUG_LL_H__ */
+#endif /* __NETGEAR_WG102_DEBUG_LL_H__ */
