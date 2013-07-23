@@ -38,12 +38,22 @@
 #include <errno.h>
 #include <malloc.h>
 #include <io.h>
+#include <linux/clk.h>
 
 #include "serial_ns16550.h"
 #include <ns16550.h>
 
-/*********** Private Functions **********************************/
-static int ns16550_setbaudrate(struct console_device *cdev, int baud_rate);
+struct ns16550_priv {
+	struct console_device cdev;
+	struct NS16550_plat plat;
+	int access_width;
+	struct clk *clk;
+};
+
+static inline struct ns16550_priv *to_ns16550_priv(struct console_device *cdev)
+{
+	return container_of(cdev, struct ns16550_priv, cdev);
+}
 
 /**
  * @brief read register
@@ -55,9 +65,10 @@ static int ns16550_setbaudrate(struct console_device *cdev, int baud_rate);
  */
 static uint32_t ns16550_read(struct console_device *cdev, uint32_t off)
 {
+	struct ns16550_priv *priv = to_ns16550_priv(cdev);
 	struct device_d *dev = cdev->dev;
-	struct NS16550_plat *plat = (struct NS16550_plat *)dev->platform_data;
-	int width = dev->resource[0].flags & IORESOURCE_MEM_TYPE_MASK;
+	struct NS16550_plat *plat = &priv->plat;
+	int width = priv->access_width;
 
 	off <<= plat->shift;
 
@@ -85,9 +96,10 @@ static uint32_t ns16550_read(struct console_device *cdev, uint32_t off)
 static void ns16550_write(struct console_device *cdev, uint32_t val,
 			  uint32_t off)
 {
+	struct ns16550_priv *priv = to_ns16550_priv(cdev);
 	struct device_d *dev = cdev->dev;
-	struct NS16550_plat *plat = (struct NS16550_plat *)dev->platform_data;
-	int width = dev->resource[0].flags & IORESOURCE_MEM_TYPE_MASK;
+	struct NS16550_plat *plat = &priv->plat;
+	int width = priv->access_width;
 
 	off <<= plat->shift;
 
@@ -120,12 +132,40 @@ static void ns16550_write(struct console_device *cdev, uint32_t val,
 static inline unsigned int ns16550_calc_divisor(struct console_device *cdev,
 					 unsigned int baudrate)
 {
-	struct NS16550_plat *plat = (struct NS16550_plat *)
-	    cdev->dev->platform_data;
+	struct ns16550_priv *priv = to_ns16550_priv(cdev);
+	struct NS16550_plat *plat = &priv->plat;
 	unsigned int clk = plat->clock;
 
 	return (clk / MODE_X_DIV / baudrate);
 
+}
+
+/**
+ * @brief Set the baudrate for the uart port
+ *
+ * @param[in] cdev  console device
+ * @param[in] baud_rate baud rate to set
+ *
+ * @return  0-implied to support the baudrate
+ */
+static int ns16550_setbaudrate(struct console_device *cdev, int baud_rate)
+{
+	unsigned int baud_divisor = ns16550_calc_divisor(cdev, baud_rate);
+	struct ns16550_priv *priv = to_ns16550_priv(cdev);
+	struct NS16550_plat *plat = &priv->plat;
+
+	ns16550_write(cdev, LCR_BKSE, lcr);
+	ns16550_write(cdev, baud_divisor & 0xff, dll);
+	ns16550_write(cdev, (baud_divisor >> 8) & 0xff, dlm);
+	ns16550_write(cdev, LCRVAL, lcr);
+	ns16550_write(cdev, MCRVAL, mcr);
+
+	if (plat->flags & NS16650_FLAG_DISABLE_FIFO)
+		ns16550_write(cdev, FCRVAL & ~FCR_FIFO_EN, fcr);
+	else
+		ns16550_write(cdev, FCRVAL, fcr);
+
+	return 0;
 }
 
 /**
@@ -191,32 +231,14 @@ static int ns16550_tstc(struct console_device *cdev)
 	return ((ns16550_read(cdev, lsr) & LSR_DR) != 0);
 }
 
-/**
- * @brief Set the baudrate for the uart port
- *
- * @param[in] cdev  console device
- * @param[in] baud_rate baud rate to set
- *
- * @return  0-implied to support the baudrate
- */
-static int ns16550_setbaudrate(struct console_device *cdev, int baud_rate)
+static void ns16550_probe_dt(struct device_d *dev, struct ns16550_priv *priv)
 {
-	unsigned int baud_divisor = ns16550_calc_divisor(cdev, baud_rate);
-	struct NS16550_plat *plat = (struct NS16550_plat *)
-	    cdev->dev->platform_data;
+	struct device_node *np = dev->device_node;
 
-	ns16550_write(cdev, LCR_BKSE, lcr);
-	ns16550_write(cdev, baud_divisor & 0xff, dll);
-	ns16550_write(cdev, (baud_divisor >> 8) & 0xff, dlm);
-	ns16550_write(cdev, LCRVAL, lcr);
-	ns16550_write(cdev, MCRVAL, mcr);
+	if (!IS_ENABLED(CONFIG_OFDEVICE))
+		return;
 
-	if (plat->flags & NS16650_FLAG_DISABLE_FIFO)
-		ns16550_write(cdev, FCRVAL & ~FCR_FIFO_EN, fcr);
-	else
-		ns16550_write(cdev, FCRVAL, fcr);
-
-	return 0;
+	of_property_read_u32(np, "reg-shift", &priv->plat.shift);
 }
 
 /**
@@ -230,21 +252,41 @@ static int ns16550_setbaudrate(struct console_device *cdev, int baud_rate)
  */
 static int ns16550_probe(struct device_d *dev)
 {
+	struct ns16550_priv *priv;
 	struct console_device *cdev;
 	struct NS16550_plat *plat = (struct NS16550_plat *)dev->platform_data;
+	int ret;
 
-	/* we do expect platform specific data */
-	if (plat == NULL)
-		return -EINVAL;
 	dev->priv = dev_request_mem_region(dev, 0);
 
-	cdev = xzalloc(sizeof(*cdev));
+	priv = xzalloc(sizeof(*priv));
+
+	if (plat)
+		priv->plat = *plat;
+	else
+		ns16550_probe_dt(dev, priv);
+
+	cdev = &priv->cdev;
+
+	if (!plat || !plat->clock) {
+		priv->clk = clk_get(dev, NULL);
+		if (IS_ERR(priv->clk)) {
+			ret = PTR_ERR(priv->clk);
+			goto err;
+		}
+		priv->plat.clock = clk_get_rate(priv->clk);
+	}
+
+	if (priv->plat.clock == 0) {
+		dev_err(dev, "no valid clockrate\n");
+		ret = -EINVAL;
+		goto err;
+	}
+
+	priv->access_width = dev->resource[0].flags & IORESOURCE_MEM_TYPE_MASK;
 
 	cdev->dev = dev;
-	if (plat->f_caps)
-		cdev->f_caps = plat->f_caps;
-	else
-		cdev->f_caps = CONSOLE_STDIN | CONSOLE_STDOUT | CONSOLE_STDERR;
+	cdev->f_caps = CONSOLE_STDIN | CONSOLE_STDOUT | CONSOLE_STDERR;
 	cdev->tstc = ns16550_tstc;
 	cdev->putc = ns16550_putc;
 	cdev->getc = ns16550_getc;
@@ -253,7 +295,20 @@ static int ns16550_probe(struct device_d *dev)
 	ns16550_serial_init_port(cdev);
 
 	return console_register(cdev);
+
+err:
+	free(priv);
+
+	return ret;
 }
+
+static struct of_device_id ns16550_serial_dt_ids[] = {
+	{
+		.compatible = "ns16550a",
+	}, {
+		/* sentinel */
+	},
+};
 
 /**
  * @brief Driver registration structure
@@ -261,5 +316,6 @@ static int ns16550_probe(struct device_d *dev)
 static struct driver_d ns16550_serial_driver = {
 	.name = "ns16550_serial",
 	.probe = ns16550_probe,
+	.of_compatible = DRV_OF_COMPAT(ns16550_serial_dt_ids),
 };
 console_platform_driver(ns16550_serial_driver);
