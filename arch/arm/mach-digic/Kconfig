@@ -1,0 +1,11 @@
+if ARCH_DIGIC
+
+choice
+	prompt "camera type"
+
+endchoice
+
+config DIGIC_CSRC_TIMER
+	bool
+
+endif
