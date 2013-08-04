@@ -3,7 +3,15 @@ if ARCH_DIGIC
 choice
 	prompt "camera type"
 
+config MACH_CANON_A1100
+	bool "Canon PowerShot A1100 IS"
+	select DIGIC_CSRC_TIMER
+
 endchoice
+
+config ARCH_TEXT_BASE
+	hex
+	default 0x00001900 if MACH_CANON_A1100
 
 config DIGIC_CSRC_TIMER
 	bool

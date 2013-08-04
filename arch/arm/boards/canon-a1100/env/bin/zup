@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# on Canon PowerShot A1100 IS we can use 0x400000
+LOADADDR=0x400000
+IMGNAME=zbarebox.bin
+
+loady
+if [ -e $IMGNAME ]; then
+	memcpy -s $IMGNAME 0 $LOADADDR
+	go $LOADADDR
+fi

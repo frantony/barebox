@@ -1,0 +1,26 @@
+/dts-v1/;
+
+/include/ "digic4.dtsi"
+
+/ {
+	model = "Canon PowerShot A1100 IS";
+	compatible = "canon,a1100";
+
+	memory {
+		reg = <0x00000000 0x04000000>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		direct_print {
+			label = "direct-print led (blue)";
+			gpios = <&gpio 51 0>;
+		};
+
+		auto_focus {
+			label = "auto-focus led (red)";
+			gpios = <&gpio 55 0>;
+		};
+	};
+};
