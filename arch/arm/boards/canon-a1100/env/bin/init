@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Canon PowerShot A1100 IS "direct print" led (blue)
+LED_ADDR=0xC02200CC
+LED_ON=0x46
+LED_OFF=0x44
+
+mw $LED_ADDR $LED_ON
+echo "== /env/bin/init started =="
+echo
+echo "HELLO!"
+mw $LED_ADDR $LED_OFF
+echo
+iomem
+echo
+
+# blink forever
+# use 'echo' for delay
+while true; do
+	echo "led_on"
+	mw $LED_ADDR $LED_ON
+	echo "led_off"
+	mw $LED_ADDR $LED_OFF
+done
+
+#echo
+#echo "== /env/bin/init done =="

@@ -6,8 +6,12 @@ choice
 config MACH_CANON_600D
 	bool "Canon EOS 600D"
 
+config MACH_CANON_A1100
+	bool "Canon PowerShot A1100 IS"
+
 endchoice
 
 source arch/arm/boards/canon-600d/Kconfig
+source arch/arm/boards/canon-a1100/Kconfig
 
 endif
