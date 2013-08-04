@@ -1,0 +1,10 @@
+if MACH_CANON_600D
+
+config ARCH_TEXT_BASE
+	hex
+	default 0x00800000
+
+config BOARDINFO
+	default "Canon EOS 600D"
+
+endif

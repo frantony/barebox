@@ -3,6 +3,11 @@ if ARCH_DIGIC
 choice
 	prompt "camera type"
 
+config MACH_CANON_600D
+	bool "Canon EOS 600D"
+
 endchoice
+
+source arch/arm/boards/canon-600d/Kconfig
 
 endif
