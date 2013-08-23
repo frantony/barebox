@@ -2,4 +2,9 @@
 
 / {
 	compatible = "canon,digic4";
+
+	uart: uart {
+		compatible = "canon,digic-uart";
+		reg = <0xc0800000 0x1c>;
+	};
 };
