@@ -1,0 +1,21 @@
+/dts-v1/;
+
+/include/ "digic4.dtsi"
+
+/ {
+	model = "Canon EOS 600D";
+	compatible = "canon,eos600d";
+
+	memory {
+		reg = <0x00000000 0x10000000>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		sd_slot {
+			label = "sd-card activity led (red)";
+			gpios = <&gpio 77 0>;
+		};
+	};
+};
