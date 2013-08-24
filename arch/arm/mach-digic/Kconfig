@@ -13,7 +13,11 @@ config ARCH_TEXT_BASE
 	hex
 	default 0x00001900 if MACH_CANON_A1100
 
+
 config DIGIC_CSRC_TIMER
+	bool
+
+config DIGIC_CSRC_DUMMY
 	bool
 
 endif
