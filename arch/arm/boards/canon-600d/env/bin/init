@@ -1,0 +1,17 @@
+#!/bin/sh
+
+export PATH=/env/bin
+
+# use "direct print" led (blue)
+LED=0
+
+DELAY=300
+
+md 0xF7FFFFF0+0x20
+
+for i in 1 2 3; do
+	led $LED 1
+	msleep $DELAY
+	led $LED 0
+	msleep $DELAY
+done
