@@ -167,10 +167,7 @@ static int beaglebone_env_init(void)
 {
 	int black = is_beaglebone_black();
 
-#ifdef CONFIG_GLOBALVAR
-	globalvar_add_simple("board.variant");
-	setenv("global.board.variant", black ? "boneblack" : "bone");
-#endif
+	globalvar_add_simple("board.variant", black ? "boneblack" : "bone");
 
 	printf("detected 'BeagleBone %s'\n", black ? "Black" : "White");
 
