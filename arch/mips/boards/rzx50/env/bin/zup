@@ -1,0 +1,12 @@
+#!/bin/sh
+
+LOADADDR=0xa1000000
+IMGNAME=zbarebox.rzx50.bin
+
+loady
+if [ -e $IMGNAME ]; then
+	memcpy -s $IMGNAME 0 $LOADADDR
+	sleep 2
+	readline "Press enter" A
+	go $LOADADDR
+fi
