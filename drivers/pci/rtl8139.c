@@ -2,7 +2,6 @@
 
 #include <command.h>
 #include <net.h>
-#include <miidev.h>
 #include <malloc.h>
 #include <init.h>
 #include <xfuncs.h>
@@ -10,6 +9,7 @@
 #include <clock.h>
 #include <asm/io.h>
 
+#include <linux/phy.h>
 #include <linux/pci.h>
 
 #undef RTL8139_DEBUG
@@ -65,7 +65,8 @@ struct rtl8139_priv {
 	unsigned char		*tx_bufs;       /* Tx bounce buffer region. */
 	dma_addr_t		tx_bufs_dma;
 
-	struct mii_device	miidev;
+	int phy_addr;
+	struct mii_bus miibus;
 };
 
 #define ETH_ZLEN        60              /* Min. octets in frame sans FCS */
@@ -317,10 +318,9 @@ static void rtl8139_init_ring(struct rtl8139_priv *priv)
 		priv->tx_buf[i] = &priv->tx_bufs[i * TX_BUF_SIZE];
 }
 
-static int rtl8139_phy_read(struct mii_device *mdev, int phy_addr, int reg)
+static int rtl8139_phy_read(struct mii_bus *bus, int phy_addr, int reg)
 {
-	struct eth_device *edev = mdev->edev;
-	struct rtl8139_priv *priv = edev->priv;
+	struct rtl8139_priv *priv = bus->priv;
 	int val;
 
 	val = 0;
@@ -338,11 +338,10 @@ static int rtl8139_phy_read(struct mii_device *mdev, int phy_addr, int reg)
 	return val;
 }
 
-static int rtl8139_phy_write(struct mii_device *mdev, int phy_addr,
-	int reg, int val)
+static int rtl8139_phy_write(struct mii_bus *bus, int phy_addr,
+	int reg, u16 val)
 {
-	struct eth_device *edev = mdev->edev;
-	struct rtl8139_priv *priv = edev->priv;
+	struct rtl8139_priv *priv = bus->priv;
 
 #ifdef RTL8139_DEBUG
 	printf("%s: addr: 0x%02x reg: 0x%02x val: 0x%04x\n", __func__,
@@ -402,14 +401,13 @@ static int rtl8139_init_dev(struct eth_device *edev)
 
 	rtl8139_chip_reset(priv);
 
-	//miidev_restart_aneg(&priv->miidev);
-
 	return 0;
 }
 
 static int rtl8139_eth_open(struct eth_device *edev)
 {
 	struct rtl8139_priv *priv = edev->priv;
+	int ret;
 
 	/* HACK: FIXME */
 	priv->tx_bufs = (unsigned char *)0xa1000000;
@@ -423,8 +421,10 @@ static int rtl8139_eth_open(struct eth_device *edev)
 	rtl8139_init_ring(priv);
 	rtl8139_hw_start(priv);
 
-	miidev_wait_aneg(&priv->miidev);
-	miidev_print_status(&priv->miidev);
+	ret = phy_device_connect(edev, &priv->miibus, priv->phy_addr, NULL, 0,
+				 PHY_INTERFACE_MODE_NA);
+	if (ret)
+		return ret;
 
 	return 0;
 }
@@ -492,7 +492,7 @@ static int rtl8139_eth_send(struct eth_device *edev, void *packet,
 
 #ifdef RTL8139_DEBUG
 	printf("rtl8139_eth_send()\n");
-	memory_display(packet, 0, 70, 1);
+	memory_display(packet, 0, 70, 1, 0);
 #endif
 
 	rtl8139_tx_interrupt(priv);
@@ -561,7 +561,7 @@ static int rtl8139_eth_rx(struct eth_device *edev)
 	pkt_size = rx_size - 4;
 
 #ifdef RTL8139_DEBUG
-	memory_display(&rx_ring[ring_offset], 0, 70, 1);
+	memory_display(&rx_ring[ring_offset], 0, 70, 1, 0);
 #endif
 
 	net_receive(&rx_ring[ring_offset + 4], pkt_size);
@@ -601,11 +601,11 @@ static int rtl8139_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	priv->pci_dev = pdev;
 
-	priv->miidev.read = rtl8139_phy_read;
-	priv->miidev.write = rtl8139_phy_write;
-	priv->miidev.address = 0;
-	priv->miidev.flags = 0;
-	priv->miidev.edev = edev;
+	priv->miibus.read = rtl8139_phy_read;
+	priv->miibus.write = rtl8139_phy_write;
+	priv->miibus.priv = priv;
+	priv->miibus.parent = dev;
+	priv->phy_addr = -1;
 
 	/* FIXME: pci_resource_start() */
 	pci_read_config_dword(pdev, PCI_BASE_ADDRESS_1, &bar);
@@ -625,10 +625,9 @@ static int rtl8139_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 	edev->set_ethaddr = rtl8139_set_ethaddr;
 	edev->halt = rtl8139_eth_halt;
 
-	mii_register(&priv->miidev);
-	eth_register(edev);
+	mdiobus_register(&priv->miibus);
 
-	return 0;
+	return eth_register(edev);
 }
 
 static DEFINE_PCI_DEVICE_TABLE(rtl8139_pci_tbl) = {

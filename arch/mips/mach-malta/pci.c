@@ -208,13 +208,12 @@ int pcibios_init()
 	BUG_ON((start & GT_PCI_HD_MSK) != (map & GT_PCI_HD_MSK) &&
 	       mask != ~((mask & -mask) - 1));
 	gt64120_mem_resource.start = start;
-	res_end = end;
+	gt64120_mem_resource.end = end;
 	gt64120_controller.mem_offset = (start & mask) - (map & mask);
 	/* Addresses are 36-bit, so do shifts in the destinations.  */
 	gt64120_mem_resource.start <<= GT_PCI_DCRM_SHF;
-	res_end <<= GT_PCI_DCRM_SHF;
-	res_end |= (1 << GT_PCI_DCRM_SHF) - 1;
-	gt64120_mem_resource.size = res_end - gt64120_mem_resource.start + 1;
+	gt64120_mem_resource.end <<= GT_PCI_DCRM_SHF;
+	gt64120_mem_resource.end |= (1 << GT_PCI_DCRM_SHF) - 1;
 	gt64120_controller.mem_offset <<= GT_PCI_DCRM_SHF;
 
 	start = GT_READ(GT_PCI0IOLD_OFS);
@@ -222,7 +221,7 @@ int pcibios_init()
 	map = GT_READ(GT_PCI0IOREMAP_OFS);
 	end = (end & GT_PCI_HD_MSK) | (start & ~GT_PCI_HD_MSK);
 	mask = ~(start ^ end);
-        /* We don't support remapping with a discontiguous mask.  */
+	/* We don't support remapping with a discontiguous mask.  */
 	BUG_ON((start & GT_PCI_HD_MSK) != (map & GT_PCI_HD_MSK) &&
 	       mask != ~((mask & -mask) - 1));
 	gt64120_io_resource.start = map & mask;
@@ -230,9 +229,8 @@ int pcibios_init()
 	gt64120_controller.io_offset = 0;
 	/* Addresses are 36-bit, so do shifts in the destinations.  */
 	gt64120_io_resource.start <<= GT_PCI_DCRM_SHF;
-	res_end <<= GT_PCI_DCRM_SHF;
-	res_end |= (1 << GT_PCI_DCRM_SHF) - 1;
-	gt64120_io_resource.size = res_end - gt64120_io_resource.start + 1;
+	gt64120_io_resource.end <<= GT_PCI_DCRM_SHF;
+	gt64120_io_resource.end |= (1 << GT_PCI_DCRM_SHF) - 1;
 
 	register_pci_controller(&gt64120_controller);
 
