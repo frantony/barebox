@@ -149,7 +149,7 @@ static struct pci_controller gt64120_controller = {
 	.mem_resource	= &gt64120_mem_resource,
 };
 
-int pcibios_init()
+static int pcibios_init(void)
 {
 	resource_size_t start, end, map, start1, end1, map1, mask, res_end;
 
@@ -236,4 +236,4 @@ int pcibios_init()
 
 	return 0;
 }
-EXPORT_SYMBOL(pcibios_init);
+postcore_initcall(pcibios_init);

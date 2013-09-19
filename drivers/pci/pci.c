@@ -5,6 +5,8 @@
 #include <command.h>
 #include <debug_ll.h>
 
+//#define DEBUG
+
 #ifdef DEBUG
 #define DBG(x...) printk(x)
 #else
@@ -181,7 +183,7 @@ unsigned int pci_scan_bus(struct pci_bus *bus)
 	last_io = bus->resource[1]->start;
 	// FIXME
 	// add 0x1000: skip malta serial port
-	last_io += 0x1000;
+	//last_io += 0x1000;
 
 	DBG("pci_scan_bus for bus %d\n", bus->number);
 	DBG(" last_io = 0x%08x, last_mem = 0x%08x\n", last_io, last_mem);
@@ -329,19 +331,3 @@ unsigned int pci_scan_bus(struct pci_bus *bus)
 	DBG("PCI: pci_scan_bus returning with max=%02x\n", max);
 	return max;
 }
-
-static int pci_init(void)
-{
-	pcibios_init();
-
-	if (!pci_present()) {
-		printf("PCI: No PCI bus detected\n");
-		return 0;
-	}
-
-	/* give BIOS a chance to apply platform specific fixes: */
-	//pcibios_fixup();
-
-	return 0;
-}
-postcore_initcall(pci_init);

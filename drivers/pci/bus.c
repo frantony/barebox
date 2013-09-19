@@ -60,6 +60,12 @@ struct bus_type pci_bus = {
 	.remove = pci_remove,
 };
 
+static int pci_bus_init(void)
+{
+	return bus_register(&pci_bus);
+}
+pure_initcall(pci_bus_init);
+
 int pci_register_driver(struct pci_driver *pdrv)
 {
 	struct driver_d *drv = &pdrv->driver;
@@ -81,7 +87,7 @@ int pci_register_device(struct pci_dev *pdev)
 
 	strcpy(dev->name, "pci");
 	dev->bus = &pci_bus;
-	dev->id = -1;
+	dev->id = DEVICE_ID_DYNAMIC;
 
 	ret = register_device(dev);
 

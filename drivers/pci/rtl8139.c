@@ -645,8 +645,8 @@ static int rtl8139_init(void)
 {
 	pci_register_driver(&rtl8139_eth_driver);
 
-	add_generic_device("rtl8139_eth", -1, NULL, 0xb0000000, 16,
-		IORESOURCE_MEM, NULL);
+//	add_generic_device("rtl8139_eth", -1, NULL, 0xb0000000, 16,
+//		IORESOURCE_MEM, NULL);
 
 	return 0;
 }
