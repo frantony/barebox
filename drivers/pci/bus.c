@@ -73,7 +73,7 @@ int pci_register_driver(struct pci_driver *pdrv)
 	if (!pdrv->id_table)
 		return -EIO;
 
-	strcpy(drv->name, pdrv->name);
+	drv->name = pdrv->name;
 	drv->bus = &pci_bus;
 
 	return register_driver(drv);
