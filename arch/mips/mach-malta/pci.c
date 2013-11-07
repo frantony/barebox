@@ -8,7 +8,7 @@
 #include <linux/pci.h>
 #include <asm/gt64120.h>
 
-#define GT64120_BASE    0xb4000000
+#include <mach/mach-gt64120.h>
 
 #define PCI_ACCESS_READ  0
 #define PCI_ACCESS_WRITE 1
