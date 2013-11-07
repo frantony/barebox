@@ -278,6 +278,16 @@ unsigned int pci_scan_bus(struct pci_bus *bus)
 
 		if (class == PCI_CLASS_BRIDGE_HOST) {
 			DBG("PCI: skip pci host bridge\n");
+			int bar;
+			u32 old_bar, mask;
+			for (bar = 0; bar < 6; bar++) {
+			pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + bar * 4, &old_bar);
+			pci_write_config_dword(dev, PCI_BASE_ADDRESS_0 + bar * 4, 0xfffffffe);
+			pci_read_config_dword(dev, PCI_BASE_ADDRESS_0 + bar * 4, &mask);
+			pci_write_config_dword(dev, PCI_BASE_ADDRESS_0 + bar * 4, old_bar);
+			DBG("    bar %d: %08x:%08x\n", bar, old_bar, mask);
+			}
+
 			continue;
 		}
 
