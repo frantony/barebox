@@ -20,10 +20,13 @@
  * @brief Clocksource based on MIPS CP0 timer
  */
 
+#include <common.h>
 #include <init.h>
 #include <clock.h>
 #include <io.h>
 #include <asm/mipsregs.h>
+
+unsigned int mips_hpt_frequency;
 
 static uint64_t c0_hpt_read(void)
 {
@@ -37,7 +40,12 @@ static struct clocksource cs = {
 
 static int clocksource_init(void)
 {
-	cs.mult = clocksource_hz2mult(100000000, cs.shift);
+	if (!mips_hpt_frequency)
+		mips_hpt_frequency = 100 * 1000 * 1000;
+
+	pr_debug("csrc-r4k: mips_hpt_frequency=%d\n", mips_hpt_frequency);
+
+	cs.mult = clocksource_hz2mult(mips_hpt_frequency, cs.shift);
 	init_clock(&cs);
 
 	return 0;
