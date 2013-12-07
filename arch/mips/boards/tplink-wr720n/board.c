@@ -20,12 +20,19 @@
 #include <sizes.h>
 #include <asm/memory.h>
 
+#define AR71XX_APB_BASE         0x18000000
+#define AR71XX_UART_BASE        (AR71XX_APB_BASE + 0x00020000)
+
 static int mem_init(void)
 {
 	barebox_set_model("TP Link WR720N");
 	barebox_set_hostname("wr720n");
 
 	mips_add_ram0(SZ_32M);
+
+	add_generic_device("ar933x_serial", DEVICE_ID_DYNAMIC, NULL,
+				KSEG1ADDR(AR71XX_UART_BASE), 0x100,
+				IORESOURCE_MEM | IORESOURCE_MEM_32BIT, NULL);
 
 	return 0;
 }
