@@ -14,6 +14,12 @@ config SERIAL_AMBA_PL011
 
 	  If unsure, say N.
 
+config DRIVER_SERIAL_AR933X
+	default n
+	bool "AR933X serial driver"
+	help
+	  Enable this to get support for Atheros serial devices.
+
 config DRIVER_SERIAL_IMX
 	depends on ARCH_IMX
 	default y
