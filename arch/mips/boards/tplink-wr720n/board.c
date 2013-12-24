@@ -19,6 +19,8 @@
 #include <init.h>
 #include <sizes.h>
 #include <asm/memory.h>
+#include <spi/spi.h>
+#include <spi/flash.h>
 
 #define AR71XX_APB_BASE         0x18000000
 #define AR71XX_UART_BASE        (AR71XX_APB_BASE + 0x00020000)
@@ -37,3 +39,35 @@ static int mem_init(void)
 	return 0;
 }
 mem_initcall(mem_init);
+
+static struct flash_platform_data spi_boot_flash_data = {
+	.name		= "spi0",
+	.type		= "s25sl032p",
+};
+
+static struct spi_board_info spi_devs[] __initdata = {
+	{
+		/* boot: Spansion S25FL032PIF SPI flash */
+		.name		= "m25p80",
+		.max_speed_hz	= 104 * 1000 * 1000,
+		.bus_num	= 0,
+		.chip_select	= 0,
+		.mode		= SPI_MODE_3,
+		.platform_data	= &spi_boot_flash_data,
+	},
+};
+
+#define AR71XX_SPI_BASE		0x1f000000
+#define AR71XX_SPI_SIZE		0x01000000
+
+static int devices_init(void)
+{
+	spi_register_board_info(spi_devs, ARRAY_SIZE(spi_devs));
+
+	add_generic_device("ar933x_spi", 0, NULL,
+		KSEG1ADDR(AR71XX_SPI_BASE), AR71XX_SPI_SIZE,
+		IORESOURCE_MEM, NULL);
+
+	return 0;
+}
+device_initcall(devices_init);
