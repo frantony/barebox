@@ -61,6 +61,9 @@ config MACH_MIPS_AR9331
 	select SYS_SUPPORTS_BIG_ENDIAN
 	select CSRC_R4K_LIB
 	select HAS_DEBUG_LL
+	select HAVE_CLK
+	select CLKDEV_LOOKUP
+	select COMMON_CLK
 
 config MACH_MIPS_BCM47XX
 	bool "Broadcom BCM47xx-based boards"
