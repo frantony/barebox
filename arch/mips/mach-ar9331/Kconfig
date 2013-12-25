@@ -4,4 +4,14 @@ config ARCH_TEXT_BASE
 	hex
 	default 0xa0800000
 
+choice
+	prompt "Board type"
+
+config BOARD_TPLINK_WR720N
+	bool "TP-LINK WR720N"
+
+endchoice
+
 endif
+
+source arch/mips/boards/tplink-wr720n/Kconfig
