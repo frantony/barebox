@@ -89,3 +89,16 @@ static int __init ar933x_clocks_init(void)
 	return 0;
 }
 postcore_initcall(ar933x_clocks_init);
+
+static int ar933x_console_init(void)
+{
+	/* FIXME: make it more readable */
+	/* FIXME: use AR71XX_GPIO_BASE */
+	__raw_writel(0x48002, (void *)0xb8040028);
+
+	add_generic_device("ar933x_serial", DEVICE_ID_DYNAMIC, NULL,
+				KSEG1ADDR(AR71XX_UART_BASE), AR71XX_UART_SIZE,
+				IORESOURCE_MEM | IORESOURCE_MEM_32BIT, NULL);
+	return 0;
+}
+console_initcall(ar933x_console_init);
