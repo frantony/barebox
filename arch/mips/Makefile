@@ -75,6 +75,8 @@ board-$(CONFIG_BOARD_QEMU_MALTA)	:= qemu-malta
 machine-$(CONFIG_MACH_MIPS_AR231X)	:= ar231x
 board-$(CONFIG_BOARD_NETGEAR_WG102)	:= netgear-wg102
 
+machine-$(CONFIG_MACH_MIPS_AR9331)	:= ar9331
+
 machine-$(CONFIG_MACH_MIPS_BCM47XX)	:= bcm47xx
 board-$(CONFIG_BOARD_DLINK_DIR320)	:= dlink-dir-320
 
