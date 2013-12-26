@@ -9,7 +9,8 @@ choice
 
 config BOARD_TPLINK_WR720N
 	bool "TP-LINK WR720N"
-
+	select HAVE_PBL_IMAGE
+	select HAVE_IMAGE_COMPRESSION
 endchoice
 
 endif
