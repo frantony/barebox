@@ -27,7 +27,9 @@
 
 	mips_disable_interrupts
 
-	/*plase some code */
+
+	pbl_ar9331_pll
+	pbl_ar9331_ram
 
 	copy_to_link_location	pbl_start
 
