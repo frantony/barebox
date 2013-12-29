@@ -102,12 +102,16 @@ static void __init ath79_add_ref_clkdev(const char *id)
 
 static int __init ar933x_clocks_init(void)
 {
+	extern unsigned int mips_hpt_frequency;
+
 	ath79_add_ref_clkdev("ref");
 	clk_add_alias("uart", NULL, "ref", NULL);
 
 	clk_ar933x("cpu", "ref",
 		AR933X_PLL_CLOCK_CTRL_CPU_DIV_SHIFT,
 		AR933X_PLL_CLOCK_CTRL_CPU_DIV_MASK);
+
+	mips_hpt_frequency = clk_get_rate(clk_lookup("cpu")) / 2;
 
 	clk_ar933x("ddr", "ref",
 		AR933X_PLL_CLOCK_CTRL_DDR_DIV_SHIFT,
