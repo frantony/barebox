@@ -182,6 +182,9 @@ config SYS_HAS_CPU_MIPS64_R1
 config SYS_HAS_CPU_MIPS64_R2
 	bool
 
+config SYS_HAS_CPU_R3000
+	bool
+
 #
 # These two indicate any level of the MIPS32 and MIPS64 architecture
 #
@@ -192,6 +195,12 @@ config CPU_MIPS32
 config CPU_MIPS64
 	bool
 	default y if CPU_MIPS64_R1 || CPU_MIPS64_R2
+
+config CPU_R3000
+	bool
+	default y
+	depends on SYS_HAS_CPU_R3000
+	select CPU_SUPPORTS_32BIT_KERNEL
 
 #
 # These two indicate the revision of the architecture, either Release 1 or Release 2

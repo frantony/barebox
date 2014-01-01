@@ -85,7 +85,7 @@ void main_entry(void)
 	cpu_probe();
 
 	if (cpu_has_4k_cache) {
-		extern void r4k_cache_init(void);
+		extern void __weak r4k_cache_init(void);
 
 		r4k_cache_init();
 	}
