@@ -62,6 +62,7 @@ u32 tegra_get_odmdata(void)
 enum tegra_chiptype {
 	TEGRA_UNK_REV = -1,
 	TEGRA20 = 0,
+	TEGRA30 = 1,
 };
 
 static __always_inline
@@ -85,10 +86,12 @@ int tegra_get_num_cores(void)
 	switch (tegra_get_chiptype()) {
 	case TEGRA20:
 		return 2;
-		break;
+	case 0x30:
+		return TEGRA30;
+	case TEGRA30:
+		return 4;
 	default:
 		return 0;
-		break;
 	}
 }
 
