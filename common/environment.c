@@ -245,7 +245,7 @@ int envfs_load(const char *filename, char *dir, unsigned flags)
 	envfd = open(filename, O_RDONLY);
 	if (envfd < 0) {
 		printf("Open %s %s\n", filename, errno_str());
-		return -1;
+		return envfd;
 	}
 
 	/* read superblock */
@@ -371,8 +371,7 @@ skip:
 	ret = 0;
 out:
 	close(envfd);
-	if (buf_free)
-		free(buf_free);
+	free(buf_free);
 	return ret;
 }
 
