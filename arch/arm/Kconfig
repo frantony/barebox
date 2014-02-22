@@ -54,6 +54,11 @@ config ARCH_CLPS711X
 	select GPIOLIB
 	select MFD_SYSCON
 
+config ARCH_DAVINCI
+	bool "TI Davinci"
+	select CPU_ARM926T
+	select HAS_DEBUG_LL
+
 config ARCH_EP93XX
 	bool "Cirrus Logic EP93xx"
 	select CPU_ARM920T
