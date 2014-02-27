@@ -176,7 +176,7 @@ static void process_macros (const char *input, char *output)
  * creates or modifies environment variables (like "bootp" does).
  */
 
-int run_command (const char *cmd, int flag)
+int run_command(const char *cmd)
 {
 	char cmdbuf[CONFIG_CBSIZE];	/* working copy of cmd		*/
 	char *token;			/* start of token in cmdbuf	*/
