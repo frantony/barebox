@@ -7,6 +7,8 @@
 #include <common.h>
 #include <io.h>
 
+#include <mach/time.h>
+
 /* Timer register offsets */
 #define PID12			0x0
 #define TIM12			0x10
@@ -41,10 +43,6 @@
 #define WDTCR_WDKEY_SHIFT            16
 #define WDTCR_WDKEY_SEQ0             0xa5c6
 #define WDTCR_WDKEY_SEQ1             0xda7e
-
-#include <mach/hardware.h>
-
-#define DAVINCI_WDOG_BASE               (IO_PHYS + 0x21C00)
 
 /* reset board using watchdog timer */
 void __noreturn reset_cpu(ulong addr)

@@ -14,7 +14,7 @@
 #include <asm/memory.h>
 
 /*
- * Before you add anything to ths file:
+ * Before you add anything to this file:
  *
  * This header is for defines common to ALL DaVinci family chips.
  * Anything that is chip specific should go in <chipname>.h,
