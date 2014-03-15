@@ -1,0 +1,17 @@
+/dts-v1/;
+
+#include "dm465.dtsi"
+
+/ {
+	model = "virt2real";
+
+	memory {
+		reg = <0x82000000 0x01000000>;
+	};
+
+	soc {
+		serial0: serial@1c20000 {
+			status = "okay";
+		};
+	};
+};
