@@ -77,3 +77,6 @@ cscope.*
 scripts/gen_netx_image
 scripts/s5p_cksum
 scripts/bareboxenv-target
+
+6F01A8C0.img
+barebox.lzma

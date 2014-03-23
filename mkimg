@@ -1,0 +1,10 @@
+#!/bin/sh
+
+lzma -c -k barebox.bin > barebox.lzma
+./FW/mktplinkfw -c -H 0x07200103 -W 1 -N TL-WR720N-v3 \
+	  -s -F 4Mlzma -k barebox.lzma -o 6F01A8C0.img
+
+#set ipaddr 192.168.173.188
+#set serverip 192.168.173.233
+#tftpboot 0x81000000 antony/6F01A8C0.img
+#bootm 0x81000000
