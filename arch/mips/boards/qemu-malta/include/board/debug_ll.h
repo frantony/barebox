@@ -20,8 +20,8 @@
 
 #include <mach/hardware.h>
 
-#define DEBUG_LL_UART_ADDR	MALTA_PIIX4_UART0
-#define DEBUG_LL_UART_SHIFT	0
+#define DEBUG_LL_UART_ADDR	MALTA_CBUS_UART
+#define DEBUG_LL_UART_SHIFT	3
 #define DEBUG_LL_UART_DIVISOR 1843200 /* no matter for emulated port */
 
 #endif /* __INCLUDE_BOARD_DEBUG_LL_QEMU_MALTA_H__ */
