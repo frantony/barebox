@@ -43,10 +43,6 @@
 	.set	push
 	.set	noreorder
 
-#define MALTA_ROM_START 0xbfc00000
-
-	/* reset vector is always 0xbfc00000 */
-__rom_start:
 	b	__start
 	 nop
 
@@ -58,101 +54,6 @@ __rom_start:
 	.word	0xffffffff
 	.word	0xffffffff
 
-	/* YAMON service vectors */
-#define YAMON_VECTOR(x)	(MALTA_ROM_START + x - __rom_start)
-#define YAMON_INVALID_VECTOR	0xffffffff
-
-	.org	0x500
-__yamon_srv_vec_tbl:
-	.word	YAMON_VECTOR(__yamon_start)
-	.word	YAMON_VECTOR(__print_count)
-	.word	YAMON_INVALID_VECTOR
-	.word	YAMON_INVALID_VECTOR
-	.word	YAMON_INVALID_VECTOR /* 0x510 */
-	.word	YAMON_INVALID_VECTOR
-	.word	YAMON_INVALID_VECTOR
-	.word	YAMON_INVALID_VECTOR
-	.word	YAMON_VECTOR(__yamon_start) /* 0x520 */
-	.word	YAMON_INVALID_VECTOR
-	.word	YAMON_INVALID_VECTOR
-	.word	YAMON_VECTOR(__flush_cache)
-	.word	YAMON_INVALID_VECTOR /* 0x530 */
-	.word	YAMON_VECTOR(__print)
-	.word	YAMON_VECTOR(__reg_cpu_isr)
-	.word	YAMON_VECTOR(__unred_cpu_isr)
-	.word	YAMON_VECTOR(__reg_ic_isr) /* 0x540 */
-	.word	YAMON_VECTOR(__unred_ic_isr)
-	.word	YAMON_VECTOR(__reg_esr)
-	.word	YAMON_VECTOR(__unreg_esr)
-	.word	YAMON_VECTOR(__getchar) /* 0x550 */
-	.word	YAMON_VECTOR(__syscon_read)
-
-	.org	0x800
-__yamon_start:
-__flush_cache:
-__reg_cpu_isr:
-__unred_cpu_isr:
-__reg_ic_isr:
-__unred_ic_isr:
-__reg_esr:
-__unreg_esr:
-__getchar:
-__syscon_read:
-	jr	ra
-	li	v0, 0
-
-__print:
-    move t5,ra
-    move t3,a0
-    move t2,a1
-
-__label814:
-    lbu a0,0(t2)
-    addiu t2,t2,1
-    beqz a0, __label834
-/* 820 */
-    nop
-    bal __label870
-    nop
-    b __label814
-/* 830 */
-    nop
-
-__label834:
-    jr t5
-    move a0,t3
-
-__print_count:
-move t5,ra
-move t3,a0
-move t2,a1
-move t4,a2
-__label84c:
-lbu a0,0(t2)
-bal __label870
-nop
-addiu t2,t2,1
-addiu t4,t4,-1
-bnez t4, __label84c
-nop
-jr t5
-move a0,t3
-
-.org 0x870
-/* outc */
-__label870:
-lui t0,0xb800
-ori t0,t0,0x3f8
-__label878:
-lbu t1,5(t0)
-nop
-andi t1,t1,0x40
-beqz t1,__label878
-nop
-jr ra
-sb a0,0(t0)
-
-	.org	0x900
 __start:
 	mips_disable_interrupts
 
