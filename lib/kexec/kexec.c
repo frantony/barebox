@@ -142,13 +142,77 @@ int sort_segments(struct kexec_info *info)
 	return 0;
 }
 
+#define ENVP_ADDR	0x80002000l
+#define ENVP_NB_ENTRIES	16
+#define ENVP_ENTRY_SIZE	256
+
+static void prom_set(uint32_t *prom_buf, int index,
+			const char *string, ...)
+{
+    va_list ap;
+    int32_t table_addr;
+
+    if (index >= ENVP_NB_ENTRIES)
+        return;
+
+    if (string == NULL) {
+        prom_buf[index] = 0;
+        return;
+    }
+
+    table_addr = sizeof(int32_t) * ENVP_NB_ENTRIES + index * ENVP_ENTRY_SIZE;
+    prom_buf[index] = (ENVP_ADDR + table_addr);
+
+    va_start(ap, string);
+    vsnprintf((char *)prom_buf + table_addr, ENVP_ENTRY_SIZE, string, ap);
+    va_end(ap);
+}
+
+
+static inline long kexec_load(void *entry, unsigned long nr_segments,
+                        struct kexec_segment *segments, unsigned long flags)
+{
+	int argnum;
+	void (*barebox)(int a0, int a1, int a2, int a3);
+    void *prom_buf;
+    long prom_size;
+    int prom_index = 0;
+
+	(void) nr_segments;
+	(void) segments;
+	(void) flags;
+
+	barebox = entry;
+	argnum = 2;
+    /* Setup prom parameters. */
+    prom_size = ENVP_NB_ENTRIES * (sizeof(int32_t) + ENVP_ENTRY_SIZE);
+    prom_buf = (void *)ENVP_ADDR;
+    prom_set(prom_buf, prom_index++, "%s", "hostname" /* kernel_filename */);
+    prom_set(prom_buf, prom_index++, "%s", NULL /* kernel_cmdline */);
+
+    prom_set(prom_buf, prom_index++, "memsize");
+    prom_set(prom_buf, prom_index++, "%i", 256 << 20);
+    prom_set(prom_buf, prom_index++, "modetty0");
+    prom_set(prom_buf, prom_index++, "38400n8r");
+    prom_set(prom_buf, prom_index++, NULL);
+
+	printf("\njumping to %p\n\n", barebox);
+	barebox(argnum,              /* number of arguments? */
+		ENVP_ADDR,
+		ENVP_ADDR + 8,
+		0x10000000      /* no matter */
+        );
+
+	return 1;
+}
+
 /*
  *	Load the new kernel
  */
 static int my_load(char *kernel, unsigned long kexec_flags)
 {
 	char *kernel_buf;
-	off_t kernel_size;
+	size_t kernel_size;
 	int i = 0;
 	int result;
 	struct kexec_info info;
@@ -236,23 +300,10 @@ static int my_load(char *kernel, unsigned long kexec_flags)
 		info.entry, info.kexec_flags);
 	print_segments(stderr, &info);
 #endif
-#if 0
+
 	result = kexec_load(
 		info.entry, info.nr_segments, info.segment, info.kexec_flags);
-#else
-	{
-		void (*barebox)(int a0, int a1, int a2, int a3);
 
-		barebox = info.entry;
-
-		printf("\njumping to %p\n\n", barebox);
-		barebox(2,              /* number of arguments? */
-			0x80002000,
-			0x80002008,
-			0x10000000      /* no matter */
-                );
-	}
-#endif
 	if (result != 0) {
 		/* The load failed, print some debugging information */
 		fprintf(stderr, "kexec_load failed: %s\n", 
