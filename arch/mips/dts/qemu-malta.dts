@@ -23,7 +23,6 @@
 		reg-shift = <0>;
 		/* no matter for emulated port */
 		clock-frequency = <1843200>;
-		status = "disabled";
 	};
 
 	uart2: serial@bf000900 {
@@ -32,7 +31,6 @@
 		reg-shift = <3>;
 		/* no matter for emulated port */
 		clock-frequency = <1843200>;
-		status = "okay";
 	};
 
 	nor0: flash@be000000 {
