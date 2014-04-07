@@ -60,6 +60,10 @@ __start:
 	/* cpu specific setup ... */
 	/* ... absent */
 
+	/* make KSEG0 uncached */
+	li	t0, CONF_CM_UNCACHED
+	mtc0	t0, CP0_CONFIG
+
 	/*
 	 * Load BAR registers of GT64120 as done by YAMON
 	 *
