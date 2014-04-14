@@ -40,6 +40,7 @@ enum filetype {
 	filetype_socfpga_xload,
 	filetype_kwbimage_v1,
 	filetype_android_sparse,
+	filetype_elf,
 	filetype_max,
 };
 
