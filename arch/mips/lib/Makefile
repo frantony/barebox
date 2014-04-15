@@ -14,3 +14,6 @@ obj-$(CONFIG_CPU_MIPS64) += c-r4k.o
 
 obj-$(CONFIG_CMD_MIPS_CPUINFO) += cpuinfo.o
 obj-$(CONFIG_CMD_BOOTM)	+= bootm.o
+
+obj-$(CONFIG_KEXEC) += kexec-mips.o
+obj-$(CONFIG_KEXEC) += relocate_kernel.o
