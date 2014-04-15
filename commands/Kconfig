@@ -484,6 +484,13 @@ config CMD_BOOTM_AIMAGE
 	help
 	  Support using Android Images.
 
+config KEXEC
+	bool
+	prompt "bootm ELF image support"
+	depends on CMD_BOOTM && HAS_KEXEC
+	help
+	  Support using ELF Images.
+
 config CMD_UIMAGE
 	select UIMAGE
 	tristate
