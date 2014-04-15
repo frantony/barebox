@@ -20,6 +20,6 @@
 #ifndef _ASM_MIPS_COMMON_H_
 #define _ASM_MIPS_COMMON_H_
 
-/* nothing special yet */
+#define ARCH_SHUTDOWN
 
 #endif /* _ASM_MIPS_COMMON_H_ */
