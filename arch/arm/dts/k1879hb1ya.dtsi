@@ -1,0 +1,19 @@
+#include "skeleton.dtsi"
+
+/ {
+	soc {
+		compatible = "simple-bus";
+		model = "RC Module K1879HB1YA";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		serial0: serial@2002b000 {
+			compatible = "ns16550a";
+			reg = <0x2002b000 0x1000>;
+			reg-shift = <2>;
+			clock-frequency = <54000000>;
+			status = "disabled";
+		};
+	};
+};
