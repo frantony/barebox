@@ -184,6 +184,10 @@ config ARCH_TEGRA
 	select OFTREE
 	select RELOCATABLE
 
+config ARCH_UEMD
+	bool "RC Module UEMD Platform"
+	select CPU_ARM1176
+
 config ARCH_ZYNQ
 	bool "Xilinx Zynq-based boards"
 	select HAS_DEBUG_LL
@@ -209,6 +213,7 @@ source arch/arm/mach-socfpga/Kconfig
 source arch/arm/mach-versatile/Kconfig
 source arch/arm/mach-vexpress/Kconfig
 source arch/arm/mach-tegra/Kconfig
+source arch/arm/mach-uemd/Kconfig
 source arch/arm/mach-zynq/Kconfig
 
 config ARM_ASM_UNIFIED
