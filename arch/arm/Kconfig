@@ -187,6 +187,7 @@ config ARCH_TEGRA
 config ARCH_UEMD
 	bool "RC Module UEMD Platform"
 	select CPU_ARM1176
+	select HAS_DEBUG_LL
 
 config ARCH_ZYNQ
 	bool "Xilinx Zynq-based boards"
