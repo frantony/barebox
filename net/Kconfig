@@ -3,20 +3,33 @@ menuconfig NET
 
 if NET
 
+choice
+	prompt "network stack implementation"
+
+config NET_LEGACY
+	bool "legacy U-Boot network stack"
+
+config NET_PICOTCP
+	bool "picotcp network stack"
+	select POLLER
+
+endchoice
+
 config NET_NFS
 	bool
 	prompt "nfs support"
 
+config NET_RESOLV
+	bool
+	prompt "dns support"
+
+if NET_LEGACY
 config NET_NETCONSOLE
 	bool
 	depends on !CONSOLE_NONE
 	prompt "network console support"
 	help
 	  This option adds support for a simple udp based network console.
-
-config NET_RESOLV
-	bool
-	prompt "dns support"
 
 config NET_IFUP
 	default y
@@ -26,4 +39,8 @@ config NET_DHCP
 	bool
 	prompt "dhcp support"
 
-endif
+endif # NET_LEGACY
+
+source "net/picotcp/Kconfig"
+
+endif # NET
