@@ -194,9 +194,15 @@ static int arp_request(IPaddr_t dest, unsigned char *ether)
 	return 0;
 }
 
+#include <pico_stack.h>
+
 void net_poll(void)
 {
-	eth_rx();
+	if (IS_ENABLED(CONFIG_NET_LEGACY)) {
+		eth_rx();
+	} else if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		pico_stack_tick();
+	}
 }
 
 static uint16_t net_udp_new_localport(void)
@@ -262,6 +268,17 @@ static struct net_connection *net_new(IPaddr_t dest, void *handler,
 	struct net_connection *con;
 	int ret;
 
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		con = xzalloc(sizeof(*con));
+		con->handler = handler;
+		con->packet = net_alloc_packet();
+		memset(con->packet, 0, PKTSIZE);
+
+		list_add_tail(&con->list, &connection_list);
+
+		return con;
+	}
+
 	if (!edev)
 		return ERR_PTR(-ENETDOWN);
 
@@ -316,6 +333,27 @@ out:
 	return ERR_PTR(ret);
 }
 
+#include <pico_socket.h>
+#include <pico_ipv4.h>
+
+static void picotcp_udp_cb(uint16_t ev, struct pico_socket *sock)
+{
+	struct net_connection *con = sock->priv;
+	udp_rx_handler_f *handler = con->handler;
+	int len;
+	union pico_address ep;
+	char *pkt = con->packet;
+
+	if (ev == PICO_SOCK_EV_ERR) {
+		printf(">>>>>> PICO_SOCK_EV_ERR (%d)\n", pico_err);
+		return;
+	}
+
+	len = pico_socket_recvfrom(sock, pkt, UDP_PAYLOAD_SIZE, &ep, &con->remote_port);
+
+	handler(con, pkt, len);
+}
+
 struct net_connection *net_udp_new(IPaddr_t dest, uint16_t dport,
 		udp_rx_handler_f *handler, void *ctx)
 {
@@ -323,6 +361,26 @@ struct net_connection *net_udp_new(IPaddr_t dest, uint16_t dport,
 
 	if (IS_ERR(con))
 		return con;
+
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		union pico_address remote_address;
+
+		remote_address.ip4.addr = dest;
+
+		con->sock = pico_socket_open(PICO_PROTO_IPV4,
+						PICO_PROTO_UDP, picotcp_udp_cb);
+
+		if (!con->sock)
+			return ERR_PTR(-ENOBUFS);
+
+		/* FIXME: check return value */
+		pico_socket_connect(con->sock, &remote_address, htons(dport));
+
+		con->sock->priv = con;
+		con->priv = ctx;
+
+		return con;
+	}
 
 	con->proto = IPPROTO_UDP;
 	con->udp->uh_dport = htons(dport);
@@ -348,6 +406,10 @@ struct net_connection *net_icmp_new(IPaddr_t dest, rx_handler_f *handler,
 
 void net_unregister(struct net_connection *con)
 {
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		pico_socket_close(con->sock);
+	}
+
 	list_del(&con->list);
 	free(con->packet);
 	free(con);
@@ -365,6 +427,13 @@ static int net_ip_send(struct net_connection *con, int len)
 
 int net_udp_send(struct net_connection *con, char *payload, int len)
 {
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		/* FIXME: pico_socket_send() ret code is ignored */
+		pico_socket_send(con->sock, payload, len);
+
+		return 0;
+	}
+
 	con->udp->uh_ulen = htons(len + 8);
 	con->udp->uh_sum = 0;
 
@@ -544,11 +613,21 @@ bad:
 	return 0;
 }
 
+#include <pico_stack.h>
+
 int net_receive(struct eth_device *edev, unsigned char *pkt, int len)
 {
 	struct ethernet *et = (struct ethernet *)pkt;
 	int et_protlen = ntohs(et->et_protlen);
 	int ret;
+
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		pico_stack_recv(edev->picodev, pkt, len);
+
+		led_trigger_network(LED_TRIGGER_NET_RX);
+
+		return 0;
+	}
 
 	led_trigger_network(LED_TRIGGER_NET_RX);
 
