@@ -326,6 +326,73 @@ static int eth_register_of_fixup(void)
 late_initcall(eth_register_of_fixup);
 #endif
 
+#ifdef CONFIG_NET_PICO_SUPPORT_ETH
+
+#include <pico_stack.h>
+#include <pico_ipv4.h>
+
+struct pico_device_barebox_eth {
+	struct pico_device dev;
+	struct eth_device *edev;
+};
+
+static int pico_adapter_send(struct pico_device *dev, void *buf, int len)
+{
+	struct pico_device_barebox_eth *t = (struct pico_device_barebox_eth *)dev;
+	struct eth_device *edev = t->edev;
+
+	pr_debug("pico_adapter_send barebox eth (len=%d)\n", len);
+	edev->send(edev, buf, len);
+
+	return len;
+}
+
+static int pico_adapter_poll(struct pico_device *dev, int loop_score)
+{
+	struct pico_device_barebox_eth *t = (struct pico_device_barebox_eth *)dev;
+	struct eth_device *edev = t->edev;
+
+	/* pico_stack_recv(dev, buf, len) will be called from net_receive */
+
+	edev->recv(edev);
+
+	return loop_score;
+}
+
+static void pico_adapter_destroy(struct pico_device *dev)
+{
+	printf("pico_adapter_destroy barebox eth\n");
+}
+
+static void pico_adapter_init(struct eth_device *edev)
+{
+	/* FIXME: get macaddr for edev */
+	static unsigned char macaddr0[6] = { 0, 0, 0, 0xa, 0xb, 0xc };
+
+	struct pico_device_barebox_eth *pif = PICO_ZALLOC(sizeof(struct pico_device_barebox_eth));
+
+	struct pico_device *picodev;
+
+	char *name = strdup(edev->dev.name);
+
+	picodev = &pif->dev;
+	if (0 != pico_device_init(picodev, name, macaddr0)) {
+		pr_info("pico_adapter_init failed.\n");
+		pico_adapter_destroy(picodev);
+		return;
+	}
+
+	picodev->send = pico_adapter_send;
+	picodev->poll = pico_adapter_poll;
+	picodev->destroy = pico_adapter_destroy;
+
+	pif->edev = edev;
+	edev->picodev = picodev;
+
+	pr_info("Device %s created.\n", picodev->name);
+}
+#endif /* CONFIG_NET_PICO_SUPPORT_ETH */
+
 int eth_register(struct eth_device *edev)
 {
 	struct device_d *dev = &edev->dev;
@@ -385,6 +452,10 @@ int eth_register(struct eth_device *edev)
 
 	if (!eth_current)
 		eth_current = edev;
+
+#ifdef CONFIG_NET_PICO_SUPPORT_ETH
+	pico_adapter_init(edev);
+#endif
 
 	return 0;
 }
