@@ -618,11 +618,17 @@ bad:
 	return 0;
 }
 
+#include <pico_stack.h>
+
 int net_receive(struct eth_device *edev, unsigned char *pkt, int len)
 {
 	struct ethernet *et = (struct ethernet *)pkt;
 	int et_protlen = ntohs(et->et_protlen);
 	int ret;
+
+#ifdef CONFIG_NET_PICOTCP
+	pico_stack_recv(edev->picodev, pkt, len);
+#endif
 
 	led_trigger_network(LED_TRIGGER_NET_RX);
 
