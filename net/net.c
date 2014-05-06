@@ -618,13 +618,21 @@ bad:
 	return 0;
 }
 
+#include <pico_stack.h>
+
 int net_receive(struct eth_device *edev, unsigned char *pkt, int len)
 {
 	struct ethernet *et = (struct ethernet *)pkt;
 	int et_protlen = ntohs(et->et_protlen);
 	int ret;
 
-	led_trigger_network(LED_TRIGGER_NET_RX);
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		pico_stack_recv(edev->picodev, pkt, len);
+
+		led_trigger_network(LED_TRIGGER_NET_RX);
+
+		return 0;
+	}
 
 	if (len < ETHER_HDR_SIZE) {
 		ret = 0;
@@ -667,4 +675,3 @@ static int net_init(void)
 }
 
 postcore_initcall(net_init);
-
