@@ -24,6 +24,10 @@
 #include <linux/string.h>	/* memcpy */
 #include <asm/byteorder.h>	/* for nton* / ntoh* stuff */
 
+#include <pico_stack.h>
+#include <pico_socket.h>
+#include <pico_ipv4.h>
+
 /* How often do we retry to send packages */
 #define PKT_NUM_RETRIES 4
 
@@ -44,6 +48,7 @@ struct eth_device {
 	int  (*get_ethaddr) (struct eth_device*, u8 adr[6]);
 	int  (*set_ethaddr) (struct eth_device*, const unsigned char *adr);
 
+	struct pico_device *picodev;
 	struct eth_device *next;
 	void *priv;
 
@@ -440,6 +445,8 @@ struct net_connection {
 	rx_handler_f *handler;
 	int proto;
 	void *priv;
+	struct pico_socket *sock;
+	uint16_t remote_port;
 };
 
 static inline char *net_alloc_packet(void)
@@ -461,9 +468,27 @@ void net_unregister(struct net_connection *con);
 
 static inline int net_udp_bind(struct net_connection *con, uint16_t sport)
 {
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		union pico_address local_address;
+		uint16_t localport;
+
+		/* FIXME: use local_address == PICO_IPV4_INADDR_ANY */
+		memset(&local_address, 0, sizeof(union pico_address));
+
+		localport = ntohs(sport);
+
+		/* FIXME: check pico_socket_bind() return value */
+		pico_socket_bind(con->sock, &local_address, &localport);
+
+		return 0;
+	}
+
 	con->udp->uh_sport = ntohs(sport);
 	return 0;
 }
+
+#define UDP_PAYLOAD_SIZE (PKTSIZE - sizeof(struct ethernet) - sizeof(struct iphdr) - \
+		sizeof(struct udphdr))
 
 static inline void *net_udp_get_payload(struct net_connection *con)
 {
@@ -486,11 +511,29 @@ extern struct list_head netdev_list;
 
 #define for_each_netdev(netdev) list_for_each_entry(netdev, &netdev_list, list)
 
+/* NB! return port in network byte order */
+static inline uint16_t getudppeerport(struct net_connection *con)
+{
+	struct udphdr *udp = net_eth_to_udphdr(con->rpacket);
+
+	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		return con->remote_port;
+	}
+
+	return udp->uh_sport;
+}
+
 #include <byteorder.h>
 
 static inline void setudppeerport(struct net_connection *con, uint16_t dport)
 {
-	con->udp->uh_dport = dport;
+	if (IS_ENABLED(CONFIG_NET_LEGACY)) {
+		con->udp->uh_dport = dport;
+	} else if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		/* FIXME */
+//		pico_socket_connect(npriv->con->sock, &remote_address, dport);
+		con->sock->remote_port = dport;
+	}
 }
 
 #endif /* __NET_H__ */
