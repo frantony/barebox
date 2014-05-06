@@ -441,6 +441,7 @@ USERINCLUDE    := \
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
 LINUXINCLUDE    := -Iinclude \
+                   -I$(srctree)/net/picotcp/include -I$(srctree)/net/picotcp/modules \
                    $(if $(building_out_of_srctree), -I$(srctree)/include) \
                    -I$(srctree)/dts/include \
 		   -I$(srctree)/arch/$(SRCARCH)/include \
