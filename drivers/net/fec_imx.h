@@ -146,6 +146,7 @@ struct fec_priv {
 	void (*phy_init)(struct phy_device *dev);
 	struct clk *clk;
 	enum fec_type type;
+	int phy_reset_gpio;
 };
 
 static inline int fec_is_imx27(struct fec_priv *priv)
