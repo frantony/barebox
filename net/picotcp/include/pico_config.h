@@ -256,6 +256,8 @@ static inline uint32_t be_to_host_long(uint32_t be)
 # include "arch/pico_none.h"
 #elif defined GENERIC
 # include "arch/pico_generic_gcc.h"
+#elif defined __BAREBOX__
+# include "arch/pico_barebox.h"
 #elif defined __KERNEL__
 # include "arch/pico_linux.h"
 /* #elif defined ... */
