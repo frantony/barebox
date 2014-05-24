@@ -1,0 +1,41 @@
+menuconfig NET_PICOTCP
+	bool "picotcp support"
+
+if NET_PICOTCP
+
+config NET_PICO_SUPPORT_IPV4
+	bool
+	prompt "ipv4 support"
+
+config NET_PICO_SUPPORT_IPFRAG
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "ip fragmentation support"
+
+config NET_PICO_SUPPORT_ICMP4
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "icmp support"
+
+config NET_PICO_SUPPORT_TCP
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "tcp support"
+
+config NET_PICO_SUPPORT_UDP
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "udp support"
+
+config NET_PICO_SUPPORT_ETH
+	bool
+	prompt "ethernet device support"
+
+config NET_PICO_SUPPORT_DEVLOOP
+	bool
+	prompt "loopback device support"
+
+config NET_PICO_BIGENDIAN
+	bool
+	prompt "bigendian picotcp"
+endif

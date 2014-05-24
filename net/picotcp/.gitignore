@@ -19,3 +19,4 @@ cscope.out
 *.log
 *.pyc
 *.elf
+*.o.cmd
