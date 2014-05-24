@@ -63,6 +63,8 @@
 # include "../test/pico_faulty.h"
 #elif defined ARCHNONE
 # include "arch/pico_none.h"
+#elif defined __BAREBOX__
+# include "arch/pico_barebox.h"
 
 
 /* #elif defined ... */
