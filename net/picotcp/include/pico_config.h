@@ -8,7 +8,9 @@
 #define INCLUDE_PICO_CONFIG
 #ifndef __KERNEL__
 #include <stddef.h>
+#ifndef __BAREBOX__
 #include <stdint.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #else
@@ -225,6 +227,8 @@ static inline uint64_t long_long_be(uint64_t le)
 # include "arch/pico_none.h"
 #elif defined GENERIC
 # include "arch/pico_generic_gcc.h"
+#elif defined __BAREBOX__
+# include "arch/pico_barebox.h"
 #elif defined __KERNEL__
 # include "arch/pico_linux.h"
 /* #elif defined ... */
