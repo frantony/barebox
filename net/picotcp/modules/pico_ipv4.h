@@ -106,4 +106,15 @@ int pico_ipv4_mcast_leave(struct pico_ip4 *mcast_link, struct pico_ip4 *mcast_gr
 struct pico_ipv4_link *pico_ipv4_get_default_mcastlink(void);
 int pico_ipv4_cleanup_links(struct pico_device *dev);
 
+extern struct pico_tree Routes;
+
+struct pico_ipv4_route
+{
+    struct pico_ip4 dest;
+    struct pico_ip4 netmask;
+    struct pico_ip4 gateway;
+    struct pico_ipv4_link *link;
+    uint32_t metric;
+};
+
 #endif /* _INCLUDE_PICO_IPV4 */
