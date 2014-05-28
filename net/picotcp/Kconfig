@@ -21,6 +21,10 @@ config NET_PICO_SUPPORT_UDP
 config NET_PICO_SUPPORT_TCP
 	bool
 	prompt "tcp support"
+
+config NET_PICO_SUPPORT_DHCP_CLIENT
+	bool
+
 endif # NET_PICO_SUPPORT_IPV4
 
 comment "Network device support"
@@ -45,5 +49,11 @@ config CMD_PICOTCP_TEST_IPV4
 	bool
 	depends on NET_PICO_SUPPORT_IPV4
 	prompt "test_picotcp command"
+
+config CMD_PICOTCP_DHCP_CLIENT
+	bool
+	depends on NET_PICO_SUPPORT_UDP
+	select NET_PICO_SUPPORT_DHCP_CLIENT
+	prompt "dhclient command"
 
 endif # NET_PICOTCP
