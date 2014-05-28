@@ -1044,6 +1044,11 @@ struct pico_ip4 pico_dhcp_get_netmask(void *dhcpc)
     return ((struct pico_dhcp_client_cookie*)dhcpc)->netmask;
 }
 
+struct pico_device *pico_dhcp_get_pico_device(void *dhcpc)
+{
+    return ((struct pico_dhcp_client_cookie*)dhcpc)->dev;
+}
+
 struct pico_ip4 pico_dhcp_get_nameserver(void*dhcpc, int index)
 {
     struct pico_ip4 fault = {
