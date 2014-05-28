@@ -7,3 +7,6 @@ obj-$(CONFIG_NET_PICO_SUPPORT_ETH) += pico_arp.o
 obj-$(CONFIG_NET_PICO_SUPPORT_DEVLOOP) += pico_dev_loop.o
 obj-y += pico_dev_null.o
 obj-y += pico_ethernet.o
+
+obj-$(CONFIG_NET_PICO_SUPPORT_DHCP_CLIENT) += pico_dhcp_client.o \
+						pico_dhcp_common.o

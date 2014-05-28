@@ -14,8 +14,13 @@ config NET_PICO_SUPPORT_ICMP4
 
 config NET_PICO_SUPPORT_UDP
 	bool
+	prompt "udp support"
 	default y if NET_PICO_SUPPORT_IPV4
 
+config NET_PICO_SUPPORT_DHCP_CLIENT
+	bool
+
+comment "Network device support"
 
 config NET_PICO_SUPPORT_ETH
 	bool
@@ -46,5 +51,11 @@ config CMD_PICOTCP_ROUTE
 	bool
 	depends on NET_PICO_SUPPORT_IPV4
 	prompt "route command"
+
+config CMD_PICOTCP_DHCP_CLIENT
+	bool
+	depends on NET_PICO_SUPPORT_UDP
+	select NET_PICO_SUPPORT_DHCP_CLIENT
+	prompt "dhclient command"
 
 endif # NET_PICOTCP
