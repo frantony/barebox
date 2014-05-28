@@ -6,6 +6,7 @@
 #include <pico_stack.h>
 #include <pico_ipv4.h>
 #include <pico_dev_null.h>
+#include <pico_dhcp_client.h>
 
 #define fail_if(a,msg) \
 	if (a) { \
@@ -220,4 +221,51 @@ static int do_route(int argc, char *argv[])
 
 BAREBOX_CMD_START(route)
 	.cmd		= do_route,
+BAREBOX_CMD_END
+
+static uint32_t dhcp_xid;
+
+static void callback_dhcpclient(void __attribute__((unused)) *cli, int code)
+{
+	struct pico_ip4 address = {0}, gateway = {0};
+	char s_address[16] = { }, s_gateway[16] = { };
+	void *identifier = NULL;
+
+	if (code == PICO_DHCP_SUCCESS) {
+		identifier = pico_dhcp_get_identifier(dhcp_xid);
+		if (!identifier) {
+			printf("DHCP client: incorrect transaction ID %u\n", dhcp_xid);
+			return;
+		}
+
+		address = pico_dhcp_get_address(identifier);
+		gateway = pico_dhcp_get_gateway(identifier);
+		pico_ipv4_to_string(s_address, address.addr);
+		pico_ipv4_to_string(s_gateway, gateway.addr);
+		printf("DHCP client: IP assigned by the server: %s\n", s_address);
+	} else {
+		printf("DHCP transaction failed.\n");
+	}
+}
+
+static int do_dhclient(int argc, char *argv[])
+{
+	struct pico_device *picodev;
+
+	if (argc != 2) {
+		perror("dhclient");
+		return 1;
+	}
+
+	picodev = pico_get_device(argv[1]);
+	if (pico_dhcp_initiate_negotiation(picodev, &callback_dhcpclient, &dhcp_xid) < 0) {
+		printf("Failed to send DHCP request.\n");
+		return 1;
+	}
+
+	return 0;
+}
+
+BAREBOX_CMD_START(dhclient)
+	.cmd		= do_dhclient,
 BAREBOX_CMD_END
