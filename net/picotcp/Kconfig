@@ -57,4 +57,10 @@ config CMD_PICOTCP_ROUTE
 	depends on NET_PICO_SUPPORT_IPV4
 	prompt "route command"
 
+config CMD_PICOTCP_DHCLIENT
+	bool
+	depends on NET_PICO_SUPPORT_UDP
+	select NET_PICO_SUPPORT_DHCP_CLIENT
+	prompt "dhclient command"
+
 endif # NET_PICOTCP
