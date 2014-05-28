@@ -52,8 +52,10 @@ int pico_ipv4_compare(struct pico_ip4 *a, struct pico_ip4 *b)
 {
     if (a->addr < b->addr)
         return -1;
+
     if (a->addr > b->addr)
         return 1;
+
     return 0;
 }
 
@@ -246,8 +248,10 @@ static inline int pico_ipv4_cmp_frag_id(struct pico_ipv4_fragmented_packet *a, s
 {
     if (a->id < b->id)
         return -1;
+
     if (a->id > b->id)
         return 1;
+
     return 0;
 }
 
@@ -255,8 +259,10 @@ static inline int pico_ipv4_cmp_frag_proto(struct pico_ipv4_fragmented_packet *a
 {
     if (a->proto < b->proto)
         return -1;
+
     if (a->proto > b->proto)
         return 1;
+
     return 0;
 }
 
@@ -265,15 +271,18 @@ static int pico_ipv4_fragmented_packet_cmp(void *ka, void *kb)
     struct pico_ipv4_fragmented_packet *a = ka, *b = kb;
     int cmp = 0;
 
-    cmp = pico_ipv4_cmp_frag_id(a,b);
+    cmp = pico_ipv4_cmp_frag_id(a, b);
     if (cmp)
         return cmp;
-    cmp = pico_ipv4_cmp_frag_proto(a,b);
+
+    cmp = pico_ipv4_cmp_frag_proto(a, b);
     if (cmp)
         return cmp;
+
     cmp = pico_ipv4_compare(&a->src, &b->src);
     if (cmp)
-       return cmp;
+        return cmp;
+
     cmp = pico_ipv4_compare(&a->dst, &b->dst);
     return cmp;
 }
@@ -518,6 +527,8 @@ static inline int8_t pico_ipv4_fragmented_check(struct pico_protocol *self, stru
 #else
 static inline int8_t pico_ipv4_fragmented_check(struct pico_protocol *self, struct pico_frame **f)
 {
+    (void)self;
+    (void)f;
     return 1;
 }
 #endif /* PICO_SUPPORT_IPFRAG */
@@ -565,6 +576,7 @@ static int ipv4_link_compare(void *ka, void *kb)
         if (a->dev > b->dev)
             return 1;
     }
+
     return 0;
 }
 
@@ -1577,6 +1589,7 @@ struct pico_device *pico_ipv4_link_find(struct pico_ip4 *address)
 
 static int pico_ipv4_rebound_large(struct pico_frame *f)
 {
+#ifdef PICO_SUPPORT_IPFRAG
     uint32_t total_payload_written = 0;
     uint32_t len = f->transport_len;
     struct pico_frame *fr;
@@ -1585,7 +1598,6 @@ static int pico_ipv4_rebound_large(struct pico_frame *f)
     hdr = (struct pico_ipv4_hdr *) f->net_hdr;
     dst.addr = hdr->src.addr;
 
-#ifdef PICO_SUPPORT_IPFRAG
     while(total_payload_written < len) {
         uint32_t space = (uint32_t)len - total_payload_written;
         if (space > PICO_IPV4_MAXPAYLOAD)
@@ -1614,6 +1626,7 @@ static int pico_ipv4_rebound_large(struct pico_frame *f)
     } /* while() */
     return (int)total_payload_written;
 #else
+    (void)f;
     return -1;
 #endif
 }
