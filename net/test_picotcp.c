@@ -98,8 +98,14 @@ BAREBOX_CMD_START(test_picotcp)
 BAREBOX_CMD_END
 
 #include <pico_icmp4.h>
+#include <poller.h>
 
 #define NUM_PING 10
+
+#define PING_STATE_WORK		0
+#define PING_STATE_DONE		1
+
+static int ping_state;
 
 /* callback function for receiving ping reply */
 void cb_ping(struct pico_icmp4_stats *s)
@@ -107,6 +113,10 @@ void cb_ping(struct pico_icmp4_stats *s)
 	char host[30];
 	int time_sec = 0;
 	int time_msec = 0;
+
+	if (ping_state == PING_STATE_DONE) {
+		return;
+	}
 
 	/* convert ip address from icmp4_stats structure to string */
 	pico_ipv4_to_string(host, s->dst.addr);
@@ -132,7 +142,18 @@ static int do_picoping(int argc, char *argv[])
 		return 1;
 	}
 
+	ping_state = PING_STATE_WORK;
+
 	pico_icmp4_ping(argv[1], NUM_PING, 1000, 5000, 48, cb_ping);
+
+	while (ping_state != PING_STATE_DONE) {
+		if (ctrlc()) {
+			ping_state = PING_STATE_DONE;
+			break;
+		}
+		get_time_ns();
+		poller_call();
+	}
 
 	return 0;
 }
