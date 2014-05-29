@@ -76,6 +76,18 @@ struct pico_mcast_group {
 };
 #endif
 
+struct pico_ipv4_route
+{
+    struct pico_ip4 dest;
+    struct pico_ip4 netmask;
+    struct pico_ip4 gateway;
+    struct pico_ipv4_link *link;
+    uint32_t metric;
+};
+
+extern struct pico_tree Routes;
+
+
 int pico_ipv4_compare(struct pico_ip4 *a, struct pico_ip4 *b);
 int pico_ipv4_to_string(char *ipbuf, const uint32_t ip);
 int pico_string_to_ipv4(const char *ipstr, uint32_t *ip);
@@ -105,16 +117,5 @@ int pico_ipv4_mcast_join(struct pico_ip4 *mcast_link, struct pico_ip4 *mcast_gro
 int pico_ipv4_mcast_leave(struct pico_ip4 *mcast_link, struct pico_ip4 *mcast_group, uint8_t reference_count, uint8_t filter_mode, struct pico_tree *MCASTFilter);
 struct pico_ipv4_link *pico_ipv4_get_default_mcastlink(void);
 int pico_ipv4_cleanup_links(struct pico_device *dev);
-
-extern struct pico_tree Routes;
-
-struct pico_ipv4_route
-{
-    struct pico_ip4 dest;
-    struct pico_ip4 netmask;
-    struct pico_ip4 gateway;
-    struct pico_ipv4_link *link;
-    uint32_t metric;
-};
 
 #endif /* _INCLUDE_PICO_IPV4 */

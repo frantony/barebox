@@ -6,6 +6,7 @@
 #include <pico_stack.h>
 #include <pico_ipv4.h>
 #include <pico_dev_null.h>
+#include <pico_dhcp_client.h>
 
 #define fail_if(a,msg) \
 	if (a) { \
@@ -69,7 +70,7 @@ static void do_test_ipv4(void)
     /*string_to_ipv4 + ipv4_to_string*/
     pico_string_to_ipv4(ipstr, &(ipaddr.addr));
 	printf("ipstr=%s, ipaddr.addr=%08x\n", ipstr, ipaddr.addr);
-    fail_if(ipaddr.addr != 0x0101a8c0, "Error string to ipv4");
+    fail_if(ipaddr.addr != long_be(0xc0a80101), "Error string to ipv4");
     memset(ipstr, 0, 12);
     pico_ipv4_to_string(ipstr, ipaddr.addr);
     fail_if(strncmp(ipstr, "192.168.1.1", 11) != 0, "Error ipv4 to string");
@@ -78,8 +79,8 @@ static void do_test_ipv4(void)
     fail_if(pico_ipv4_valid_netmask(long_be(nm32.addr)) != 32, "Error checking netmask");
 
     /*is_unicast*/
-    fail_if((pico_ipv4_is_unicast(0x0101a8c0)) != 1, "Error checking unicast");
-    fail_if((pico_ipv4_is_unicast(0x010000e0)) != 0, "Error checking unicast");
+    fail_if((pico_ipv4_is_unicast(long_be(0xc0a80101))) != 1, "Error checking unicast");
+    fail_if((pico_ipv4_is_unicast(long_be(0xe0000001))) != 0, "Error checking unicast");
 
     /*rebound*/
     fail_if(pico_ipv4_rebound(f_NULL) != -1, "Error rebound frame");
@@ -102,6 +103,15 @@ BAREBOX_CMD_END
 #include <pico_icmp4.h>
 
 #define NUM_PING 10
+#define PING_STATE_ON (0)
+#define PING_STATE_OK (1)
+#define PING_STATE_ERR (2)
+
+#define PING_MAX_ERR  (3)
+
+static int ping_state = 0;
+static int ping_err = 0;
+static int ping_count = 0;
 
 /* callback function for receiving ping reply */
 void cb_ping(struct pico_icmp4_stats *s)
@@ -119,24 +129,43 @@ void cb_ping(struct pico_icmp4_stats *s)
 
 	if (s->err == PICO_PING_ERR_REPLIED) {
 		/* print info if no error reported in icmp4_stats structure */
-		printf("%lu bytes from %s: icmp_req=%lu ttl=%lu time=%llu ms\n", \
-			s->size, host, s->seq, s->ttl, s->time);
+        if (ping_state == PING_STATE_ON)
+		    printf("%lu bytes from %s: icmp_req=%lu ttl=%lu time=%llu ms\n", \
+			    s->size, host, s->seq, s->ttl, s->time);
+        ping_count++;
 	} else {
 		/* else, print error info */
 		printf("PING %lu to %s: Error %d\n", s->seq, host, s->err);
+        if(++ping_err >  PING_MAX_ERR)
+            ping_state = PING_STATE_ERR;
 	}
+    if (ping_err + ping_count >= NUM_PING)
+        ping_state = PING_STATE_OK;
 }
 
 static int do_picoping(int argc, char *argv[])
 {
+    int ret = 0;
 	if (argc < 1) {
 		perror("picoping");
 		return 1;
 	}
+    ping_state = PING_STATE_ON;
+    ping_err = 0;
+    ping_count = 0;
 
 	pico_icmp4_ping(argv[1], NUM_PING, 1000, 5000, 48, cb_ping);
+	while (ping_state == PING_STATE_ON) {
+		if (ctrlc()) {
+			ret = 2;
+			break;
+		}
+        pico_stack_tick();
+    }
+    if (ping_state != PING_STATE_ON)
+        ret = 1;
 
-	return 0;
+	return ret;
 }
 
 BAREBOX_CMD_START(picoping)
@@ -223,6 +252,70 @@ static int do_route(int argc, char *argv[])
 
 BAREBOX_CMD_START(route)
 	.cmd		= do_route,
+BAREBOX_CMD_END
+
+
+static uint32_t dhcp_xid;
+
+#define DHCP_STATE_ON (0)
+#define DHCP_STATE_OK (1)
+#define DHCP_STATE_FAIL (2)
+
+
+static int dhcp_state = DHCP_STATE_ON;
+
+static void callback_dhcpclient(void __attribute__((unused)) *cli, int code)
+{
+	struct pico_ip4 address = {0}, gateway = {0};
+	char s_address[16] = { }, s_gateway[16] = { };
+	void *identifier = NULL;
+
+	if (code == PICO_DHCP_SUCCESS) {
+		identifier = pico_dhcp_get_identifier(dhcp_xid);
+		if (!identifier) {
+			printf("DHCP client: incorrect transaction ID %u\n", dhcp_xid);
+			return;
+		}
+
+		address = pico_dhcp_get_address(identifier);
+		gateway = pico_dhcp_get_gateway(identifier);
+		pico_ipv4_to_string(s_address, address.addr);
+		pico_ipv4_to_string(s_gateway, gateway.addr);
+		printf("DHCP client: IP assigned by the server: %s\n", s_address );
+        dhcp_state = DHCP_STATE_OK;
+	} else {
+		printf("DHCP transaction failed.\n");
+        dhcp_state = DHCP_STATE_FAIL;
+	}
+}
+
+
+static int do_dhclient(int argc, char *argv[])
+{
+    struct pico_device *picodev;
+    dhcp_state = DHCP_STATE_ON;
+	if (argc != 2) {
+		perror("dhclient");
+		return 1;
+	}
+    picodev = pico_get_device(argv[1]);
+	if (pico_dhcp_initiate_negotiation(picodev, &callback_dhcpclient, &dhcp_xid) < 0) {
+		printf("Failed to send DHCP request.\n");
+		return 1;
+	}
+	while (dhcp_state == DHCP_STATE_ON) {
+		if (ctrlc()) {
+            return 2;
+		}
+        pico_stack_tick();
+    }
+    if (dhcp_state != DHCP_STATE_OK)
+        return 1;
+	return 0;
+}
+
+BAREBOX_CMD_START(dhclient)
+	.cmd		= do_dhclient,
 BAREBOX_CMD_END
 
 #include <init.h>
