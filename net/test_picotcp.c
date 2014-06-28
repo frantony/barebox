@@ -2,6 +2,7 @@
 #include <common.h>
 #include <complete.h>
 #include <driver.h>
+#include <poller.h>
 
 #include <pico_stack.h>
 #include <pico_ipv4.h>
@@ -224,6 +225,8 @@ BAREBOX_CMD_START(route)
 BAREBOX_CMD_END
 
 static uint32_t dhcp_xid;
+static int dhcp_done;
+static int dhcp_code;
 
 static void callback_dhcpclient(void __attribute__((unused)) *cli, int code)
 {
@@ -246,6 +249,9 @@ static void callback_dhcpclient(void __attribute__((unused)) *cli, int code)
 	} else {
 		printf("DHCP transaction failed.\n");
 	}
+
+	dhcp_done = 1;
+	dhcp_code = code;
 }
 
 static int do_dhclient(int argc, char *argv[])
@@ -257,10 +263,26 @@ static int do_dhclient(int argc, char *argv[])
 		return 1;
 	}
 
+	dhcp_done = 0;
+	dhcp_code = PICO_DHCP_RESET;
+
 	picodev = pico_get_device(argv[1]);
 	if (pico_dhcp_initiate_negotiation(picodev, &callback_dhcpclient, &dhcp_xid) < 0) {
 		printf("Failed to send DHCP request.\n");
 		return 1;
+	}
+
+	while (!dhcp_done) {
+		if (ctrlc()) {
+			pico_dhcp_client_abort(dhcp_xid);
+			break;
+		}
+		get_time_ns();
+		poller_call();
+	}
+
+	if (dhcp_code != PICO_DHCP_SUCCESS) {
+		return -EIO;
 	}
 
 	return 0;
