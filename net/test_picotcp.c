@@ -102,6 +102,9 @@ BAREBOX_CMD_END
 
 #define NUM_PING 10
 
+static int ping_done;
+static int ping_code;
+
 /* callback function for receiving ping reply */
 void cb_ping(struct pico_icmp4_stats *s)
 {
@@ -120,20 +123,49 @@ void cb_ping(struct pico_icmp4_stats *s)
 		/* print info if no error reported in icmp4_stats structure */
 		printf("%lu bytes from %s: icmp_req=%lu ttl=%lu time=%llu ms\n", \
 			s->size, host, s->seq, s->ttl, s->time);
+		if (s->seq == NUM_PING) {
+			ping_done = 1;
+		}
 	} else {
 		/* else, print error info */
 		printf("PING %lu to %s: Error %d\n", s->seq, host, s->err);
+		ping_done = 1;
 	}
+
+	ping_code = s->err;
 }
 
 static int do_picoping(int argc, char *argv[])
 {
+	int id;
+
 	if (argc < 1) {
 		perror("picoping");
 		return 1;
 	}
 
-	pico_icmp4_ping(argv[1], NUM_PING, 1000, 5000, 48, cb_ping);
+	id = pico_icmp4_ping(argv[1], NUM_PING, 1000, 5000, 48, cb_ping);
+
+	if (id == -1) {
+		return -EIO;
+	}
+
+	ping_done = 0;
+	ping_code = PICO_PING_ERR_PENDING;
+
+	while (!ping_done) {
+		if (ctrlc()) {
+			break;
+		}
+		get_time_ns();
+		poller_call();
+	}
+
+	pico_icmp4_ping_abort(id);
+
+	if (ping_code != PICO_PING_ERR_REPLIED) {
+		return -EIO;
+	}
 
 	return 0;
 }
