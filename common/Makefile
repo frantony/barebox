@@ -46,6 +46,7 @@ obj-$(CONFIG_UIMAGE)		+= image.o uimage.o
 obj-$(CONFIG_MENUTREE)		+= menutree.o
 obj-$(CONFIG_EFI_GUID)		+= efi-guid.o
 obj-$(CONFIG_EFI_DEVICEPATH)	+= efi-devicepath.o
+obj-$(CONFIG_FILE_LIST)		+= file-list.o
 
 quiet_cmd_pwd_h = PWDH    $@
 ifdef CONFIG_PASSWORD
