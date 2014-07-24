@@ -22,22 +22,6 @@
 #define CONFIG_SYS_USB_EHCI_MAX_ROOT_PORTS	16
 #endif
 
-/* (shifted) direction/type/recipient from the USB 2.0 spec, table 9.2 */
-#define DeviceRequest \
-	((USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_DEVICE) << 8)
-
-#define DeviceOutRequest \
-	((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_DEVICE) << 8)
-
-#define InterfaceRequest \
-	((USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_INTERFACE) << 8)
-
-#define EndpointRequest \
-	((USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_INTERFACE) << 8)
-
-#define EndpointOutRequest \
-	((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_INTERFACE) << 8)
-
 /*
  * Register Space.
  */
@@ -83,31 +67,6 @@ struct ehci_hcor {
 #define USBMODE_BE	(1 << 2)	/* BE/LE endiannes select */
 #define USBMODE_CM_HC	(3 << 0)	/* host controller mode */
 #define USBMODE_CM_IDLE	(0 << 0)	/* idle state */
-
-/* Interface descriptor */
-struct usb_linux_interface_descriptor {
-	unsigned char	bLength;
-	unsigned char	bDescriptorType;
-	unsigned char	bInterfaceNumber;
-	unsigned char	bAlternateSetting;
-	unsigned char	bNumEndpoints;
-	unsigned char	bInterfaceClass;
-	unsigned char	bInterfaceSubClass;
-	unsigned char	bInterfaceProtocol;
-	unsigned char	iInterface;
-} __attribute__ ((packed));
-
-/* Configuration descriptor information.. */
-struct usb_linux_config_descriptor {
-	unsigned char	bLength;
-	unsigned char	bDescriptorType;
-	unsigned short	wTotalLength;
-	unsigned char	bNumInterfaces;
-	unsigned char	bConfigurationValue;
-	unsigned char	iConfiguration;
-	unsigned char	bmAttributes;
-	unsigned char	MaxPower;
-} __attribute__ ((packed));
 
 #if defined CONFIG_EHCI_DESC_BIG_ENDIAN
 #define	ehci_readl(x)		(*((volatile u32 *)(x)))
