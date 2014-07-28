@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+IFILE=$1
+OFILE=$2
+
+TFILE=$(mktemp)
+
+dd if=/dev/zero of=$TFILE bs=1k count=128 2>/dev/null
+dd if=$IFILE of=$TFILE conv=notrunc 2>/dev/null
+
+scripts/dancingbits $TFILE $OFILE 2
+
+rm -f $TFILE

@@ -11,6 +11,7 @@ hostprogs-y                      += bareboxenv
 hostprogs-y                      += bareboxcrc32
 hostprogs-y                      += kernel-install
 hostprogs-$(CONFIG_KALLSYMS)     += kallsyms
+hostprogs-$(CONFIG_ARCH_DIGIC)   += dancingbits
 hostprogs-$(CONFIG_ARCH_MVEBU)   += kwbimage kwboot
 hostprogs-$(CONFIG_ARCH_NETX)    += gen_netx_image
 hostprogs-$(CONFIG_ARCH_OMAP)    += omap_signGP mk-am3xxx-spi-image

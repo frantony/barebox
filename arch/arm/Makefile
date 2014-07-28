@@ -191,8 +191,14 @@ quiet_cmd_canon_a1100_image = DD      $@
 barebox.canon-a1100.bin: $(KBUILD_BINARY) FORCE
 	$(call if_changed,canon_a1100_image)
 
+quiet_cmd_canon_a1100_diskboot_image = DB      $@
+      cmd_canon_a1100_diskboot_image = scripts/mkdiskboot $< $@ || \
+	echo "WARNING: Couldn't create Canon A1100 DISKBOOT image due to previous errors."
+DISKBOOT-A1100.BIN: $(KBUILD_BINARY) FORCE
+	$(call if_changed,canon_a1100_diskboot_image)
+
 ifeq ($(CONFIG_MACH_CANON_A1100),y)
-KBUILD_IMAGE := barebox.canon-a1100.bin
+KBUILD_IMAGE := barebox.canon-a1100.bin DISKBOOT-A1100.BIN
 endif
 
 KWBIMAGE_OPTS = \
