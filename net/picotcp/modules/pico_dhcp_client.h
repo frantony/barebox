@@ -8,7 +8,7 @@
 #ifndef INCLUDE_PICO_DHCP_CLIENT
 #define INCLUDE_PICO_DHCP_CLIENT
 #include "pico_defines.h"
-#ifdef PICO_SUPPORT_UDP
+//#ifdef PICO_SUPPORT_UDP
 #include "pico_dhcp_common.h"
 #include "pico_addressing.h"
 #include "pico_protocol.h"
@@ -26,5 +26,5 @@ int pico_dhcp_client_abort(uint32_t xid);
 #define PICO_DHCP_ERROR   1
 #define PICO_DHCP_RESET   2
 
-#endif
+//#endif
 #endif
