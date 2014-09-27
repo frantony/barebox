@@ -1,0 +1,160 @@
+\section{MDNS client}
+
+% Short description/overview of module functions
+This module can take an mDNS hostname and announce it to the network. It will defend the name when
+a peer tries to claim it. It can get the IP address of other peers using their hostname, as well as their hostname from the IP address.
+mDNS answers are cached and called upon when a request is matched until the TTL has expired.
+
+\subsection{pico$\_$mdns$\_$init}
+
+\subsubsection*{Description}
+Function to initialise the mDNS client with a given hostname.
+\subsubsection*{Function prototype}
+\begin{verbatim}
+int pico_mdns_init(char *hostname, void (*cb_initialised)(char *str, void *arg), void *arg);
+\end{verbatim}
+
+\subsubsection*{Parameters}
+\begin{itemize}[noitemsep]
+\item \texttt{hostname} - Hostname to be used with MDNS. Should end with '.local'.
+\item \texttt{cb$\_$initialised} - Callback function that is called when the initialisation process is done. The status variable indicates wheter the synchronisation was succesfull or not.
+\item \texttt{arg} - Argument for callback supplied by user. This can be used if you want to pass some variable into your callback function.
+\end{itemize}
+
+\subsubsection*{Return value}
+On success, this call returns 0 if the synchronisation operation has succeeded.
+On error, -1 is returned and \texttt{pico$\_$err} is set appropriately.
+
+\subsubsection*{Errors}
+\begin{itemize}[noitemsep]
+\item \texttt{PICO$\_$ERR$\_$EINVAL} - invalid argument
+\item \texttt{PICO$\_$ERR$\_$ENOMEM} - not enough space
+\end{itemize}
+
+\subsubsection*{Example}
+\begin{verbatim}
+pico_mdns_init("my_name.local", &callback, NULL);
+\end{verbatim}
+
+
+\subsection{pico$\_$mdns$\_$getaddr}
+
+\subsubsection*{Description}
+Function to get the address of a certain hostname or url.
+
+\subsubsection*{Function prototype}
+\begin{verbatim}
+int pico_mdns_getaddr(const char *url, void (*callback)(char *ip, void *arg), void *arg);
+\end{verbatim}
+
+\subsubsection*{Parameters}
+\begin{itemize}[noitemsep]
+\item \texttt{url} - Hostname of which the address will be retreived.
+\item \texttt{callback} - Callback function that is called when the address is retreived.
+\item \texttt{arg} - Argument for callback supplied by user. This can be used if you want to pass some variable into your callback function.
+\end{itemize}
+
+\subsubsection*{Return value}
+On success, this call returns 0 if the time is set.
+On error, -1 is returned and \texttt{pico$\_$err} is set appropriately.
+
+\subsubsection*{Example}
+\begin{verbatim}
+int ret = pico_mdns_getaddr("other_host.local", callback, NULL);
+\end{verbatim}
+
+
+
+\subsection{pico$\_$mdns$\_$getname}
+
+\subsubsection*{Description}
+Function to get the name of a host using the IP address.
+
+\subsubsection*{Function prototype}
+\begin{verbatim}
+int pico_mdns_getname(const char *ip, void (*callback)(char *url, void *arg), void *arg);
+\end{verbatim}
+
+\subsubsection*{Parameters}
+\begin{itemize}[noitemsep]
+\item \texttt{ip} - IP address of the host you want the name of.
+\item \texttt{callback} - Callback function that is called when the hostname is retreived.
+\item \texttt{arg} - Argument for callback supplied by user. This can be used if you want to pass some variable into your callback function.
+\end{itemize}
+
+\subsubsection*{Return value}
+On success, this call returns 0 if the time is set.
+On error, -1 is returned and \texttt{pico$\_$err} is set appropriately.
+
+\subsubsection*{Example}
+\begin{verbatim}
+pico_mdns_getname("192.168.1.7", &callback, NULL);
+\end{verbatim}
+
+
+\subsection{pico$\_$mdns$\_$getaddr6}
+
+\subsubsection*{Description}
+Function to get the IPv6 address of a certain hostname or url.
+
+\subsubsection*{Function prototype}
+\begin{verbatim}
+int pico_mdns_getaddr6(const char *url, void (*callback)(char *ip, void *arg), void *arg);
+\end{verbatim}
+
+\subsubsection*{Parameters}
+\begin{itemize}[noitemsep]
+\item \texttt{url} - Hostname of which the IPv6 address will be retrieved.
+\item \texttt{callback} - Callback function that is called when the address is retrieved.
+\item \texttt{arg} - Argument for callback supplied by user. This can be used if you want to pass some variable into your callback function.
+\end{itemize}
+
+\subsubsection*{Return value}
+On success, this call returns 0 if the time is set.
+On error, -1 is returned and \texttt{pico$\_$err} is set appropriately.
+
+\subsubsection*{Example}
+\begin{verbatim}
+int ret = pico_mdns_getaddr6("other_host.local", callback, NULL);
+\end{verbatim}
+
+
+
+\subsection{pico$\_$mdns$\_$getname6}
+
+\subsubsection*{Description}
+Function to get the name of a host using its IPv6 address.
+
+\subsubsection*{Function prototype}
+\begin{verbatim}
+int pico_mdns_getname6(const char *ip, void (*callback)(char *url, void *arg), void *arg);
+\end{verbatim}
+
+\subsubsection*{Parameters}
+\begin{itemize}[noitemsep]
+\item \texttt{ip} - IPv6 address of the host you want the name of.
+\item \texttt{callback} - Callback function that is called when the hostname is retreived.
+\item \texttt{arg} - Argument for callback supplied by user. This can be used if you want to pass some variable into your callback function.
+\end{itemize}
+
+\subsubsection*{Return value}
+On success, this call returns 0 if the time is set.
+On error, -1 is returned and \texttt{pico$\_$err} is set appropriately.
+
+\subsubsection*{Example}
+\begin{verbatim}
+pico_mdns_getname6("fc00:aaaa:bbbb:cccc::", &callback, NULL);
+\end{verbatim}
+
+\subsection{pico$\_$mdns$\_$flush$\_$cache}
+
+\subsubsection*{Description}
+Function to flush the mDNS resource record cache.
+
+\subsubsection*{Function prototype}
+\begin{verbatim}
+int pico_mdns_flush_cache(void);
+\end{verbatim}
+
+\subsubsection*{Return value}
+This call returns 0.
