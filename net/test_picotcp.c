@@ -177,6 +177,38 @@ BAREBOX_CMD_END
 #include <pico_tree.h>
 
 extern struct pico_tree Device_tree;
+extern struct pico_tree Tree_dev_link;
+
+static void printf_iface(struct pico_device *dev)
+{
+	struct pico_ipv4_link *link;
+	struct pico_tree_node *index;
+
+	printf("%-10s", dev->name);
+
+	if (dev->eth) {
+		struct pico_ethdev *eth = dev->eth;
+
+		printf("Link encap:Ethernet  HWaddr ");
+		printf("%02x:%02x:%02x:%02x:%02x:%02x",
+			eth->mac.addr[0], eth->mac.addr[1],
+			eth->mac.addr[2], eth->mac.addr[3],
+			eth->mac.addr[4], eth->mac.addr[5]);
+	}
+	printf("\n");
+
+	pico_tree_foreach(index, &Tree_dev_link) {
+		link = index->keyValue;
+		if (dev == link->dev) {
+			char ipstr[16];
+			pico_ipv4_to_string(ipstr, link->address.addr);
+			printf("          inet addr:%s", ipstr);
+			pico_ipv4_to_string(ipstr, link->netmask.addr);
+			printf(" Mask:%s\n", ipstr);
+		}
+	}
+	printf("\n");
+}
 
 static int do_ifconfig(int argc, char *argv[])
 {
@@ -184,9 +216,14 @@ static int do_ifconfig(int argc, char *argv[])
 	struct pico_ip4 ipaddr, nm;
 	int ret;
 
-	if (argc < 3) {
-		perror("ifconfig");
-		return 1;
+	if (argc == 1) {
+		struct pico_tree_node *index;
+
+		pico_tree_foreach(index, &Device_tree) {
+			printf_iface(index->keyValue);
+		}
+
+		return 0;
 	}
 
 	picodev = pico_get_device(argv[1]);
@@ -203,6 +240,25 @@ static int do_ifconfig(int argc, char *argv[])
 			printf("%s\n", dev->name);
 		}
 
+		return 1;
+	}
+
+	if (argc == 2) {
+		struct pico_tree_node *index;
+
+		pico_tree_foreach(index, &Device_tree) {
+			struct pico_device *dev = index->keyValue;
+
+			if (!strcmp(dev->name, argv[1])) {
+				printf_iface(dev);
+			}
+		}
+
+		return 0;
+	}
+
+	if (argc < 4) {
+		perror("ifconfig");
 		return 1;
 	}
 
