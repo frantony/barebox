@@ -189,7 +189,7 @@ static int ehci_td_buffer(struct qTD *td, void *buf, size_t sz)
 	uint32_t addr, delta, next;
 	int idx;
 
-	addr = (uint32_t) buf;
+	addr = (uint32_t)virt_to_phys(buf);
 	td->qtd_dma = addr;
 	td->length = sz;
 
@@ -242,7 +242,7 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 	memset(ehci->td, 0, sizeof(struct qTD) * NUM_TD);
 
 	qh = &ehci->qh_list[1];
-	qh->qh_link = cpu_to_hc32((uint32_t)ehci->qh_list | QH_LINK_TYPE_QH);
+	qh->qh_link = cpu_to_hc32((uint32_t)virt_to_phys(ehci->qh_list) | QH_LINK_TYPE_QH);
 	c = (dev->speed != USB_SPEED_HIGH &&
 	     usb_pipeendpoint(pipe) == 0) ? 1 : 0;
 	endpt = (8 << 28) |
@@ -293,7 +293,7 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 			dev_dbg(ehci->dev, "unable construct SETUP td\n");
 			goto fail;
 		}
-		*tdp = cpu_to_hc32((uint32_t) td);
+		*tdp = cpu_to_hc32((uint32_t)virt_to_phys(td));
 		tdp = &td->qt_next;
 
 		toggle = 1;
@@ -315,7 +315,7 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 			dev_err(ehci->dev, "unable construct DATA td\n");
 			goto fail;
 		}
-		*tdp = cpu_to_hc32((uint32_t) td);
+		*tdp = cpu_to_hc32((uint32_t)virt_to_phys(td));
 		tdp = &td->qt_next;
 	}
 
@@ -331,11 +331,11 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 		    (3 << 10) |
 		    ((usb_pipein(pipe) ? 0 : 1) << 8) | (0x80 << 0);
 		td->qt_token = cpu_to_hc32(token);
-		*tdp = cpu_to_hc32((uint32_t)td);
+		*tdp = cpu_to_hc32((uint32_t)virt_to_phys(td));
 		tdp = &td->qt_next;
 	}
 
-	ehci->qh_list->qh_link = cpu_to_hc32((uint32_t) qh | QH_LINK_TYPE_QH);
+	ehci->qh_list->qh_link = cpu_to_hc32((uint32_t)virt_to_phys(qh) | QH_LINK_TYPE_QH);
 
 	/* Flush dcache */
 	if (IS_ENABLED(CONFIG_MMU)) {
@@ -403,7 +403,7 @@ ehci_submit_async(struct usb_device *dev, unsigned long pipe, void *buffer,
 		goto fail;
 	}
 
-	ehci->qh_list->qh_link = cpu_to_hc32((uint32_t)ehci->qh_list | QH_LINK_TYPE_QH);
+	ehci->qh_list->qh_link = cpu_to_hc32((uint32_t)virt_to_phys(ehci->qh_list) | QH_LINK_TYPE_QH);
 
 	token = hc32_to_cpu(qh->qt_token);
 	if (!(token & 0x80)) {
@@ -447,6 +447,7 @@ fail:
 	dev_err(ehci->dev, "fail1\n");
 	td = (void *)hc32_to_cpu(qh->qt_next);
 	while (td != (void *)QT_NEXT_TERMINATE) {
+		td = 0xa0000000 + (void *)td;
 		qh->qt_next = td->qt_next;
 		td = (void *)hc32_to_cpu(qh->qt_next);
 	}
@@ -806,7 +807,8 @@ static int ehci_init(struct usb_host *host)
 	ehci->qh_list->qt_token = cpu_to_hc32(0x40);
 
 	/* Set async. queue head pointer. */
-	ehci_writel(&ehci->hcor->or_asynclistaddr, (uint32_t)ehci->qh_list);
+	ehci_writel(&ehci->hcor->or_asynclistaddr,
+			(uint32_t)virt_to_phys(ehci->qh_list));
 
 	/*
 	 * Set up periodic list
@@ -838,13 +840,13 @@ static int ehci_init(struct usb_host *host)
 		ehci->periodic_list = dma_alloc_coherent(1024 * 4,
 							 DMA_ADDRESS_BROKEN);
 	for (i = 0; i < 1024; i++) {
-		ehci->periodic_list[i] = cpu_to_hc32((unsigned long)periodic
+		ehci->periodic_list[i] = cpu_to_hc32((0x1fffffff & (unsigned long)periodic)
 						| QH_LINK_TYPE_QH);
 	}
 
 	/* Set periodic list base address */
 	ehci_writel(&ehci->hcor->or_periodiclistbase,
-		(unsigned long)ehci->periodic_list);
+		0x1fffffff & ((unsigned long)ehci->periodic_list));
 
 	reg = ehci_readl(&ehci->hccr->cr_hcsparams);
 	descriptor.hub.bNbrPorts = HCS_N_PORTS(reg);
@@ -936,7 +938,7 @@ disable_periodic(struct ehci_priv *ehci)
 	return 0;
 }
 
-#define NEXT_QH(qh) (struct QH *)((unsigned long)hc32_to_cpu((qh)->qh_link) & ~0x1f)
+#define NEXT_QH(qh) (struct QH *)((0xa0000000 | (unsigned long)hc32_to_cpu((qh)->qh_link)) & ~0x1f)
 
 static int
 enable_periodic(struct ehci_priv *ehci)
@@ -1064,11 +1066,11 @@ static struct int_queue *ehci_create_int_queue(struct usb_device *dev,
 		struct qTD *td = result->tds + i;
 		void **buf = &qh->buffer;
 
-		qh->qh_link = cpu_to_hc32((unsigned long)(qh+1) | QH_LINK_TYPE_QH);
+		qh->qh_link = cpu_to_hc32(0x1fffffff & ((unsigned long)(qh+1) | QH_LINK_TYPE_QH));
 		if (i == queuesize - 1)
 			qh->qh_link = cpu_to_hc32(QH_LINK_TERMINATE);
 
-		qh->qt_next = cpu_to_hc32((unsigned long)td);
+		qh->qt_next = cpu_to_hc32(0x1fffffff & (unsigned long)td);
 		qh->qt_altnext = cpu_to_hc32(QT_NEXT_TERMINATE);
 		qh->qh_endpt1 =
 			cpu_to_hc32((0 << 28) | /* No NAK reload (ehci 4.9) */
@@ -1097,7 +1099,7 @@ static struct int_queue *ehci_create_int_queue(struct usb_device *dev,
 			((usb_pipein(pipe) ? 1 : 0) << 8) | /* IN/OUT token */
 			0x80); /* active */
 		td->qt_buffer[0] =
-		    cpu_to_hc32((unsigned long)buffer + i * elementsize);
+		    cpu_to_hc32(0x1fffffff & ((unsigned long)buffer + i * elementsize));
 		td->qt_buffer[1] =
 		    cpu_to_hc32((td->qt_buffer[0] + 0x1000) & ~0xfff);
 		td->qt_buffer[2] =
@@ -1121,7 +1123,7 @@ static struct int_queue *ehci_create_int_queue(struct usb_device *dev,
 
 	/* hook up to periodic list */
 	result->last->qh_link = list->qh_link;
-	list->qh_link = cpu_to_hc32((unsigned long)result->first | QH_LINK_TYPE_QH);
+	list->qh_link = cpu_to_hc32((0x1fffffff & (unsigned long)result->first) | QH_LINK_TYPE_QH);
 
 	if (enable_periodic(ehci) < 0) {
 		dev_err(&dev->dev,
