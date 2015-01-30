@@ -11,3 +11,6 @@ obj-$(CONFIG_NET_RESOLV)+= dns.o
 obj-$(CONFIG_NET_NETCONSOLE) += netconsole.o
 obj-$(CONFIG_NET_IFUP)	+= ifup.o
 obj-$(CONFIG_NET_FASTBOOT) += fastboot.o
+
+obj-$(CONFIG_NET_PICOTCP) += picotcp/
+obj-$(CONFIG_NET_PICOTCP) += picotcp.o

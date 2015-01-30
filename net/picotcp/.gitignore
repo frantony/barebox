@@ -26,3 +26,4 @@ cscope.out
 *.pcap
 .ycm_extra_conf.py
 .clang_complete
+*.o.cmd
