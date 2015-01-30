@@ -1,0 +1,39 @@
+config NET_PICOTCP
+	bool "picotcp network stack"
+	select POLLER
+
+if NET_PICOTCP
+
+config NET_PICO_SUPPORT_IPV4
+	bool
+	default y
+
+config NET_PICO_SUPPORT_ICMP4
+	bool
+	default y if NET_PICO_SUPPORT_IPV4
+
+config NET_PICO_SUPPORT_UDP
+	bool
+	default y if NET_PICO_SUPPORT_IPV4
+
+config NET_PICO_SUPPORT_TCP
+	bool
+	default y if NET_PICO_SUPPORT_IPV4
+
+config NET_PICO_SUPPORT_ETH
+	bool
+	default y
+
+config NET_PICO_SUPPORT_DEVLOOP
+	bool
+	default y
+
+config NET_PICO_SUPPORT_DHCP_CLIENT
+	bool
+	default y
+
+config NET_PICO_SUPPORT_DNS_CLIENT
+	bool
+	default y
+
+endif # NET_PICOTCP

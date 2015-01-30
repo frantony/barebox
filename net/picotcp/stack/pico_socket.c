@@ -41,8 +41,12 @@
 #include "pico_socket_multicast.h"
 #include "pico_socket_tcp.h"
 #include "pico_socket_udp.h"
+#ifdef PICO_SUPPORT_IPV6PMTU
 #include "pico_ipv6_pmtu.h"
+#endif
+#ifdef PICO_SUPPORT_PACKET_SOCKETS
 #include "pico_socket_ll.h"
+#endif
 
 #if defined (PICO_SUPPORT_IPV4) || defined (PICO_SUPPORT_IPV6) || defined(PICO_SUPPORT_PACKET_SOCKETS)
 #if defined (PICO_SUPPORT_TCP) || defined (PICO_SUPPORT_UDP) || defined(PICO_SUPPORT_PACKET_SOCKETS)
@@ -1470,7 +1474,7 @@ int MOCKABLE pico_socket_sendto_extended(struct pico_socket *s, const void *buf,
     remote_endpoint = pico_socket_sendto_destination(s, dst, remote_port);
 
     if (PROTO(s) == PICO_PROTO_ICMP4) {
-        if (pico_socket_icmp4_sendto_check(s, buf, len, dst, remote_port) < 0)
+        if (pico_socket_icmp4_sendto_check(s, (void *)buf, len, dst, remote_port) < 0)
             return -1;
     }
     if ((PROTO(s) == PICO_PROTO_UDP) || (PROTO(s) == PICO_PROTO_TCP)) {
@@ -1635,9 +1639,11 @@ int pico_socket_fionread(struct pico_socket *s)
         return f->payload_len;
     }
 #endif
+#ifdef PICO_SUPPORT_TCP
     else if (PROTO(s) == PICO_PROTO_TCP) {
         return pico_tcp_queue_in_size(s);
     }
+#endif
     return 0;
 }
 

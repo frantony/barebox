@@ -26,7 +26,7 @@
  *********************************************************************/
 #ifndef INCLUDE_PICO_CONFIG
 #define INCLUDE_PICO_CONFIG
-#ifndef __KERNEL__
+#if !defined(__BAREBOX__) && !defined(__KERNEL__)
 #include "pico_defines.h"
 #include <stddef.h>
 #include <stdint.h>

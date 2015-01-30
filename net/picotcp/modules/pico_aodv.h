@@ -27,7 +27,11 @@
 #ifndef PICO_AODV_H_
 #define PICO_AODV_H_
 
+#ifndef __BAREBOX__
 #include <stdint.h>
+#else
+#include <linux/types.h>
+#endif
 #include "pico_addressing.h"
 #include "pico_config.h"
 #include "pico_device.h"

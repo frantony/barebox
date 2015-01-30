@@ -36,7 +36,9 @@
 #include "pico_device.h"
 #include "pico_socket.h"
 #include "pico_icmp6.h"
+#ifdef PICO_SUPPORT_DNS_CLIENT
 #include "pico_dns_client.h"
+#endif
 #include "pico_mld.h"
 #include "pico_igmp.h"
 #include "pico_constants.h"

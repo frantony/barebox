@@ -28,16 +28,26 @@
 #include "pico_frame.h"
 #include "pico_constants.h"
 #include "pico_queue.h"
+#include "pico_tree.h"
 #include "heap.h"
 #ifndef INCLUDE_PICO_STACK
 #define INCLUDE_PICO_STACK
 #include "pico_arp.h"
+#if defined (PICO_SUPPORT_DHCPC) || defined (PICO_SUPPORT_DHCPD)
 #include "pico_dhcp_common.h"
-#include "pico_dhcp_client.h"
+#endif
+#ifdef PICO_SUPPORT_MDNS
 #include "pico_mdns.h"
+#endif
+#ifdef PICO_SUPPORT_TFTP
 #include "pico_tftp.h"
+#endif
+#ifdef PICO_SUPPORT_OLSR
 #include "pico_olsr.h"
+#endif
+#ifdef PICO_SUPPORT_SNTP_CLIENT
 #include "pico_sntp_client.h"
+#endif
 
 #ifdef PICO_SUPPORT_IPV6PMTU
 #include "pico_ipv6_pmtu.h"
