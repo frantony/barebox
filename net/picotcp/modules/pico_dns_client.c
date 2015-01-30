@@ -772,10 +772,12 @@ int pico_dns_client_getaddr(struct pico_stack *S, const char *url, void (*callba
     return pico_dns_client_getaddr_init(S, url, PICO_PROTO_IPV4, callback, arg);
 }
 
+#ifdef PICO_SUPPORT_IPV6
 int pico_dns_client_getaddr6(struct pico_stack *S, const char *url, void (*callback)(char *, void *), void *arg)
 {
     return pico_dns_client_getaddr_init(S, url, PICO_PROTO_IPV6, callback, arg);
 }
+#endif
 
 static int pico_dns_getname_univ(struct pico_stack *S, const char *ip, void (*callback)(char *, void *), void *arg, enum pico_dns_arpa arpa)
 {
@@ -813,10 +815,12 @@ int pico_dns_client_getname(struct pico_stack *S, const char *ip, void (*callbac
 }
 
 
+#ifdef PICO_SUPPORT_IPV6
 int pico_dns_client_getname6(struct pico_stack *S, const char *ip, void (*callback)(char *, void *), void *arg)
 {
     return pico_dns_getname_univ(S, ip, callback, arg, PICO_DNS_ARPA6);
 }
+#endif
 
 int pico_dns_client_nameserver(struct pico_stack *S, struct pico_ip4 *ns, uint8_t flag)
 {

@@ -741,7 +741,7 @@ static int net_handle_icmp(struct eth_device *edev, unsigned char *pkt, int len)
 			return 0;
 		}
 	}
-	return 0;
+	return -ENOTCONN;
 }
 
 static int net_handle_ip(struct eth_device *edev, unsigned char *pkt, int len)
@@ -781,7 +781,7 @@ static int net_handle_ip(struct eth_device *edev, unsigned char *pkt, int len)
 		return net_handle_udp(pkt, len);
 	}
 
-	return 0;
+	return -EPROTONOSUPPORT;
 bad:
 	net_bad_packet(pkt, len);
 	return 0;
@@ -817,6 +817,8 @@ int net_receive(struct eth_device *edev, unsigned char *pkt, int len)
 	switch (et_protlen) {
 	case PROT_ARP:
 		ret = net_handle_arp(edev, pkt, len);
+		if (!ret)
+			ret = -EINPROGRESS;
 		break;
 	case PROT_IP:
 		ret = net_handle_ip(edev, pkt, len);
@@ -827,6 +829,10 @@ int net_receive(struct eth_device *edev, unsigned char *pkt, int len)
 		break;
 	}
 out:
+	if (ret != 0) {
+		pico_adapter_receive(edev, pkt, len);
+	}
+
 	return ret;
 }
 

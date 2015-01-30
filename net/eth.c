@@ -50,6 +50,8 @@ int eth_set_ethaddr(struct eth_device *edev, const char *ethaddr)
 
 	memcpy(edev->ethaddr, ethaddr, ETH_ALEN);
 
+	pico_adapter_set_ethaddr(edev, ethaddr);
+
 	return 0;
 }
 
@@ -484,12 +486,30 @@ int eth_register(struct eth_device *edev)
 			found = 1;
 	}
 
+	if (IS_ENABLED(CONFIG_NET_PICO_SUPPORT_ETH)) {
+		/* obtain ethaddr for picotcp early */
+		if (!is_valid_ether_addr(ethaddr)) {
+			dev_warn(&edev->dev, "not valid MAC address set: %pM\n", ethaddr);
+			random_ether_addr(ethaddr);
+			dev_warn(&edev->dev, "Using random address %pM\n", ethaddr);
+			found = 1;
+		}
+	}
+
 	if (found)
 		register_preset_mac_address(edev, ethaddr);
 
 	if (IS_ENABLED(CONFIG_OFDEVICE) && edev->parent &&
 			edev->parent->of_node)
 		edev->nodepath = xstrdup(edev->parent->of_node->full_name);
+
+#ifdef CONFIG_NET_PICOTCP
+	if (IS_ENABLED(CONFIG_NET_PICO_SUPPORT_ETH)) {
+		extern void pico_adapter_init(struct eth_device *edev);
+
+		pico_adapter_init(edev);
+	}
+#endif
 
 	return 0;
 }

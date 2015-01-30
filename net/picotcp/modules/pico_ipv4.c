@@ -44,6 +44,11 @@
 #include "pico_ethernet.h"
 #include "pico_mcast.h"
 
+#ifdef __BAREBOX__
+#include <linux/limits.h>
+#define UINT8_MAX U8_MAX
+#endif
+
 #ifdef PICO_SUPPORT_IPV4
 
 #ifdef PICO_SUPPORT_MCAST

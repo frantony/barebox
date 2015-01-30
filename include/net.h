@@ -23,6 +23,16 @@
 #include <linux/string.h>	/* memcpy */
 #include <asm/byteorder.h>	/* for nton* / ntoh* stuff */
 
+#ifdef CONFIG_NET_PICOTCP
+void pico_adapter_init(struct eth_device *edev);
+void pico_adapter_receive(struct eth_device *edev, unsigned char *pkt, int len);
+void pico_adapter_set_ethaddr(struct eth_device *edev, const char *ethaddr);
+#else
+static inline void pico_adapter_init(struct eth_device *edev) { };
+static inline void pico_adapter_receive(struct eth_device *edev, unsigned char *pkt, int len) { };
+static inline void pico_adapter_set_ethaddr(struct eth_device *edev, const char *ethaddr) { };
+#endif
+
 /* How often do we retry to send packages */
 #define PKT_NUM_RETRIES 4
 
@@ -79,6 +89,10 @@ struct eth_device {
 	unsigned int global_mode;
 
 	uint64_t last_link_check;
+
+#ifdef CONFIG_NET_PICOTCP
+	void *picodev;
+#endif
 };
 
 #define dev_to_edev(d) container_of(d, struct eth_device, dev)

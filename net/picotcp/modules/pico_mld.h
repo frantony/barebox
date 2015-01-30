@@ -27,7 +27,11 @@
 #ifndef INCLUDE_PICO_MLD
 #define INCLUDE_PICO_MLD
 
+#ifndef __BAREBOX__
 #include <stdint.h>
+#else
+#include <linux/types.h>
+#endif
 #include "pico_ipv6.h"
 
 #define PICO_MLDV1               1
