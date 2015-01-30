@@ -445,6 +445,8 @@ LINUXINCLUDE    := -Iinclude \
                    -I$(srctree)/dts/include \
 		   -I$(srctree)/arch/$(SRCARCH)/include \
 		   -I$(objtree)/arch/$(SRCARCH)/include \
+                   -I$(srctree)/net/picotcp/include \
+                   -I$(srctree)/net/picotcp/modules \
 		   $(USERINCLUDE)
 
 KBUILD_CPPFLAGS        := -D__KERNEL__ -D__BAREBOX__ $(LINUXINCLUDE) -fno-builtin -ffreestanding

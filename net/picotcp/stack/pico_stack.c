@@ -14,12 +14,20 @@
 #include "pico_protocol.h"
 #include "pico_stack.h"
 #include "pico_addressing.h"
+#ifdef PICO_SUPPORT_DNS_CLIENT
 #include "pico_dns_client.h"
+#endif
 
+#ifdef PICO_SUPPORT_6LOWPAN
 #include "pico_6lowpan_ll.h"
+#endif
 #include "pico_ethernet.h"
+#ifdef PICO_SUPPORT_6LOWPAN
 #include "pico_6lowpan.h"
+#endif
+#ifdef PICO_SUPPORT_OLSR
 #include "pico_olsr.h"
+#endif
 #include "pico_aodv.h"
 #include "pico_eth.h"
 #include "pico_arp.h"
