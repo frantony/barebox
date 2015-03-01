@@ -25,6 +25,12 @@ config NET_PICO_SUPPORT_TCP
 config NET_PICO_SUPPORT_DHCP_CLIENT
 	bool
 
+config NET_PICO_SUPPORT_TFTP
+	depends on FS_TFTP
+	depends on NET_PICO_SUPPORT_UDP
+	bool
+	default y
+
 endif # NET_PICO_SUPPORT_IPV4
 
 comment "Network device support"

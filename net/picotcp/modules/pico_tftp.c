@@ -13,6 +13,8 @@
 #include <pico_tftp.h>
 #include <pico_strings.h>
 
+#include <common.h>
+
 /* a zero value means adaptative timeout! (2, 4, 8) */
 #define PICO_TFTP_TIMEOUT 2000U
 
@@ -144,7 +146,7 @@ static int extract_value(char *str, uint32_t *value, uint32_t max)
     char *endptr;
     unsigned long num;
 
-    num = strtoul(str, &endptr, 10);
+    num = simple_strtoul(str, &endptr, 10);
 
     if (endptr == str || *endptr || num > max)
         return -1;
@@ -366,9 +368,7 @@ static size_t prepare_options_string(struct pico_tftp_session *session, char *st
     int res;
 
     if (session->options & PICO_TFTP_OPTION_TIME) {
-        strcpy(str_options, "timeout");
-        len += 8;
-        res = num2string(session->option_timeout, &str_options[len], 4);
+        res = sprintf(&str_options[len], "tsize%c%d", 0, session->option_timeout);
         if (res < 0)
             return 0;
 
@@ -376,9 +376,7 @@ static size_t prepare_options_string(struct pico_tftp_session *session, char *st
     }
 
     if (session->options & PICO_TFTP_OPTION_FILE) {
-        strcpy(&str_options[len], "tsize");
-        len += 6;
-        res = num2string(filesize, &str_options[len], 11);
+        res = sprintf(&str_options[len], "tsize%c%d", 0, filesize);
         if (res < 0)
             return 0;
 
