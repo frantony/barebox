@@ -9,3 +9,4 @@ obj-y += pico_dev_null.o
 
 obj-$(CONFIG_NET_PICO_SUPPORT_DHCP_CLIENT) += pico_dhcp_client.o \
 						pico_dhcp_common.o
+obj-$(CONFIG_NET_PICO_SUPPORT_TFTP) += pico_tftp.o pico_strings.o

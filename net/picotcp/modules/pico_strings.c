@@ -7,7 +7,8 @@
    Author: Michele Di Pede
  *********************************************************************/
 
-#include <ctype.h>
+#include <linux/ctype.h>
+
 #include <stdlib.h>
 #include "pico_strings.h"
 
@@ -76,6 +77,7 @@ static inline int revert_and_shift(char *buf, int len, int pos)
     return len;
 }
 
+#if 0
 int num2string(int32_t num, char *buf, int len)
 {
     ldiv_t res;
@@ -99,3 +101,4 @@ int num2string(int32_t num, char *buf, int len)
 
     return revert_and_shift(buf, len, pos);
 }
+#endif
