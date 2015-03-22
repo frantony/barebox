@@ -88,6 +88,7 @@ machine-$(CONFIG_MACH_MIPS_LOONGSON)	:= loongson
 board-$(CONFIG_BOARD_LOONGSON_TECH_LS1B)	:= loongson-ls1b
 
 machine-$(CONFIG_MACH_MIPS_XBURST)	:= xburst
+board-$(CONFIG_BOARD_AINOL_NOVO7_PALADIN)	:= ainol-novo7-paladin
 board-$(CONFIG_BOARD_RZX50)	:= ritmix-rzx50
 board-$(CONFIG_BOARD_CI20)	:= img-ci20
 

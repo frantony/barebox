@@ -30,6 +30,10 @@ config BOARD_RZX50
 	select HAS_POWEROFF
 	select CPU_JZ4755
 
+config BOARD_AINOL_NOVO7_PALADIN
+	bool "Ainol Novo7 Paladin"
+	select CPU_JZ4770
+
 config BOARD_CI20
 	bool "Imagination Creator CI20"
 	select CPU_JZ4780
