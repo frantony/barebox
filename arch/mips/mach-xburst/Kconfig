@@ -10,6 +10,12 @@ config CPU_JZ4755
 	select WATCHDOG
 	select WATCHDOG_JZ4740
 
+config CPU_JZ4770
+	bool
+	select SYS_HAS_CPU_MIPS32_R2
+	select WATCHDOG
+	select WATCHDOG_JZ4740
+
 config CPU_JZ4780
 	bool
 	select SYS_HAS_CPU_MIPS32_R2

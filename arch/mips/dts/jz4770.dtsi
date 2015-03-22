@@ -1,0 +1,90 @@
+#include "skeleton.dtsi"
+
+/ {
+	soc {
+		model = "Ingenic JZ4770";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		ranges = <>;
+
+		wdt: wdt@10002000 {
+			compatible = "ingenic,jz4740-wdt";
+			reg = <0x10002000 0x10>;
+		};
+
+		uart0: serial@10030000 {
+			compatible = "ingenic,jz4740-uart";
+			reg = <0x10030000 0x100>;
+			reg-shift = <2>;
+			clock-frequency = <12000000>;
+			status = "disabled";
+		};
+
+		uart1: serial@10031000 {
+			compatible = "ingenic,jz4740-uart";
+			reg = <0x10031000 0x100>;
+			reg-shift = <2>;
+			clock-frequency = <12000000>;
+			status = "disabled";
+		};
+
+		uart2: serial@10032000 {
+			compatible = "ingenic,jz4740-uart";
+			reg = <0x10032000 0x100>;
+			reg-shift = <2>;
+			clock-frequency = <12000000>;
+			status = "disabled";
+		};
+
+		uart3: serial@10033000 {
+			compatible = "ingenic,jz4740-uart";
+			reg = <0x10033000 0x100>;
+			reg-shift = <2>;
+			clock-frequency = <12000000>;
+			status = "disabled";
+		};
+
+		gpio0: gpio@10010000 {
+			compatible = "ingenic,jz4740-gpio";
+			gpio-controller;
+			reg = <0x10010000 0x100>;
+			#gpio-cells = <2>;
+		};
+
+		gpio1: gpio@10010100 {
+			compatible = "ingenic,jz4740-gpio";
+			gpio-controller;
+			reg = <0x10010100 0x100>;
+			#gpio-cells = <2>;
+		};
+
+		gpio2: gpio@10010200 {
+			compatible = "ingenic,jz4740-gpio";
+			gpio-controller;
+			reg = <0x10010200 0x100>;
+			#gpio-cells = <2>;
+		};
+
+		gpio3: gpio@10010300 {
+			compatible = "ingenic,jz4740-gpio";
+			gpio-controller;
+			reg = <0x10010300 0x100>;
+			#gpio-cells = <2>;
+		};
+
+		gpio4: gpio@10010400 {
+			compatible = "ingenic,jz4740-gpio";
+			gpio-controller;
+			reg = <0x10010400 0x100>;
+			#gpio-cells = <2>;
+		};
+
+		gpio5: gpio@10010500 {
+			compatible = "ingenic,jz4740-gpio";
+			gpio-controller;
+			reg = <0x10010500 0x100>;
+			#gpio-cells = <2>;
+		};
+	};
+};
