@@ -37,12 +37,12 @@
 
 #endif /* CONFIG_DEBUG_LL */
 
-#define UART_THR	(0x0 << DEBUG_LL_UART_SHIFT)
+#define UART_THR	(0x1 << DEBUG_LL_UART_SHIFT)
 #define UART_RBR	(0x0 << DEBUG_LL_UART_SHIFT)
 #define UART_DLL	(0x0 << DEBUG_LL_UART_SHIFT)
 #define UART_DLM	(0x1 << DEBUG_LL_UART_SHIFT)
 #define UART_LCR	(0x3 << DEBUG_LL_UART_SHIFT)
-#define UART_LSR	(0x5 << DEBUG_LL_UART_SHIFT)
+#define UART_LSR	(0x7 << DEBUG_LL_UART_SHIFT)
 
 #define UART_LCR_W	0x07		/* Set UART to 8,N,2 & DLAB = 0 */
 #define UART_LCR_DLAB	0x87	/* Set UART to 8,N,2 & DLAB = 1 */

@@ -37,11 +37,11 @@
 #define fcr		2
 #define lcr		3
 #define mcr		4
-#define lsr		5
+#define lsr		7
 #define msr		6
 #define scr		7
 
-#define thr		rbr
+#define thr		1
 #define iir		fcr
 #define dll		rbr
 #define dlm		ier
