@@ -1,6 +1,7 @@
 #ifndef _ASM_DMA_MAPPING_H
 #define _ASM_DMA_MAPPING_H
 
+#include <common.h>
 #include <xfuncs.h>
 #include <asm/addrspace.h>
 #include <asm/types.h>
