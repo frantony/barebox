@@ -70,6 +70,9 @@ config MACH_MIPS_ATH79
 	select CLKDEV_LOOKUP
 	select OFTREE
 	select GPIOLIB
+	select USB_HOST
+	select USB_EHCI
+	select USB_EHCI_BIG_ENDIAN_MMIO
 
 config MACH_MIPS_BCM47XX
 	bool "Broadcom BCM47xx-based boards"
