@@ -70,13 +70,49 @@ struct ehci_hcor {
 #define USBMODE_CM_HC	(3 << 0)	/* host controller mode */
 #define USBMODE_CM_IDLE	(0 << 0)	/* idle state */
 
-static inline void ehci_writel(__u32 __iomem *regs, const unsigned int val)
+struct ehci_priv {
+	int rootdev;
+	struct device_d *dev;
+	struct ehci_hccr *hccr;
+	struct ehci_hcor *hcor;
+	struct usb_host host;
+	struct QH *qh_list;
+	struct qTD *td;
+	int portreset;
+	unsigned long flags;
+	unsigned	big_endian_mmio:1;
+
+	int (*init)(void *drvdata);
+	int (*post_init)(void *drvdata);
+	void *drvdata;
+};
+
+#ifdef CONFIG_USB_EHCI_BIG_ENDIAN_MMIO
+#define ehci_big_endian_mmio(e)		((e)->big_endian_mmio)
+#else
+#define ehci_big_endian_mmio(e)		0
+#endif
+
+static inline void ehci_writel(const struct ehci_priv *ehci,
+				__u32 __iomem *regs, const unsigned int val)
 {
-	writel(val, regs);
+	if (IS_ENABLED(CONFIG_USB_EHCI_BIG_ENDIAN_MMIO)) {
+		ehci_big_endian_mmio(ehci) ?
+			iowrite32be(val, regs) :
+			writel(val, regs);
+	} else
+		writel(val, regs);
 }
 
-static inline unsigned int ehci_readl(__u32 __iomem *regs)
+static inline unsigned int ehci_readl(const struct ehci_priv *ehci,
+					__u32 __iomem *regs)
 {
+	if (IS_ENABLED(CONFIG_USB_EHCI_BIG_ENDIAN_MMIO)) {
+		return ehci_big_endian_mmio(ehci) ?
+			ioread32be(regs) :
+			readl(regs);
+	}
+
 	return readl(regs);
 }
 

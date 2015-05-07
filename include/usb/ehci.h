@@ -2,6 +2,7 @@
 #define __USB_EHCI_H
 
 #define EHCI_HAS_TT	(1 << 0)
+#define EHCI_BE_MMIO	(1 << 1)
 
 struct ehci_platform_data {
 	unsigned long flags;
