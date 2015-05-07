@@ -12,6 +12,10 @@ config BOARD_TPLINK_MR3020
 	select HAVE_PBL_IMAGE
 	select HAVE_IMAGE_COMPRESSION
 	select HAS_NMON
+	select USB_HOST
+	select HAS_DMA
+	select USB_EHCI
+	select USB_EHCI_BIG_ENDIAN_MMIO
 
 endchoice
 
