@@ -2,6 +2,9 @@ config USB_EHCI
 	bool "EHCI driver"
 	depends on HAS_DMA
 
+config USB_EHCI_BIG_ENDIAN_MMIO
+	bool
+
 config USB_EHCI_OMAP
 	depends on ARCH_OMAP3
 	depends on USB_TWL4030
