@@ -54,6 +54,7 @@ struct state_backend {
 	int (*load)(struct state_backend *backend, struct state *state);
 	int (*save)(struct state_backend *backend, struct state *state);
 	const char *name;
+	const char *of_path;
 	const char *path;
 };
 
@@ -74,12 +75,20 @@ struct state_variable {
 	void *raw;
 };
 
+enum state_convert {
+	STATE_CONVERT_FROM_NODE,
+	STATE_CONVERT_FROM_NODE_CREATE,
+	STATE_CONVERT_TO_NODE,
+	STATE_CONVERT_FIXUP,
+};
+
 /* A variable type (uint32, enum32) */
 struct variable_type {
 	enum state_variable_type type;
 	const char *type_name;
 	struct list_head list;
-	int (*export)(struct state_variable *, struct device_node *);
+	int (*export)(struct state_variable *, struct device_node *,
+			enum state_convert);
 	int (*import)(struct state_variable *, const struct device_node *);
 	struct state_variable *(*create)(struct state *state,
 			const char *name, struct device_node *);
@@ -126,15 +135,15 @@ static inline struct state_uint32 *to_state_uint32(struct state_variable *s)
 }
 
 static int state_uint32_export(struct state_variable *var,
-		struct device_node *node)
+		struct device_node *node, enum state_convert conv)
 {
 	struct state_uint32 *su32 = to_state_uint32(var);
 	int ret;
 
-	if (su32->value_default) {
+	if (su32->value_default || conv == STATE_CONVERT_FIXUP) {
 		ret = of_property_write_u32(node, "default",
 					    su32->value_default);
-		if (ret)
+		if (ret || conv == STATE_CONVERT_FIXUP)
 			return ret;
 	}
 
@@ -162,7 +171,7 @@ static struct state_variable *state_uint32_create(struct state *state,
 	su32 = xzalloc(sizeof(*su32));
 
 	param = dev_add_param_int(&state->dev, name, state_set_dirty,
-				  NULL, &su32->value, "%d", state);
+				  NULL, &su32->value, "%u", state);
 	if (IS_ERR(param)) {
 		free(su32);
 		return ERR_CAST(param);
@@ -193,16 +202,16 @@ static inline struct state_enum32 *to_state_enum32(struct state_variable *s)
 }
 
 static int state_enum32_export(struct state_variable *var,
-		struct device_node *node)
+		struct device_node *node, enum state_convert conv)
 {
 	struct state_enum32 *enum32 = to_state_enum32(var);
 	int ret, i, len;
 	char *prop, *str;
 
-	if (enum32->value_default) {
+	if (enum32->value_default || conv == STATE_CONVERT_FIXUP) {
 		ret = of_property_write_u32(node, "default",
 					    enum32->value_default);
-		if (ret)
+		if (ret || conv == STATE_CONVERT_FIXUP)
 			return ret;
 	}
 
@@ -309,14 +318,14 @@ static inline struct state_mac *to_state_mac(struct state_variable *s)
 }
 
 static int state_mac_export(struct state_variable *var,
-		struct device_node *node)
+		struct device_node *node, enum state_convert conv)
 {
 	struct state_mac *mac = to_state_mac(var);
 	int ret;
 
 	ret = of_property_write_u8_array(node, "default", mac->value_default,
 					 ARRAY_SIZE(mac->value_default));
-	if (ret)
+	if (ret || conv == STATE_CONVERT_FIXUP)
 		return ret;
 
 	return of_property_write_u8_array(node, "value", mac->value,
@@ -426,13 +435,6 @@ static struct state *state_new(const char *name)
 	return state;
 }
 
-static void state_release(struct state *state)
-{
-	list_del(&state->list);
-	unregister_device(&state->dev);
-	free(state);
-}
-
 static struct state_variable *state_find_var(struct state *state,
 					     const char *name)
 {
@@ -445,12 +447,6 @@ static struct state_variable *state_find_var(struct state *state,
 
 	return ERR_PTR(-ENOENT);
 }
-
-enum state_convert {
-	STATE_CONVERT_FROM_NODE,
-	STATE_CONVERT_FROM_NODE_CREATE,
-	STATE_CONVERT_TO_NODE,
-};
 
 static int state_convert_node_variable(struct state *state,
 		struct device_node *node, struct device_node *parent,
@@ -476,7 +472,8 @@ static int state_convert_node_variable(struct state *state,
 			parent_name, parent_name[0] ? "." : "", short_name);
 	free(short_name);
 
-	if (conv == STATE_CONVERT_TO_NODE)
+	if ((conv == STATE_CONVERT_TO_NODE) ||
+	    (conv == STATE_CONVERT_FIXUP))
 		new_node = of_new_node(parent, node->name);
 
 	for_each_child_of_node(node, child) {
@@ -489,6 +486,15 @@ static int state_convert_node_variable(struct state *state,
 	/* parents are allowed to have no type */
 	ret = of_property_read_string(node, "type", &type_name);
 	if (!list_empty(&node->children) && ret == -EINVAL) {
+		if (conv == STATE_CONVERT_FIXUP) {
+			ret = of_property_write_u32(new_node, "#address-cells", 1);
+			if (ret)
+				goto out_free;
+
+			ret = of_property_write_u32(new_node, "#size-cells", 1);
+			if (ret)
+				goto out_free;
+		}
 		ret = 0;
 		goto out_free;
 	} else if (ret) {
@@ -512,13 +518,16 @@ static int state_convert_node_variable(struct state *state,
 
 		ret = of_property_read_u32_array(node, "reg", start_size,
 						 ARRAY_SIZE(start_size));
-		if (ret)
+		if (ret) {
+			dev_err(&state->dev,
+				"%s: reg property not found\n", name);
 			goto out_free;
+		}
 
 		if (start_size[1] != sv->size) {
 			dev_err(&state->dev,
-				"size mismatch: type=%s(size=%u) size=%u\n",
-			       type_name, sv->size, start_size[1]);
+				"%s: size mismatch: type=%s(size=%u) size=%u\n",
+				name, type_name, sv->size, start_size[1]);
 			ret = -EOVERFLOW;
 			goto out_free;
 		}
@@ -539,7 +548,8 @@ static int state_convert_node_variable(struct state *state,
 		}
 		free(name);
 
-		if (conv == STATE_CONVERT_TO_NODE) {
+		if ((conv == STATE_CONVERT_TO_NODE) ||
+		    (conv == STATE_CONVERT_FIXUP)) {
 			ret = of_set_property(new_node, "type",
 					      vtype->type_name,
 					      strlen(vtype->type_name) + 1, 1);
@@ -556,8 +566,9 @@ static int state_convert_node_variable(struct state *state,
 		}
 	}
 
-	if (conv == STATE_CONVERT_TO_NODE)
-		ret = vtype->export(sv, new_node);
+	if ((conv == STATE_CONVERT_TO_NODE) ||
+	    (conv == STATE_CONVERT_FIXUP))
+		ret = vtype->export(sv, new_node, conv);
 	else
 		ret = vtype->import(sv, node);
 
@@ -571,20 +582,21 @@ out:
 	return ret;
 }
 
-static struct device_node *state_to_node(struct state *state)
+static struct device_node *state_to_node(struct state *state, struct device_node *parent,
+					 enum state_convert conv)
 {
 	struct device_node *child;
 	struct device_node *root;
 	int ret;
 
-	root = of_new_node(NULL, NULL);
+	root = of_new_node(parent, state->root->name);
 	ret = of_property_write_u32(root, "magic", state->magic);
 	if (ret)
 		goto out;
 
 	for_each_child_of_node(state->root, child) {
 		ret = state_convert_node_variable(state, child, root, "",
-						  STATE_CONVERT_TO_NODE);
+						  conv);
 		if (ret)
 			goto out;
 	}
@@ -657,6 +669,101 @@ static int state_from_node(struct state *state, struct device_node *node,
 	return ret;
 }
 
+static int of_state_fixup(struct device_node *root, void *ctx)
+{
+	struct state *state = ctx;
+	const char *compatible = "barebox,state";
+	struct device_node *new_node, *node, *parent, *backend_node;
+	struct property *p;
+	int ret;
+	phandle phandle;
+
+	node = of_find_node_by_path_from(root, state->root->full_name);
+	if (node) {
+		/* replace existing node - it will be deleted later */
+		parent = node->parent;
+	} else {
+		char *of_path, *c;
+
+		/* look for parent, remove last '/' from path */
+		of_path = xstrdup(state->root->full_name);
+		c = strrchr(of_path, '/');
+		if (!c)
+			return -ENODEV;
+		*c = '0';
+		parent = of_find_node_by_path(of_path);
+		if (!parent)
+			parent = root;
+
+		free(of_path);
+	}
+
+	/* serialize variable definitions */
+	new_node = state_to_node(state, parent, STATE_CONVERT_FIXUP);
+	if (IS_ERR(new_node))
+		return PTR_ERR(new_node);
+
+	/* compatible */
+	p = of_new_property(new_node, "compatible", compatible,
+			    strlen(compatible) + 1);
+	if (!p) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	/* backend-type */
+	if (!state->backend) {
+		ret = -ENODEV;
+		goto out;
+	}
+
+	p = of_new_property(new_node, "backend-type", state->backend->name,
+			    strlen(state->backend->name) + 1);
+	if (!p) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	/* backend phandle */
+	backend_node = of_find_node_by_path_from(root, state->backend->of_path);
+	if (!backend_node) {
+		ret = -ENODEV;
+		goto out;
+	}
+
+	phandle = of_node_create_phandle(backend_node);
+	ret = of_property_write_u32(new_node, "backend", phandle);
+	if (ret)
+		goto out;
+
+	/* address-cells + size-cells */
+	ret = of_property_write_u32(new_node, "#address-cells", 1);
+	if (ret)
+		goto out;
+
+	ret = of_property_write_u32(new_node, "#size-cells", 1);
+	if (ret)
+		goto out;
+
+	/* delete existing node */
+	if (node)
+		of_delete_node(node);
+
+	return 0;
+
+ out:
+	of_delete_node(new_node);
+	return ret;
+}
+
+void state_release(struct state *state)
+{
+	of_unregister_fixup(of_state_fixup, state);
+	list_del(&state->list);
+	unregister_device(&state->dev);
+	free(state);
+}
+
 /*
  * state_new_from_node - create a new state instance from a device_node
  *
@@ -678,27 +785,11 @@ struct state *state_new_from_node(const char *name, struct device_node *node)
 		return ERR_PTR(ret);
 	}
 
-	return state;
-}
-
-/*
- * state_new_from_fdt - create a new state instance from a fdt binary blob
- *
- * @name	The name of the new state instance
- * @fdt		The fdt binary blob describing the new state instance
- */
-struct state *state_new_from_fdt(const char *name, void *fdt)
-{
-	struct state *state;
-	struct device_node *root;
-
-	root = of_unflatten_dtb(fdt);
-	if (!root)
-		return ERR_PTR(-EINVAL);
-
-	state = state_new_from_node(name, root);
-
-	of_delete_node(root);
+	ret = of_register_fixup(of_state_fixup, state);
+	if (ret) {
+		state_release(state);
+		return ERR_PTR(ret);
+	}
 
 	return state;
 }
@@ -809,7 +900,7 @@ static int mtd_get_meminfo(const char *path, struct mtd_info_user *meminfo)
 {
 	int fd, ret;
 
-	fd = open(path, O_RDWR);
+	fd = open(path, O_RDONLY);
 	if (fd < 0)
 		return fd;
 
@@ -863,7 +954,7 @@ static int state_backend_dtb_save(struct state_backend *backend,
 	struct device_node *root;
 	struct fdt_header *fdt;
 
-	root = state_to_node(state);
+	root = state_to_node(state, NULL, STATE_CONVERT_TO_NODE);
 	if (IS_ERR(root))
 		return PTR_ERR(root);
 
@@ -906,7 +997,7 @@ out:
  * @state	The state instance to work on
  * @path	The path where the state will be stored to
  */
-int state_backend_dtb_file(struct state *state, const char *path)
+int state_backend_dtb_file(struct state *state, const char *of_path, const char *path)
 {
 	struct state_backend_dtb *backend_dtb;
 	struct state_backend *backend;
@@ -921,13 +1012,14 @@ int state_backend_dtb_file(struct state *state, const char *path)
 
 	backend->load = state_backend_dtb_load;
 	backend->save = state_backend_dtb_save;
+	backend->of_path = xstrdup(of_path);
 	backend->path = xstrdup(path);
 	backend->name = "dtb";
 
 	state->backend = backend;
 
 	ret = mtd_get_meminfo(backend->path, &meminfo);
-	if (!ret && !(meminfo.mtd->flags & MTD_NO_ERASE))
+	if (!ret && !(meminfo.flags & MTD_NO_ERASE))
 		backend_dtb->need_erase = true;
 
 	return 0;
@@ -938,9 +1030,9 @@ int state_backend_dtb_file(struct state *state, const char *path)
  */
 struct state_backend_raw {
 	struct state_backend backend;
-	unsigned long size_data; /* The raw data size (without magic and crc) */
-	unsigned long size_full;
-	unsigned long step; /* The step in bytes between two copies */
+	unsigned long size_data; /* The raw data size (without header) */
+	unsigned long size_full; /* The size header + raw data */
+	unsigned long stride; /* The stride size in bytes of the copies */
 	off_t offset; /* offset in the storage file */
 	size_t size; /* size of the storage area */
 	int num_copy_read; /* The first successfully read copy */
@@ -961,14 +1053,18 @@ static int backend_raw_load_one(struct state_backend_raw *backend_raw,
 	uint32_t crc;
 	struct state_variable *sv;
 	struct backend_raw_header header = {};
+	unsigned long max_len;
 	int ret;
 	void *buf;
+
+	max_len = backend_raw->stride;
 
 	ret = lseek(fd, offset, SEEK_SET);
 	if (ret < 0)
 		return ret;
 
 	ret = read_full(fd, &header, sizeof(header));
+	max_len -= sizeof(header);
 	if (ret < 0)
 		return ret;
 
@@ -984,6 +1080,13 @@ static int backend_raw_load_one(struct state_backend_raw *backend_raw,
 		dev_err(&state->dev,
 			"invalid magic 0x%08x, should be 0x%08x\n",
 			header.magic, state->magic);
+		return -EINVAL;
+	}
+
+	if (header.data_len > max_len) {
+		dev_err(&state->dev,
+			"invalid data_len %u in header, max is %lu\n",
+			header.data_len, max_len);
 		return -EINVAL;
 	}
 
@@ -1028,7 +1131,7 @@ static int state_backend_raw_load(struct state_backend *backend,
 		return fd;
 
 	for (i = 0; i < RAW_BACKEND_COPIES; i++) {
-		off_t offset = backend_raw->offset + i * backend_raw->step;
+		off_t offset = backend_raw->offset + i * backend_raw->stride;
 
 		ret = backend_raw_load_one(backend_raw, state, fd, offset);
 		if (!ret) {
@@ -1044,11 +1147,11 @@ static int state_backend_raw_load(struct state_backend *backend,
 	return ret;
 }
 
-static int backend_raw_write_one(struct state_backend_raw *backend_raw,
+static int backend_raw_save_one(struct state_backend_raw *backend_raw,
 		struct state *state, int fd, int num, void *buf, size_t size)
 {
 	int ret;
-	off_t offset = backend_raw->offset + num * backend_raw->step;
+	off_t offset = backend_raw->offset + num * backend_raw->stride;
 
 	dev_dbg(&state->dev, "%s: 0x%08lx 0x%08zx\n",
 			__func__, offset, size);
@@ -1058,7 +1161,7 @@ static int backend_raw_write_one(struct state_backend_raw *backend_raw,
 		return ret;
 
 	if (backend_raw->need_erase) {
-		ret = erase(fd, backend_raw->size_full, offset);
+		ret = erase(fd, backend_raw->stride, offset);
 		if (ret)
 			return ret;
 	}
@@ -1075,14 +1178,12 @@ static int state_backend_raw_save(struct state_backend *backend,
 {
 	struct state_backend_raw *backend_raw = container_of(backend,
 			struct state_backend_raw, backend);
-	int ret = 0, size, fd;
+	int ret = 0, fd, i;
 	void *buf, *data;
 	struct backend_raw_header *header;
 	struct state_variable *sv;
 
-	size = backend_raw->size_data + sizeof(struct backend_raw_header);
-
-	buf = xzalloc(size);
+	buf = xzalloc(backend_raw->size_full);
 
 	header = buf;
 	data = buf + sizeof(*header);
@@ -1100,13 +1201,20 @@ static int state_backend_raw_save(struct state_backend *backend,
 	if (fd < 0)
 		goto out_free;
 
-	ret = backend_raw_write_one(backend_raw, state, fd,
-				    !backend_raw->num_copy_read, buf, size);
-	if (ret)
-		goto out_close;
+	/* save other slots first */
+	for (i = 0; i < RAW_BACKEND_COPIES; i++) {
+		if (i == backend_raw->num_copy_read)
+			continue;
 
-	ret = backend_raw_write_one(backend_raw, state, fd,
-				    backend_raw->num_copy_read, buf, size);
+		ret = backend_raw_save_one(backend_raw, state, fd,
+					   i, buf, backend_raw->size_full);
+		if (ret)
+			goto out_close;
+
+	}
+
+	ret = backend_raw_save_one(backend_raw, state, fd,
+				   backend_raw->num_copy_read, buf, backend_raw->size_full);
 	if (ret)
 		goto out_close;
 
@@ -1115,6 +1223,60 @@ out_close:
 	close(fd);
 out_free:
 	free(buf);
+
+	return ret;
+}
+
+#ifdef __BAREBOX__
+#define STAT_GIVES_SIZE(s) (S_ISREG(s.st_mode) || S_ISCHR(s.st_mode))
+#define BLKGET_GIVES_SIZE(s) 0
+#ifndef BLKGETSIZE64
+#define BLKGETSIZE64 -1
+#endif
+#else
+#define STAT_GIVES_SIZE(s) (S_ISREG(s.st_mode))
+#define BLKGET_GIVES_SIZE(s) (S_ISBLK(s.st_mode))
+#endif
+
+static int state_backend_raw_file_get_size(const char *path, size_t *out_size)
+{
+	struct mtd_info_user meminfo;
+	struct stat s;
+	int ret;
+
+	ret = stat(path, &s);
+	if (ret)
+		return -errno;
+
+	/*
+	 * under Linux, stat() gives the size only on regular files
+	 * under barebox, it works on char dev, too
+	 */
+	if (STAT_GIVES_SIZE(s)) {
+		*out_size = s.st_size;
+		return 0;
+	}
+
+	/* this works under Linux on block devs */
+	if (BLKGET_GIVES_SIZE(s)) {
+		int fd;
+
+		fd = open(path, O_RDONLY);
+		if (fd < 0)
+			return -errno;
+
+		ret = ioctl(fd, BLKGETSIZE64, out_size);
+		close(fd);
+		if (!ret)
+			return 0;
+	}
+
+	/* try mtd next */
+	ret = mtd_get_meminfo(path, &meminfo);
+	if (!ret) {
+		*out_size = meminfo.size;
+		return 0;
+	}
 
 	return ret;
 }
@@ -1136,32 +1298,34 @@ out_free:
  * device @size may be 0. The two copies are spread to different
  * eraseblocks if approriate for this device.
  */
-int state_backend_raw_file(struct state *state, const char *path, off_t offset,
-		size_t size)
+int state_backend_raw_file(struct state *state, const char *of_path,
+		const char *path, off_t offset, size_t size)
 {
 	struct state_backend_raw *backend_raw;
 	struct state_backend *backend;
 	struct state_variable *sv;
-	int ret;
-	struct stat s;
 	struct mtd_info_user meminfo;
+	size_t path_size = 0;
+	int ret;
 
 	if (state->backend)
 		return -EBUSY;
 
-	ret = stat(path, &s);
-	if (!ret && S_ISCHR(s.st_mode)) {
-		if (size == 0)
-			size = s.st_size;
-		else if (offset + size > s.st_size)
-			return -EINVAL;
-	}
+	ret = state_backend_raw_file_get_size(path, &path_size);
+	if (ret)
+		return ret;
+
+	if (size == 0)
+		size = path_size;
+	else if (offset + size > path_size)
+		return -EINVAL;
 
 	backend_raw = xzalloc(sizeof(*backend_raw));
 	backend = &backend_raw->backend;
 
 	backend->load = state_backend_raw_load;
 	backend->save = state_backend_raw_save;
+	backend->of_path = xstrdup(of_path);
 	backend->path = xstrdup(path);
 	backend->name = "raw";
 
@@ -1175,17 +1339,19 @@ int state_backend_raw_file(struct state *state, const char *path, off_t offset,
 	state->backend = backend;
 
 	ret = mtd_get_meminfo(backend->path, &meminfo);
-	if (!ret && !(meminfo.mtd->flags & MTD_NO_ERASE)) {
+	if (!ret && !(meminfo.flags & MTD_NO_ERASE)) {
 		backend_raw->need_erase = true;
-		backend_raw->step = ALIGN(backend_raw->size_full,
-					  meminfo.erasesize);
+		backend_raw->size_full = ALIGN(backend_raw->size_full,
+					       meminfo.writesize);
+		backend_raw->stride = ALIGN(backend_raw->size_full,
+					    meminfo.erasesize);
 		dev_dbg(&state->dev, "is a mtd, adjust stepsize to %ld\n",
-			backend_raw->step);
+			backend_raw->stride);
 	} else {
-		backend_raw->step = backend_raw->size_full;
+		backend_raw->stride = backend_raw->size_full;
 	}
 
-	if (backend_raw->size / backend_raw->step < RAW_BACKEND_COPIES) {
+	if (backend_raw->size / backend_raw->stride < RAW_BACKEND_COPIES) {
 		dev_err(&state->dev, "not enough space for two copies\n");
 		ret = -ENOSPC;
 		goto err;
