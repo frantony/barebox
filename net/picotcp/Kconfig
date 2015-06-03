@@ -52,4 +52,9 @@ config CMD_PICOTCP_PING
 	depends on NET_PICO_SUPPORT_ICMP4
 	prompt "ping command"
 
+config CMD_PICOTCP_ROUTE
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "route command"
+
 endif # NET_PICOTCP
