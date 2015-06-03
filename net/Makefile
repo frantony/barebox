@@ -11,3 +11,4 @@ obj-$(CONFIG_NET_PICOTCP) += picotcp/
 obj-$(CONFIG_NET_PICOTCP) += picotcp.o
 
 obj-$(CONFIG_CMD_PICOTCP_TEST_IPV4) += picotcp_test_ipv4.o
+obj-$(CONFIG_CMD_PICOTCP_IFCONFIG) += picotcp_ifconfig.o
