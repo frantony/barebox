@@ -2,3 +2,4 @@
 
 obj-$(CONFIG_CMD_PICOTCP_TEST_IPV4) += picotcp_test_ipv4.o
 obj-$(CONFIG_CMD_PICOTCP_IFCONFIG) += picotcp_ifconfig.o
+obj-$(CONFIG_CMD_PICOTCP_ROUTE) += picotcp_route.o
