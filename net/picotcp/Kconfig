@@ -37,4 +37,9 @@ config CMD_PICOTCP_IFCONFIG
 	depends on NET_PICO_SUPPORT_IPV4
 	prompt "ifconfig command"
 
+config CMD_PICOTCP_ROUTE
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "route command"
+
 endif # NET_PICOTCP
