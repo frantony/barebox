@@ -56,4 +56,9 @@ config CMD_PICOTCP_DHCP_CLIENT
 	select NET_PICO_SUPPORT_DHCP_CLIENT
 	prompt "dhclient command"
 
+config CMD_PICOTCP_IFCONFIG
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "ifconfig command"
+
 endif # NET_PICOTCP
