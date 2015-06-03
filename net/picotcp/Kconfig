@@ -38,4 +38,9 @@ config CMD_PICOTCP_TEST_IPV4
 	depends on NET_PICO_SUPPORT_IPV4
 	prompt "test_picotcp command"
 
+config CMD_PICOTCP_IFCONFIG
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "ifconfig command"
+
 endif # NET_PICOTCP
