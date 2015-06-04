@@ -29,5 +29,6 @@ endif
 
 obj-y += pico_rand.o
 
+obj-y += commands/
 obj-y += modules/
 obj-y += stack/
