@@ -9,3 +9,5 @@ obj-$(CONFIG_NET_IFUP)	+= ifup.o
 
 obj-$(CONFIG_NET_PICOTCP) += picotcp/
 obj-$(CONFIG_NET_PICOTCP) += picotcp.o
+
+obj-$(CONFIG_CMD_PICOTCP_TEST_IPV4) += picotcp_test_ipv4.o
