@@ -39,4 +39,11 @@ config NET_PICO_BIGENDIAN
 	bool
 	prompt "bigendian picotcp"
 
+comment "Commands"
+
+config CMD_PICOTCP_TEST_IPV4
+	bool
+	depends on NET_PICO_SUPPORT_IPV4
+	prompt "test_picotcp command"
+
 endif # NET_PICOTCP
