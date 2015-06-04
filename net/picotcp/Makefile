@@ -36,5 +36,6 @@ ifeq ($(CONFIG_NET_PICO_SUPPORT_DNS_CLIENT),y)
 KBUILD_CPPFLAGS += -DPICO_SUPPORT_DNS_CLIENT
 endif
 
+obj-y += commands/
 obj-y += modules/
 obj-y += stack/
