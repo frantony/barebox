@@ -91,6 +91,14 @@ config MACH_CFA10036
 	help
 	  Say Y here if you are using the Crystalfontz CFA-10036 module
 
+config MACH_TEM_IMX28
+	bool "TEM i.MX28 module"
+	select HAVE_DEFAULT_ENVIRONMENT_NEW
+	select MXS_OCOTP
+	select HAVE_PBL_MULTI_IMAGES
+	help
+	  Say Y here if you are using the TEM i.MX28 module
+
 endchoice
 
 endif
