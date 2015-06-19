@@ -261,6 +261,7 @@ msg_nmon_help:
 	.align	4
 
 nmon_exit:
+	b	nmon_main
 
 	nmon_outs	msg_nl
 

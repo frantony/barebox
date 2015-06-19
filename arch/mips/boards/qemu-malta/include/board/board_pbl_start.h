@@ -43,6 +43,7 @@
 	.set	push
 	.set	noreorder
 
+#if 0
 	b	__start
 	 nop
 
@@ -53,10 +54,13 @@
 	.org	0x10
 	.word	0xffffffff
 	.word	0xffffffff
+#endif
+
 
 __start:
 	mips_disable_interrupts
 
+#if 0
 	/* cpu specific setup ... */
 	/* ... absent */
 
@@ -93,6 +97,9 @@ __start:
 	sw	t0, GT_PCI0M1LD_OFS(t1)
 	li	t0, GT_LD(0x1bdfffff)
 	sw	t0, GT_PCI0M1HD_OFS(t1)
+#endif
+
+	debug_ll_ns16550_init
 
 	mips_nmon
 
