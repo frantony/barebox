@@ -50,4 +50,18 @@ static inline int bbu_register_handler(struct bbu_handler *unused)
 
 #endif
 
+#if defined(CONFIG_BAREBOX_UPDATE_IMX_NAND_FCB)
+int imx6_bbu_nand_register_handler(const char *name, unsigned long flags);
+int imx28_bbu_nand_register_handler(const char *name, unsigned long flags);
+#else
+static inline int imx6_bbu_nand_register_handler(const char *name, unsigned long flags)
+{
+	return -ENOSYS;
+}
+static inline int imx28_bbu_nand_register_handler(const char *name, unsigned long flags)
+{
+	return -ENOSYS;
+}
+#endif
+
 #endif /* __INCLUDE_BBU_H */
