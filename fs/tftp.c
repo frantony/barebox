@@ -33,6 +33,10 @@
 #include <kfifo.h>
 #include <linux/sizes.h>
 
+#include <pico_socket.h>
+#include <pico_ipv4.h>
+#include <poller.h>
+
 #define TFTP_PORT	69	/* Well known TFTP port number */
 
 /* Seconds to wait before remote server is allowed to resend a lost packet */
@@ -84,10 +88,15 @@ struct file_priv {
 	void *buf;
 	int blocksize;
 	int block_requested;
+
+	struct pico_socket *sock;
+	union pico_address remote_address;
+	uint16_t remote_port;
+	uint8_t *pkt;
 };
 
 struct tftp_priv {
-	IPaddr_t server;
+	union pico_address server;
 };
 
 static int tftp_create(struct device_d *dev, const char *pathname, mode_t mode)
@@ -120,7 +129,7 @@ static int tftp_send(struct file_priv *priv)
 	unsigned char *xp;
 	int len = 0;
 	uint16_t *s;
-	unsigned char *pkt = net_udp_get_payload(priv->tftp_con);
+	uint8_t *pkt = priv->pkt;
 	int ret;
 
 	debug("%s: state %d\n", __func__, priv->state);
@@ -169,7 +178,8 @@ static int tftp_send(struct file_priv *priv)
 		break;
 	}
 
-	ret = net_udp_send(priv->tftp_con, len);
+	ret = pico_socket_sendto(priv->sock, priv->pkt, len,
+		&priv->remote_address, priv->remote_port);
 
 	return ret;
 }
@@ -177,7 +187,7 @@ static int tftp_send(struct file_priv *priv)
 static int tftp_send_write(struct file_priv *priv, void *buf, int len)
 {
 	uint16_t *s;
-	unsigned char *pkt = net_udp_get_payload(priv->tftp_con);
+	uint8_t *pkt = priv->pkt;
 	int ret;
 
 	s = (uint16_t *)pkt;
@@ -188,7 +198,8 @@ static int tftp_send_write(struct file_priv *priv, void *buf, int len)
 		priv->state = STATE_LAST;
 	len += 4;
 
-	ret = net_udp_send(priv->tftp_con, len);
+	ret = pico_socket_sendto(priv->sock, priv->pkt, len,
+		&priv->remote_address, priv->remote_port);
 	priv->last_block = priv->block;
 	priv->state = STATE_WAITACK;
 
@@ -216,7 +227,8 @@ static int tftp_poll(struct file_priv *priv)
 		return -ETIMEDOUT;
 	}
 
-	net_poll();
+	/* despite of is_timeout() can call poller_call() by itself ... */
+	poller_call();
 
 	return 0;
 }
@@ -293,14 +305,13 @@ static void tftp_recv(struct file_priv *priv,
 			priv->state = STATE_DONE;
 			break;
 		}
-		priv->tftp_con->udp->uh_dport = uh_sport;
+		priv->remote_port = uh_sport;
 		priv->state = STATE_WDATA;
 		break;
 
 	case TFTP_OACK:
 		tftp_parse_oack(priv, pkt, len);
-		priv->server_port = ntohs(uh_sport);
-		priv->tftp_con->udp->uh_dport = uh_sport;
+		priv->remote_port = uh_sport;
 
 		if (priv->push) {
 			/* send first block */
@@ -321,8 +332,7 @@ static void tftp_recv(struct file_priv *priv,
 		if (priv->state == STATE_RRQ || priv->state == STATE_OACK) {
 			/* first block received */
 			priv->state = STATE_RDATA;
-			priv->tftp_con->udp->uh_dport = uh_sport;
-			priv->server_port = ntohs(uh_sport);
+			priv->remote_port = uh_sport;
 			priv->last_block = 0;
 
 			if (priv->block != 1) {	/* Assertion */
@@ -381,6 +391,53 @@ static void tftp_handler(void *ctx, char *packet, unsigned len)
 	tftp_recv(priv, pkt, net_eth_to_udplen(packet), udp->uh_sport);
 }
 
+static void tftp_cb(uint16_t ev, struct pico_socket *sock)
+{
+	struct file_priv *priv = sock->priv;
+
+	union pico_address ep;
+	uint16_t remote_port;
+	uint8_t *pkt = priv->pkt;
+	int len;
+
+	if (ev == PICO_SOCK_EV_ERR) {
+		printf("              >>>>>> PICO_SOCK_EV_ERR <<<<<<< \n");
+		return;
+	}
+
+	/*
+	 * we have to receive:
+	 *     opcode (2 bytes)
+	 *     block# (2 bytes)
+	 *     data (blocksize bytes)
+	 */
+	len = pico_socket_recvfrom(sock, pkt, priv->blocksize + 4,
+					&ep, &remote_port);
+
+	tftp_recv(priv, pkt, len, remote_port);
+}
+
+static struct pico_socket *tftp_socket_open(uint16_t localport)
+{
+	struct pico_socket *sock;
+	union pico_address local_address;
+
+	sock = pico_socket_open(PICO_PROTO_IPV4, PICO_PROTO_UDP, tftp_cb);
+	if (!sock)
+		return NULL;
+
+	localport = short_be(localport);
+
+	/* FIXME: use local_address == PICO_IPV4_INADDR_ANY */
+	memset(&local_address, 0, sizeof(union pico_address));
+	if (pico_socket_bind(sock, &local_address, &localport) < 0) {
+		pico_socket_close(sock);
+		return NULL;
+	}
+
+	return sock;
+}
+
 static struct file_priv *tftp_do_open(struct device_d *dev,
 		int accmode, const char *filename)
 {
@@ -426,16 +483,25 @@ static struct file_priv *tftp_do_open(struct device_d *dev,
 		goto out;
 	}
 
-	priv->tftp_con = net_udp_new(tpriv->server, TFTP_PORT, tftp_handler,
-			priv);
-	if (IS_ERR(priv->tftp_con)) {
-		ret = PTR_ERR(priv->tftp_con);
+	priv->sock = tftp_socket_open(0);
+	if (!priv->sock) {
+		ret = -1;
 		goto out1;
 	}
 
+	priv->sock->priv = priv;
+
+	/* FIXME: add free */
+	priv->pkt = xzalloc(2048);
+	priv->remote_address = tpriv->server;
+	priv->remote_port = short_be(TFTP_PORT);
+
+	/* FIXME: convert PICOTCP error code to barebox error code */
 	ret = tftp_send(priv);
-	if (ret)
-		goto out2;
+	if (ret == -1)
+		goto out1;
+
+	poller_call();
 
 	tftp_timer_reset(priv);
 	while (priv->state != STATE_RDATA &&
@@ -444,20 +510,20 @@ static struct file_priv *tftp_do_open(struct device_d *dev,
 		ret = tftp_poll(priv);
 		if (ret == TFTP_ERR_RESEND)
 			tftp_send(priv);
+
 		if (ret < 0)
-			goto out2;
+			goto out1;
 	}
 
 	if (priv->state == STATE_DONE && priv->err) {
 		ret = priv->err;
-		goto out2;
+		goto out1;
 	}
 
 	priv->buf = xmalloc(priv->blocksize);
 
 	return priv;
-out2:
-	net_unregister(priv->tftp_con);
+
 out1:
 	kfifo_free(priv->fifo);
 out:
@@ -503,14 +569,16 @@ static int tftp_do_close(struct file_priv *priv)
 	}
 
 	if (!priv->push && priv->state != STATE_DONE) {
-		uint16_t *pkt = net_udp_get_payload(priv->tftp_con);
+		uint16_t *pkt = (uint16_t *)priv->pkt;
 		*pkt++ = htons(TFTP_ERROR);
 		*pkt++ = 0;
 		*pkt++ = 0;
-		net_udp_send(priv->tftp_con, 6);
+		pico_socket_sendto(priv->sock, priv->pkt, 6,
+			&priv->remote_address, priv->remote_port);
 	}
 
-	net_unregister(priv->tftp_con);
+	pico_socket_close(priv->sock);
+
 	kfifo_free(priv->fifo);
 	free(priv->buf);
 	free(priv);
@@ -630,7 +698,10 @@ static int tftp_probe(struct device_d *dev)
 
 	dev->priv = priv;
 
-	priv->server = resolv(fsdev->backingstore);
+	/* FIXME: use picotcp name resolution */
+//	priv->server = resolv(fsdev->backingstore);
+
+	pico_string_to_ipv4(fsdev->backingstore, &priv->server.ip4.addr);
 
 	return 0;
 }
