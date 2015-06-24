@@ -36,6 +36,10 @@
 #include <linux/sizes.h>
 #include <byteorder.h>
 
+#include <pico_socket.h>
+#include <pico_ipv4.h>
+#include <poller.h>
+
 #include "parseopt.h"
 
 #define SUNRPC_PORT     111
@@ -128,14 +132,16 @@ struct rpc_reply {
 #define NFS_MAX_RESEND	5
 
 struct nfs_priv {
-	struct net_connection *con;
-	IPaddr_t server;
 	char *path;
-	unsigned short mount_port;
-	unsigned short nfs_port;
 	uint32_t rpc_id;
 	uint32_t rootfh_len;
 	char rootfh[NFS3_FHSIZE];
+
+	struct pico_socket *sock;
+	union pico_address remote_address;
+	uint16_t mount_port;
+	uint16_t nfs_port;
+	uint8_t *pkt;
 };
 
 struct file_priv {
@@ -382,7 +388,7 @@ static int rpc_req(struct nfs_priv *npriv, int rpc_prog, int rpc_proc,
 	struct rpc_call pkt;
 	unsigned short dport;
 	int ret;
-	unsigned char *payload = net_udp_get_payload(npriv->con);
+	unsigned char *payload = npriv->pkt;
 	int nfserr;
 	int tries = 0;
 
@@ -397,7 +403,7 @@ static int rpc_req(struct nfs_priv *npriv, int rpc_prog, int rpc_proc,
 	debug("%s: prog: %d, proc: %d\n", __func__, rpc_prog, rpc_proc);
 
 	if (rpc_prog == PROG_PORTMAP) {
-		dport = SUNRPC_PORT;
+		dport = hton16(SUNRPC_PORT);
 		pkt.vers = hton32(2);
 	} else if (rpc_prog == PROG_MOUNT) {
 		dport = npriv->mount_port;
@@ -407,14 +413,14 @@ static int rpc_req(struct nfs_priv *npriv, int rpc_prog, int rpc_proc,
 		pkt.vers = hton32(3);
 	}
 
+	/* FIXME: extra copy here */
 	memcpy(payload, &pkt, sizeof(pkt));
 	memcpy(payload + sizeof(pkt), data, datalen * sizeof(uint32_t));
 
-	npriv->con->udp->uh_dport = hton16(dport);
-
 again:
-	ret = net_udp_send(npriv->con,
-			sizeof(pkt) + datalen * sizeof(uint32_t));
+	ret = pico_socket_sendto(npriv->sock, npriv->pkt,
+			sizeof(pkt) + datalen * sizeof(uint32_t),
+			&npriv->remote_address, dport);
 
 	nfs_timer_start = get_time_ns();
 
@@ -426,7 +432,9 @@ again:
 			ret = -EINTR;
 			break;
 		}
-		net_poll();
+
+		/* do we really need it? is_timeout() can do this work for us. */
+		poller_call();
 
 		if (is_timeout(nfs_timer_start, NFS_TIMEOUT)) {
 			tries++;
@@ -942,15 +950,6 @@ static int nfs_read_req(struct file_priv *priv, uint64_t offset,
 	return 0;
 }
 
-static void nfs_handler(void *ctx, char *packet, unsigned len)
-{
-	char *pkt = net_eth_to_udp_payload(packet);
-
-	nfs_state = STATE_DONE;
-	nfs_packet = pkt;
-	nfs_len = len;
-}
-
 static int nfs_create(struct device_d *dev, const char *pathname, mode_t mode)
 {
 	return -ENOSYS;
@@ -1306,6 +1305,48 @@ static int nfs_stat(struct device_d *dev, const char *filename, struct stat *s)
 	}
 }
 
+static void nfs_cb(uint16_t ev, struct pico_socket *sock)
+{
+	struct nfs_priv *npriv = sock->priv;
+	char *pkt = npriv->pkt;
+	int len;
+	union pico_address ep;
+	uint16_t remote_port;
+
+	if (ev == PICO_SOCK_EV_ERR) {
+		printf("              >>>>>> PICO_SOCK_EV_ERR <<<<<<< \n");
+		return;
+	}
+
+	/* FIXME: 2000 */
+	len = pico_socket_recvfrom(sock, pkt, 2000, &ep, &remote_port);
+
+	nfs_state = STATE_DONE;
+	nfs_packet = pkt;
+	nfs_len = len;
+}
+
+static struct pico_socket *nfs_socket_open(uint16_t localport)
+{
+	struct pico_socket *sock;
+	union pico_address local_address;
+
+	sock = pico_socket_open(PICO_PROTO_IPV4, PICO_PROTO_UDP, nfs_cb);
+	if (!sock)
+		return NULL;
+
+	localport = short_be(localport);
+
+	/* FIXME: use local_address == PICO_IPV4_INADDR_ANY */
+	memset(&local_address, 0, sizeof(union pico_address));
+	if (pico_socket_bind(sock, &local_address, &localport) < 0) {
+		pico_socket_close(sock);
+		return NULL;
+	}
+
+	return sock;
+}
+
 static int nfs_probe(struct device_d *dev)
 {
 	struct fs_device_d *fsdev = dev_to_fs_device(dev);
@@ -1328,18 +1369,24 @@ static int nfs_probe(struct device_d *dev)
 
 	npriv->path = xstrdup(path + 1);
 
-	npriv->server = resolv(tmp);
+	/* FIXME */
+	//npriv->server = resolv(tmp);
 
 	debug("nfs: server: %s path: %s\n", tmp, npriv->path);
 
-	npriv->con = net_udp_new(npriv->server, 0, nfs_handler, npriv);
-	if (IS_ERR(npriv->con)) {
-		ret = PTR_ERR(npriv->con);
+	pico_string_to_ipv4(tmp, &npriv->remote_address.ip4.addr);
+
+	/* FIXME: 2048 */
+	npriv->pkt = xzalloc(2048);
+
+	/* Need a priviliged source port */
+	npriv->sock = nfs_socket_open(1000);
+	if (!npriv->sock) {
+		ret = -1;
 		goto err1;
 	}
 
-	/* Need a priviliged source port */
-	net_udp_bind(npriv->con, 1000);
+	npriv->sock->priv = npriv;
 
 	parseopt_hu(fsdev->options, "mountport", &npriv->mount_port);
 	if (!npriv->mount_port) {
@@ -1351,6 +1398,7 @@ static int nfs_probe(struct device_d *dev)
 		npriv->mount_port = ret;
 	}
 	debug("mount port: %hu\n", npriv->mount_port);
+	npriv->mount_port = hton16(npriv->mount_port);
 
 	parseopt_hu(fsdev->options, "port", &npriv->nfs_port);
 	if (!npriv->nfs_port) {
@@ -1362,6 +1410,7 @@ static int nfs_probe(struct device_d *dev)
 		npriv->nfs_port = ret;
 	}
 	debug("nfs port: %d\n", npriv->nfs_port);
+	npriv->nfs_port = hton16(npriv->nfs_port);
 
 	ret = nfs_mount_req(npriv);
 	if (ret) {
@@ -1374,8 +1423,9 @@ static int nfs_probe(struct device_d *dev)
 	return 0;
 
 err2:
-	net_unregister(npriv->con);
+	pico_socket_close(npriv->sock);
 err1:
+	free(npriv->pkt);
 	free(npriv->path);
 err:
 	free(tmp);
@@ -1390,7 +1440,8 @@ static void nfs_remove(struct device_d *dev)
 
 	nfs_umount_req(npriv);
 
-	net_unregister(npriv->con);
+	pico_socket_close(npriv->sock);
+	free(npriv->pkt);
 	free(npriv->path);
 	free(npriv);
 }
