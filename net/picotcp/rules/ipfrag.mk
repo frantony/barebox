@@ -1,2 +1,0 @@
-OPTIONS+=-DPICO_SUPPORT_IPFRAG
-MOD_OBJ+=$(LIBBASE)modules/pico_fragments.o
