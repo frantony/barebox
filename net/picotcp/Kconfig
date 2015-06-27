@@ -2,32 +2,28 @@ if NET_PICOTCP
 
 config NET_PICO_SUPPORT_IPV4
 	bool
-	prompt "ipv4 support"
-
-if NET_PICO_SUPPORT_IPV4
+	default y if NET_PICOTCP
 
 config NET_PICO_SUPPORT_IPFRAG
 	bool
-	prompt "ip fragmentation support"
+	default y if NET_PICO_SUPPORT_IPV4
 
 config NET_PICO_SUPPORT_ICMP4
 	bool
-	prompt "icmp support"
+	default y if NET_PICO_SUPPORT_IPV4
 
 config NET_PICO_SUPPORT_UDP
 	bool
-	prompt "udp support"
-endif # NET_PICO_SUPPORT_IPV4
+	default y if NET_PICO_SUPPORT_IPV4
 
-comment "Network device support"
 
 config NET_PICO_SUPPORT_ETH
 	bool
-	prompt "ethernet device support"
+	default y if NET_PICOTCP
 
 config NET_PICO_SUPPORT_DEVLOOP
 	bool
-	prompt "loopback device support"
+	default y if NET_PICOTCP
 
 comment "Misc options"
 
