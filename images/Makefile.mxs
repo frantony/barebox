@@ -30,6 +30,15 @@ image-$(CONFIG_MACH_DUCKBILL) += barebox-duckbill-sd.img
 FILE_barebox-duckbill-2nd.img = start_barebox_duckbill.pblx
 image-$(CONFIG_MACH_DUCKBILL) += barebox-duckbill-2nd.img
 
+pblx-$(CONFIG_MACH_TEM_IMX28) += start_barebox_tem_imx28 prep_start_barebox_tem
+CFG_start_barebox_tem_imx28.mxsbs = $(mxs28cfg)
+FILE_barebox-tem-imx28-bootstream.img = start_barebox_tem_imx28.mxsbs
+image-$(CONFIG_MACH_TEM_IMX28) += barebox-tem-imx28-bootstream.img
+FILE_barebox-tem-imx28-sd.img = start_barebox_tem_imx28.mxsbs.mxssd
+image-$(CONFIG_MACH_TEM_IMX28) += barebox-tem-imx28-sd.img
+FILE_barebox-tem-imx28-2nd.img = start_barebox_tem_imx28.pblx
+image-$(CONFIG_MACH_TEM_IMX28) += barebox-tem-imx28-2nd.img
+
 pblx-$(CONFIG_MACH_TX28) += start_barebox_karo_tx28 prep_start_barebox_karo_tx28
 CFG_start_barebox_karo_tx28.mxsbs = $(mxs28cfg)
 FILE_barebox-karo-tx28-bootstream.img = start_barebox_karo_tx28.mxsbs

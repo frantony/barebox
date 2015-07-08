@@ -1,0 +1,265 @@
+/*
+ * Copyright 2014 Michael Grzeschik <mgr@pengutronix.de>
+ *
+ * The code contained herein is licensed under the GNU General Public
+ * License. You may obtain a copy of the GNU General Public License
+ * Version 2 at the following locations:
+ *
+ * http://www.opensource.org/licenses/gpl-license.html
+ * http://www.gnu.org/copyleft/gpl.html
+ */
+
+/dts-v1/;
+#include <arm/imx28.dtsi>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "TEM i.MX28 module";
+	compatible = "tem,imx28", "fsl,imx28";
+
+	aliases {
+		serial0 = &duart;
+	};
+
+	chosen {
+		stdout-path = &duart;
+
+		environment-nand {
+			compatible = "barebox,environment";
+			device-path = &gpmi, "partname:barebox-environment";
+		};
+	};
+
+	aliases {
+		mmc0 = &ssp0;
+	};
+
+	memory {
+		reg = <0x40000000 0x08000000>;
+	};
+
+	backlight {
+		compatible = "pwm-backlight";
+		/* 20kHz PWM */
+		pwms = <&pwm 2 50000>;
+		brightness-levels = <0 8 16 32 64 128 255>;
+		default-brightness-level = <6>;
+		enable-gpios = <&gpio1 27 GPIO_ACTIVE_HIGH>;
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+		status = "okay";
+
+		green {
+			label = "green";
+			/* 200Hz PWM */
+			pwms = <&pwm 3 5000000>;
+			linux,default-trigger = "default-on";
+			max-brightness = <255>;
+		};
+
+		red {
+			label = "red";
+			/* 200Hz PWM */
+			pwms = <&pwm 4 5000000>;
+			max-brightness = <255>;
+		};
+	};
+};
+
+&pinctrl {
+	pinctrl-names = "default";
+	pinctrl-0 = <&hog_pins>;
+
+	hog_pins: hog@0 {
+		reg = <0>;
+		fsl,pinmux-ids = <
+			/* RS485 Setup */
+			/* MX28_PAD_SAIF0_LRCLK__GPIO_3_21 */
+			MX28_PAD_SAIF0_LRCLK__AUART4_RTS
+			MX28_PAD_SAIF0_BITCLK__GPIO_3_22
+			MX28_PAD_SAIF0_BITCLK__AUART4_RX
+			/* FRMS und FRMM */
+			MX28_PAD_AUART1_RX__GPIO_3_4
+			MX28_PAD_AUART1_TX__GPIO_3_5
+			/* Display Enable */
+			MX28_PAD_LCD_CS__GPIO_1_27
+			MX28_PAD_PWM0__PWM_0
+			MX28_PAD_PWM1__PWM_1
+			MX28_PAD_PWM2__PWM_2
+			MX28_PAD_PWM3__PWM_3
+			MX28_PAD_PWM4__PWM_4
+			MX28_PAD_AUART0_CTS__DUART_RX
+			MX28_PAD_AUART0_RTS__DUART_TX
+		>;
+		fsl,drive-strength = <MXS_DRIVE_4mA>;
+		fsl,voltage = <MXS_VOLTAGE_HIGH>;
+		fsl,pull-up = <MXS_PULL_DISABLE>;
+	};
+
+	gpmi_pins_b: gpmi-nand@0 {
+		reg = <0>;
+		fsl,pinmux-ids = <
+			MX28_PAD_GPMI_D00__GPMI_D0
+			MX28_PAD_GPMI_D01__GPMI_D1
+			MX28_PAD_GPMI_D02__GPMI_D2
+			MX28_PAD_GPMI_D03__GPMI_D3
+			MX28_PAD_GPMI_D04__GPMI_D4
+			MX28_PAD_GPMI_D05__GPMI_D5
+			MX28_PAD_GPMI_D06__GPMI_D6
+			MX28_PAD_GPMI_D07__GPMI_D7
+			MX28_PAD_GPMI_CE0N__GPMI_CE0N
+			MX28_PAD_GPMI_RDY0__GPMI_READY0
+			MX28_PAD_GPMI_RDN__GPMI_RDN
+			MX28_PAD_GPMI_WRN__GPMI_WRN
+			MX28_PAD_GPMI_ALE__GPMI_ALE
+			MX28_PAD_GPMI_CLE__GPMI_CLE
+			MX28_PAD_GPMI_RESETN__GPMI_RESETN
+		>;
+		fsl,drive-strength = <MXS_DRIVE_4mA>;
+		fsl,voltage = <MXS_VOLTAGE_LOW>;
+		fsl,pull-up = <MXS_PULL_DISABLE>;
+	};
+
+	lcdif_pins_imxmodul: lcdif-modul@0 {
+		reg = <0>;
+		fsl,pinmux-ids = <
+			MX28_PAD_LCD_RD_E__LCD_VSYNC
+			MX28_PAD_LCD_WR_RWN__LCD_HSYNC
+			MX28_PAD_LCD_RS__LCD_DOTCLK
+		>;
+		fsl,drive-strength = <MXS_DRIVE_4mA>;
+		fsl,voltage = <MXS_VOLTAGE_HIGH>;
+		fsl,pull-up = <MXS_PULL_DISABLE>;
+	};
+};
+
+&digctl {
+	status = "okay";
+};
+
+/* 1st TX-Std UART - (D)UART */
+&duart {
+	status = "okay";
+};
+
+&lcdif {
+	pinctrl-names = "default";
+	pinctrl-0 = <&lcdif_24bit_pins_a &lcdif_pins_imxmodul>;
+	display = <&tem_display>;
+	status = "okay";
+
+	tem_display: display@0 {
+		bits-per-pixel = <32>;
+		bus-width = <24>;
+
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: timing0 {
+				clock-frequency = <10000000>;
+				hactive = <480>;
+				vactive = <272>;
+				hback-porch = <3>;
+				hfront-porch = <2>;
+				vback-porch = <3>;
+				vfront-porch = <33>;
+				hsync-len = <40>;
+				vsync-len = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
+};
+
+&gpmi {
+	pinctrl-0 = <&gpmi_pins_b &gpmi_status_cfg>;
+	pinctrl-names = "default";
+	nand-on-flash-bbt;
+	status = "okay";
+
+	partition@0 {
+		label = "barebox";
+		reg = <0x00000000 0x00400000>;
+	};
+	partition@1 {
+		label = "barebox-environment";
+		reg = <0x00400000 0x00100000>;
+	};
+	partition@2 {
+		label = "root";
+		reg = <0x005a0000 0x06400000>;
+	};
+	partition@3 {
+		label = "data";
+		reg = <0x069a0000 0x01400000>;
+	};
+	partition@4 {
+		label = "splash";
+		reg = <0x7da0000 0x00260000>;
+	};
+};
+
+&mac0 {
+	phy-mode = "rmii";
+	pinctrl-names = "default";
+	pinctrl-0 = <&mac0_pins_a>;
+	status = "okay";
+};
+
+&mxs_rtc {
+	status = "okay";
+};
+
+&ocotp {
+	status = "okay";
+};
+
+&ssp0 {
+	compatible = "fsl,imx28-mmc";
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc0_4bit_pins_a>;
+	bus-width = <4>;
+	status = "okay";
+};
+
+&ssp2 {
+	compatible = "fsl,imx28-spi";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi2_pins_a>;
+	clock-frequency = <100000>;
+	status = "okay";
+	cs-gpios = <&gpio2 19 1 &gpio2 20 0>;
+	num-chipselects = <2>;
+
+	spidev0: spi@0 {
+		compatible = "spidev";
+		reg = <0>;
+		spi-max-frequency = <100000>;
+	};
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins_a>;
+	clock-frequency = <50000>;
+	status = "okay";
+
+	himax-touch@4a{
+		compatible = "himax-hx8526";
+		reg = <0x4a>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <20 2>;
+		reset-gpio = <&gpio3 26 0>;
+		display-width = <480>;
+		display-height = <272>;
+	};
+};
+
+&pwm {
+	pinctrl-names = "default";
+	status = "okay";
+};
