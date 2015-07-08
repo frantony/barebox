@@ -146,6 +146,8 @@ static void fb_info(struct device_d *dev)
 	fb_print_modes(&info->edid_modes);
 }
 
+int register_fbconsole(struct fb_info *fb);
+
 int register_framebuffer(struct fb_info *info)
 {
 	int id = get_free_deviceid("fb");
@@ -218,6 +220,8 @@ int register_framebuffer(struct fb_info *info)
 			dev_err(&info->dev, "failed to register simplefb: %s\n",
 					strerror(-ret));
 	}
+
+	register_fbconsole(info);
 
 	return 0;
 

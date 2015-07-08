@@ -69,8 +69,13 @@ static int sdlfb_probe(struct device_d *dev)
 	dev->priv = fb;
 
 	ret = register_framebuffer(fb);
-	if (!ret)
+	if (!ret) {
+		extern int register_fbconsole(struct fb_info *fb);
+
+		register_fbconsole(fb);
+
 		return 0;
+	}
 
 err:
 	kfree(fb->screen_base);
