@@ -1184,6 +1184,7 @@ menu "Network"
 config CMD_DHCP
 	bool
 	select NET_DHCP
+	depends on NET_LEGACY
 	prompt "dhcp"
 	help
 	  DHCP client to obtain IP or boot params
@@ -1210,6 +1211,7 @@ config CMD_HOST
 config NET_CMD_IFUP
 	bool
 	prompt "ifup"
+	depends on NET_LEGACY
 	help
 	  Bring up network interfaces based on config files.
 
@@ -1237,6 +1239,7 @@ config CMD_MIITOOL
 
 config CMD_PING
 	tristate
+	depends on NET_LEGACY
 	prompt "ping"
 	help
 	  Send ICMP echo requests.
@@ -1245,6 +1248,7 @@ config CMD_PING
 
 config CMD_TFTP
 	depends on FS_TFTP
+	depends on NET_LEGACY
 	tristate
 	prompt "tftp"
 	help
