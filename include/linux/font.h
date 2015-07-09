@@ -17,7 +17,8 @@ struct font_desc {
 	const void *data;
 };
 
-extern const struct font_desc	font_vga_8x16;
+extern const struct font_desc	font_vga_8x16,
+			font_mini_4x6;
 
 /* Find a font with a specific name */
 extern const struct font_desc *find_font(const char *name);
