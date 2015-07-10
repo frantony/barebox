@@ -1,0 +1,5 @@
+#!/bin/sh
+
+splash -b 0x0 /env/data/logo.png
+fb0.enable=1
+backlight0.brightness=10
