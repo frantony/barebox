@@ -588,18 +588,14 @@ static void dhcp_send_request_packet(struct bootp *bp_offer)
 /*
  *	Handle DHCP received packets.
  */
-static void dhcp_handler(void *ctx, char *packet, unsigned int len)
+static void dhcp_handler(struct net_connection *con, char *pkt, unsigned int len)
 {
-	char *pkt = net_eth_to_udp_payload(packet);
-	struct udphdr *udp = net_eth_to_udphdr(packet);
 	struct bootp *bp = (struct bootp *)pkt;
-
-	len = net_eth_to_udplen(packet);
 
 	debug("DHCPHandler: got packet: (len=%d) state: %d\n",
 		len, dhcp_state);
 
-	if (bootp_check_packet(pkt, ntohs(udp->uh_sport), len)) /* Filter out pkts we don't want */
+	if (bootp_check_packet(pkt, ntohs(getudppeerport(con)), len)) /* Filter out pkts we don't want */
 		return;
 
 	switch (dhcp_state) {

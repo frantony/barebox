@@ -405,6 +405,8 @@ static inline int is_valid_ether_addr(const u8 *addr)
 }
 
 typedef void rx_handler_f(void *ctx, char *packet, unsigned int len);
+struct net_connection;
+typedef void udp_rx_handler_f(struct net_connection *con, char *packet, unsigned int len);
 
 void eth_set_current(struct eth_device *eth);
 struct eth_device *eth_get_current(void);
@@ -426,8 +428,9 @@ struct net_connection {
 	struct eth_device *edev;
 	struct icmphdr *icmp;
 	unsigned char *packet;
+	unsigned char *rpacket;
 	struct list_head list;
-	rx_handler_f *handler;
+	void *handler;
 	int proto;
 	void *priv;
 };
@@ -438,7 +441,7 @@ static inline char *net_alloc_packet(void)
 }
 
 struct net_connection *net_udp_new(IPaddr_t dest, uint16_t dport,
-		rx_handler_f *handler, void *ctx);
+		udp_rx_handler_f *handler, void *ctx);
 
 struct net_connection *net_icmp_new(IPaddr_t dest, rx_handler_f *handler,
 		void *ctx);
@@ -466,5 +469,13 @@ void led_trigger_network(enum led_trigger trigger);
 
 int ifup(const char *name, unsigned flags);
 int ifup_all(unsigned flags);
+
+/* NB! return port in network byte order */
+static inline uint16_t getudppeerport(struct net_connection *con)
+{
+	struct udphdr *udp = net_eth_to_udphdr(con->rpacket);
+
+	return udp->uh_sport;
+}
 
 #endif /* __NET_H__ */
