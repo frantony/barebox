@@ -562,9 +562,8 @@ static int nfs_read_reply(unsigned char *pkt, unsigned len)
 Interfaces of barebox
 **************************************************************************/
 
-static void nfs_handler(void *ctx, char *packet, unsigned len)
+static void nfs_handler(struct net_connection *con, char *pkt, unsigned len)
 {
-	char *pkt = net_eth_to_udp_payload(packet);
 	int ret;
 
 	debug("%s\n", __func__);

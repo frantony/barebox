@@ -255,7 +255,7 @@ void net_set_gateway(IPaddr_t gw)
 
 static LIST_HEAD(connection_list);
 
-static struct net_connection *net_new(IPaddr_t dest, rx_handler_f *handler,
+static struct net_connection *net_new(IPaddr_t dest, void *handler,
 		void *ctx)
 {
 	struct eth_device *edev = eth_get_current();
@@ -317,7 +317,7 @@ out:
 }
 
 struct net_connection *net_udp_new(IPaddr_t dest, uint16_t dport,
-		rx_handler_f *handler, void *ctx)
+		udp_rx_handler_f *handler, void *ctx)
 {
 	struct net_connection *con = net_new(dest, handler, ctx);
 
@@ -480,7 +480,10 @@ static int net_handle_udp(unsigned char *pkt, int len)
 	port = ntohs(udp->uh_dport);
 	list_for_each_entry(con, &connection_list, list) {
 		if (con->proto == IPPROTO_UDP && port == ntohs(con->udp->uh_sport)) {
-			con->handler(con->priv, pkt, len);
+			udp_rx_handler_f *handler = con->handler;
+			con->rpacket = pkt;
+			handler(con, net_eth_to_udp_payload(pkt),
+						net_eth_to_udplen(pkt));
 			return 0;
 		}
 	}
@@ -495,7 +498,8 @@ static int net_handle_icmp(unsigned char *pkt, int len)
 
 	list_for_each_entry(con, &connection_list, list) {
 		if (con->proto == IPPROTO_ICMP) {
-			con->handler(con->priv, pkt, len);
+			rx_handler_f *handler = con->handler;
+			handler(con->priv, pkt, len);
 			return 0;
 		}
 	}

@@ -192,11 +192,10 @@ static void dns_recv(struct header *header, unsigned len)
 	}
 }
 
-static void dns_handler(void *ctx, char *packet, unsigned len)
+static void dns_handler(struct net_connection *con, char *packet, unsigned len)
 {
-	(void)ctx;
-	dns_recv((struct header *)net_eth_to_udp_payload(packet),
-		net_eth_to_udplen(packet));
+	(void)con;
+	dns_recv((struct header *)packet, len);
 }
 
 IPaddr_t resolv(char *host)

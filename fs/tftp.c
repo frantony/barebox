@@ -368,14 +368,11 @@ static void tftp_recv(struct file_priv *priv,
 	}
 }
 
-static void tftp_handler(void *ctx, char *packet, unsigned len)
+static void tftp_handler(struct net_connection *con, char *packet, unsigned len)
 {
-	struct file_priv *priv = ctx;
-	char *pkt = net_eth_to_udp_payload(packet);
-	struct udphdr *udp = net_eth_to_udphdr(packet);
+	struct file_priv *priv = con->priv;
 
-	(void)len;
-	tftp_recv(priv, pkt, net_eth_to_udplen(packet), udp->uh_sport);
+	tftp_recv(priv, packet, len, getudppeerport(con));
 }
 
 static struct file_priv *tftp_do_open(struct device_d *dev,

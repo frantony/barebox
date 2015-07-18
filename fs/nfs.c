@@ -943,10 +943,8 @@ static int nfs_read_req(struct file_priv *priv, uint64_t offset,
 	return 0;
 }
 
-static void nfs_handler(void *ctx, char *packet, unsigned len)
+static void nfs_handler(struct net_connection *con, char *pkt, unsigned len)
 {
-	char *pkt = net_eth_to_udp_payload(packet);
-
 	nfs_state = STATE_DONE;
 	nfs_packet = pkt;
 	nfs_len = len;
