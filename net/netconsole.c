@@ -44,12 +44,11 @@ struct nc_priv {
 
 static struct nc_priv *g_priv;
 
-static void nc_handler(void *ctx, char *pkt, unsigned len)
+static void nc_handler(struct net_connection *con, char *pkt, unsigned len)
 {
 	struct nc_priv *priv = g_priv;
-	unsigned char *packet = net_eth_to_udp_payload(pkt);
 
-	kfifo_put(priv->fifo, packet, net_eth_to_udplen(pkt));
+	kfifo_put(priv->fifo, pkt, len);
 }
 
 static int nc_getc(struct console_device *cdev)
