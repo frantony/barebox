@@ -486,4 +486,11 @@ extern struct list_head netdev_list;
 
 #define for_each_netdev(netdev) list_for_each_entry(netdev, &netdev_list, list)
 
+#include <byteorder.h>
+
+static inline void setudppeerport(struct net_connection *con, uint16_t dport)
+{
+	con->udp->uh_dport = dport;
+}
+
 #endif /* __NET_H__ */
