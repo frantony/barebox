@@ -119,7 +119,8 @@ static int tftp_send(struct file_priv *priv)
 	unsigned char *xp;
 	int len = 0;
 	uint16_t *s;
-	unsigned char *pkt = net_udp_get_payload(priv->tftp_con);
+	uint8_t *payload = net_udp_get_payload(priv->tftp_con);
+	uint8_t *pkt = payload;
 	int ret;
 
 	debug("%s: state %d\n", __func__, priv->state);
@@ -168,7 +169,7 @@ static int tftp_send(struct file_priv *priv)
 		break;
 	}
 
-	ret = net_udp_send(priv->tftp_con, len);
+	ret = net_udp_send(priv->tftp_con, payload, len);
 
 	return ret;
 }
@@ -187,7 +188,7 @@ static int tftp_send_write(struct file_priv *priv, void *buf, int len)
 		priv->state = STATE_LAST;
 	len += 4;
 
-	ret = net_udp_send(priv->tftp_con, len);
+	ret = net_udp_send(priv->tftp_con, pkt, len);
 	priv->last_block = priv->block;
 	priv->state = STATE_WAITACK;
 
@@ -501,7 +502,7 @@ static int tftp_do_close(struct file_priv *priv)
 		*pkt++ = htons(TFTP_ERROR);
 		*pkt++ = 0;
 		*pkt++ = 0;
-		net_udp_send(priv->tftp_con, 6);
+		net_udp_send(priv->tftp_con, (char *)pkt, 6);
 	}
 
 	net_unregister(priv->tftp_con);

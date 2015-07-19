@@ -100,7 +100,7 @@ static void nc_putc(struct console_device *cdev, char c)
 	*packet = c;
 
 	priv->busy = 1;
-	net_udp_send(priv->con, 1);
+	net_udp_send(priv->con, packet, 1);
 	priv->busy = 0;
 }
 
