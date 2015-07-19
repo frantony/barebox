@@ -411,7 +411,7 @@ static int rpc_req(struct nfs_priv *npriv, int rpc_prog, int rpc_proc,
 	memcpy(payload, &pkt, sizeof(pkt));
 	memcpy(payload + sizeof(pkt), data, datalen * sizeof(uint32_t));
 
-	npriv->con->udp->uh_dport = hton16(dport);
+	setudppeerport(npriv->con, htons(dport));
 
 again:
 	ret = net_udp_send(npriv->con, payload,
