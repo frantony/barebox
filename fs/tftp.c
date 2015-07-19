@@ -177,7 +177,7 @@ static int tftp_send(struct file_priv *priv)
 static int tftp_send_write(struct file_priv *priv, void *buf, int len)
 {
 	uint16_t *s;
-	unsigned char *pkt = net_udp_get_payload(priv->tftp_con);
+	uint8_t *pkt = net_udp_get_payload(priv->tftp_con);
 	int ret;
 
 	s = (uint16_t *)pkt;
@@ -293,13 +293,14 @@ static void tftp_recv(struct file_priv *priv,
 			priv->state = STATE_DONE;
 			break;
 		}
-		priv->tftp_con->udp->uh_dport = uh_sport;
+		setudppeerport(priv->tftp_con, uh_sport);
+
 		priv->state = STATE_WDATA;
 		break;
 
 	case TFTP_OACK:
 		tftp_parse_oack(priv, pkt, len);
-		priv->tftp_con->udp->uh_dport = uh_sport;
+		setudppeerport(priv->tftp_con, uh_sport);
 
 		if (priv->push) {
 			/* send first block */
@@ -320,7 +321,7 @@ static void tftp_recv(struct file_priv *priv,
 		if (priv->state == STATE_RRQ || priv->state == STATE_OACK) {
 			/* first block received */
 			priv->state = STATE_RDATA;
-			priv->tftp_con->udp->uh_dport = uh_sport;
+			setudppeerport(priv->tftp_con, uh_sport);
 			priv->last_block = 0;
 
 			if (priv->block != 1) {	/* Assertion */

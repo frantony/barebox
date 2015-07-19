@@ -478,4 +478,11 @@ static inline uint16_t getudppeerport(struct net_connection *con)
 	return udp->uh_sport;
 }
 
+#include <byteorder.h>
+
+static inline void setudppeerport(struct net_connection *con, uint16_t dport)
+{
+	con->udp->uh_dport = dport;
+}
+
 #endif /* __NET_H__ */
