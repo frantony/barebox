@@ -460,7 +460,7 @@ static inline void *net_udp_get_payload(struct net_connection *con)
 		sizeof(struct udphdr);
 }
 
-int net_udp_send(struct net_connection *con, int len);
+int net_udp_send(struct net_connection *con, char *payload, int len);
 int net_icmp_send(struct net_connection *con, int len);
 
 void led_trigger_network(enum led_trigger trigger);

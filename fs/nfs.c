@@ -414,7 +414,7 @@ static int rpc_req(struct nfs_priv *npriv, int rpc_prog, int rpc_proc,
 	npriv->con->udp->uh_dport = hton16(dport);
 
 again:
-	ret = net_udp_send(npriv->con,
+	ret = net_udp_send(npriv->con, payload,
 			sizeof(pkt) + datalen * sizeof(uint32_t));
 
 	nfs_timer_start = get_time_ns();

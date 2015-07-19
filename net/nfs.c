@@ -225,7 +225,8 @@ static int rpc_req(int rpc_prog, int rpc_proc, uint32_t *data, int datalen)
 		sport = nfs_server_nfs_port;
 
 	nfs_con->udp->uh_dport = htons(sport);
-	ret = net_udp_send(nfs_con, sizeof(pkt) + datalen * sizeof(uint32_t));
+	ret = net_udp_send(nfs_con, payload,
+				sizeof(pkt) + datalen * sizeof(uint32_t));
 
 	return ret;
 }
