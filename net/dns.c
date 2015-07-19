@@ -111,7 +111,7 @@ static int dns_send(const char *name)
 	*p++ = 0;
 	*p++ = 1;				/* Class: inet, 0x0001 */
 
-	ret = net_udp_send(dns_con, p - packet);
+	ret = net_udp_send(dns_con, packet, p - packet);
 
 	free(fullname);
 

@@ -79,7 +79,7 @@ static int sntp_send(void)
 	ntp->version = VERSION;
 	ntp->mode = M_CLNT;
 
-	return net_udp_send(sntp_con, sizeof(struct ntp_packet));
+	return net_udp_send(sntp_con, (char *)ntp, sizeof(struct ntp_packet));
 }
 
 static void sntp_handler(void *ctx, char *pkt, unsigned len)
