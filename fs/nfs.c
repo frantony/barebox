@@ -439,7 +439,7 @@ static struct packet *rpc_req(struct nfs_priv *npriv, int rpc_prog,
 	nfs_timer_start = get_time_ns();
 
 again:
-	ret = net_udp_send(npriv->con,
+	ret = net_udp_send(npriv->con, payload,
 			sizeof(pkt) + datalen * sizeof(uint32_t));
 	if (ret) {
 		if (is_timeout(nfs_timer_start, NFS_TIMEOUT)) {
