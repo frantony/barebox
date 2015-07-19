@@ -363,7 +363,7 @@ static int net_ip_send(struct net_connection *con, int len)
 	return eth_send(con->edev, con->packet, ETHER_HDR_SIZE + sizeof(struct iphdr) + len);
 }
 
-int net_udp_send(struct net_connection *con, int len)
+int net_udp_send(struct net_connection *con, char *payload, int len)
 {
 	con->udp->uh_ulen = htons(len + 8);
 	con->udp->uh_sum = 0;
