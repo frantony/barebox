@@ -619,6 +619,13 @@ static int param_ip_set(struct device_d *dev, struct param_d *p, const char *val
 	ret = pi->set(p, p->driver_priv);
 	if (ret)
 		*pi->ip = ip_save;
+	else if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		struct eth_device *edev = p->driver_priv;
+		struct pico_device *picodev = edev->picodev;
+
+		printf("param_ip_set: picodev->name=%s: param name=%s\n",
+				picodev->name, p->name);
+	}
 
 	return ret;
 }
