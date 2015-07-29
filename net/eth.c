@@ -388,10 +388,10 @@ static void pico_adapter_destroy(struct pico_device *dev)
 	printf("pico_adapter_destroy barebox eth\n");
 }
 
-static void pico_adapter_init(struct eth_device *edev)
+static void pico_adapter_init(struct eth_device *edev, unsigned char *macaddr)
 {
 	/* FIXME: get macaddr for edev */
-	static unsigned char macaddr0[6] = { 0, 0, 0, 0xa, 0xb, 0xc };
+//	static unsigned char macaddr0[6] = { 0, 0, 0, 0xa, 0xb, 0xc };
 
 	struct pico_device_barebox_eth *pif = PICO_ZALLOC(sizeof(struct pico_device_barebox_eth));
 
@@ -400,7 +400,7 @@ static void pico_adapter_init(struct eth_device *edev)
 	char *name = strdup(edev->dev.name);
 
 	picodev = &pif->dev;
-	if (0 != pico_device_init(picodev, name, macaddr0)) {
+	if (0 != pico_device_init(picodev, name, macaddr)) {
 		pr_info("pico_adapter_init failed.\n");
 		pico_adapter_destroy(picodev);
 		return;
@@ -457,19 +457,30 @@ int eth_register(struct eth_device *edev)
 
 	list_add_tail(&edev->list, &netdev_list);
 
+	printf(">>>1 found=%d\n", found);
 	ret = eth_get_registered_ethaddr(edev, ethaddr);
 	if (!ret)
 		found = 1;
 
+	printf(">>>2 found=%d\n", found);
 	if (!found) {
 		ret = edev->get_ethaddr(edev, ethaddr);
 		if (!ret)
 			found = 1;
 	}
+	printf(">>>3 found=%d\n", found);
+
+	ethaddr[0] = 0xff;
+	ethaddr[1] = 0xff;
+	ethaddr[2] = 0xff;
+	ethaddr[3] = 0xff;
+	ethaddr[4] = 0xff;
+	ethaddr[5] = 0xff;
 
 	if (found)
 		register_preset_mac_address(edev, ethaddr);
 
+	printf(">>>4 found=%d\n", found);
 	if (IS_ENABLED(CONFIG_OFDEVICE) && edev->parent &&
 			edev->parent->device_node)
 		edev->nodepath = xstrdup(edev->parent->device_node->full_name);
@@ -478,7 +489,7 @@ int eth_register(struct eth_device *edev)
 		eth_current = edev;
 
 #ifdef CONFIG_NET_PICO_SUPPORT_ETH
-	pico_adapter_init(edev);
+	pico_adapter_init(edev, ethaddr);
 #endif
 
 	return 0;
