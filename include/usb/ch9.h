@@ -379,6 +379,7 @@ struct usb_endpoint_descriptor {
 	/* use USB_DT_ENDPOINT*_SIZE in bLength, not sizeof. */
 	__u8  bRefresh;
 	__u8  bSynchAddress;
+	__u8  fill;
 } __attribute__ ((packed));
 
 #define USB_DT_ENDPOINT_SIZE		7
