@@ -80,13 +80,8 @@ static inline unsigned int ehci_readl(__u32 __iomem *regs)
 	return readl(regs);
 }
 
-#if defined CONFIG_EHCI_MMIO_BIG_ENDIAN
-#define hc32_to_cpu(x)		be32_to_cpu((x))
-#define cpu_to_hc32(x)		cpu_to_be32((x))
-#else
 #define hc32_to_cpu(x)		le32_to_cpu((x))
 #define cpu_to_hc32(x)		cpu_to_le32((x))
-#endif
 
 #define EHCI_PS_WKOC_E		(1 << 22)	/* RW wake on over current */
 #define EHCI_PS_WKDSCNNT_E	(1 << 21)	/* RW wake on disconnect */

@@ -162,9 +162,6 @@ static int ehci_reset(struct ehci_priv *ehci)
 		reg_ptr = (uint32_t *)((u8 *)ehci->hcor + USBMODE);
 		tmp = ehci_readl(reg_ptr);
 		tmp |= USBMODE_CM_HC;
-#if defined(CONFIG_EHCI_MMIO_BIG_ENDIAN)
-		tmp |= USBMODE_BE;
-#endif
 		ehci_writel(reg_ptr, tmp);
 	}
 out:
