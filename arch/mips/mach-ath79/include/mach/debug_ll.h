@@ -75,6 +75,8 @@ static inline void PUTC_LL(int ch)
  * from u-boot_mod/u-boot/cpu/mips/ar7240/hornet_serial.c
  */
 #define BAUD_CLOCK 25000000
+//#define CLOCK_SCALE ((1310 * CONFIG_BAUDRATE) / (131072 * BAUD_CLOCK))
+//#define CLOCK_STEP ((131072 * BAUD_CLOCK) / (CONFIG_BAUDRATE / (CLOCK_SCALE + 1)))
 #define CLOCK_SCALE ((BAUD_CLOCK / (16 * CONFIG_BAUDRATE)) - 1)
 #define CLOCK_STEP 0x2000
 

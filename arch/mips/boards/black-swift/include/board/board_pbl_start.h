@@ -38,7 +38,26 @@ skip_pll_ram_config:
 	debug_ll_ar9331_init
 	mips_nmon
 
+	/*
+	 * General Purpose I/O Function (GPIO_FUNCTION_1)
+	 *
+	 *  SPI_EN  (18) enables SPI SPA Interface signals
+	 *               in GPIO_2, GPIO_3, GPIO_4 and GPIO_5.
+	 *  RES     (15) reserved. This bit must be written with 1.
+	 *  UART_EN  (2) enables UART I/O on GPIO_9 (SIN) and GPIO_10 (SOUT).
+	 */
+
+#define AR933X_GPIO_FUNC_SPI_EN			BIT(18)
+#define AR933X_GPIO_FUNC_RESERVED		BIT(15)
+#define AR933X_GPIO_FUNC_UART_EN		BIT(1)
+
+#if 1
+	pbl_reg_writel (AR933X_GPIO_FUNC_UART_EN
+			| AR933X_GPIO_FUNC_RESERVED
+			| AR933X_GPIO_FUNC_SPI_EN), GPIO_FUNC
+#else
 	pbl_reg_set (1 << 18), 0xb80600ac
+#endif
 
 	copy_to_link_location	pbl_start
 
