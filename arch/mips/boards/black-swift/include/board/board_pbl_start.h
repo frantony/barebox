@@ -35,6 +35,8 @@
 	debug_ll_ar9331_init
 	mips_nmon
 
+	pbl_reg_set (1 << 18), 0xb80600ac
+
 	copy_to_link_location	pbl_start
 
 	.set	pop
