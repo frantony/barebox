@@ -18,6 +18,7 @@ config BOARD_BLACK_SWIFT
 	select HAVE_PBL_IMAGE
 	select HAVE_IMAGE_COMPRESSION
 	select HAS_NMON
+	select INPUT
 
 endchoice
 
