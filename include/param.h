@@ -63,10 +63,12 @@ struct param_d *dev_add_param_ip(struct device_d *dev, const char *name,
 		int (*get)(struct param_d *p, void *priv),
 		IPaddr_t *ip, void *priv);
 
+#ifdef CONFIG_NET
 struct param_d *dev_add_param_mac(struct device_d *dev, const char *name,
 		int (*set)(struct param_d *p, void *priv),
 		int (*get)(struct param_d *p, void *priv),
 		u8 *mac, void *priv);
+#endif
 
 int dev_add_param_fixed(struct device_d *dev, const char *name, const char *value);
 
@@ -154,14 +156,6 @@ static inline struct param_d *dev_add_param_ip(struct device_d *dev, const char 
 	return ERR_PTR(-ENOSYS);
 }
 
-static inline struct param_d *dev_add_param_mac(struct device_d *dev, const char *name,
-		int (*set)(struct param_d *p, void *priv),
-		int (*get)(struct param_d *p, void *priv),
-		u8 *mac, void *priv)
-{
-	return ERR_PTR(-ENOSYS);
-}
-
 static inline int dev_add_param_fixed(struct device_d *dev, const char *name, const char *value)
 {
 	return 0;
@@ -176,6 +170,17 @@ static inline int dev_param_set_generic(struct device_d *dev, struct param_d *p,
 {
 	return 0;
 }
+#endif
+
+#if ! defined(CONFIG_PARAMETER) || ! defined(CONFIG_NET)
+static inline struct param_d *dev_add_param_mac(struct device_d *dev, const char *name,
+		int (*set)(struct param_d *p, void *priv),
+		int (*get)(struct param_d *p, void *priv),
+		u8 *mac, void *priv)
+{
+	return ERR_PTR(-ENOSYS);
+}
+
 #endif
 
 #endif /* PARAM_H */
