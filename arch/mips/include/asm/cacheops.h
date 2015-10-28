@@ -33,4 +33,14 @@
 #define Hit_Invalidate_D		(Cache_D | Hit_Invalidate)
 #define Hit_Writeback_Inv_D		(Cache_D | Hit_Writeback_Inv)
 
+/*
+ * R4000SC and R4400SC-specific cacheops
+ */
+#define Cache_SD			0x03
+
+#define Index_Writeback_Inv_SD		(Cache_SD | Index_Writeback_Inv)
+#define Index_Store_Tag_SD		(Cache_SD | Index_Store_Tag)
+#define Hit_Invalidate_SD		(Cache_SD | Hit_Invalidate)
+#define Hit_Writeback_Inv_SD		(Cache_SD | Hit_Writeback_Inv)
+
 #endif	/* __ASM_CACHEOPS_H */

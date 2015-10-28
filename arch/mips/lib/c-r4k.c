@@ -46,7 +46,9 @@ static inline void blast_##pfx##cache##_range(unsigned long start,	\
 }
 
 __BUILD_BLAST_CACHE_RANGE(d, dcache, Hit_Writeback_Inv_D)
+__BUILD_BLAST_CACHE_RANGE(s, scache, Hit_Writeback_Inv_SD)
 __BUILD_BLAST_CACHE_RANGE(inv_d, dcache, Hit_Invalidate_D)
+__BUILD_BLAST_CACHE_RANGE(inv_s, scache, Hit_Invalidate_SD)
 
 void flush_cache_all(void)
 {
@@ -54,7 +56,7 @@ void flush_cache_all(void)
 	unsigned long lsize;
 	unsigned long addr;
 	unsigned long aend;
-	unsigned int icache_size, dcache_size;
+	unsigned int icache_size, dcache_size, scache_size;
 
 	dcache_size = c->dcache.waysize * c->dcache.ways;
 	lsize = c->dcache.linesz;
@@ -68,21 +70,26 @@ void flush_cache_all(void)
 	for (addr = KSEG0; addr <= aend; addr += lsize)
 		cache_op(Index_Invalidate_I, addr);
 
-	/* secondatory cache skipped */
+	if (c->scache.flags & MIPS_CACHE_NOT_PRESENT)
+		return;
+
+	scache_size = c->scache.waysize * c->scache.ways;
+	lsize = c->scache.linesz;
+	aend = (KSEG0 + scache_size - 1) & ~(lsize - 1);
+	for (addr = KSEG0; addr <= aend; addr += lsize)
+		cache_op(Index_Writeback_Inv_SD, addr);
 }
 
 void dma_flush_range(unsigned long start, unsigned long end)
 {
 	blast_dcache_range(start, end);
-
-	/* secondatory cache skipped */
+	blast_scache_range(start, end);
 }
 
 void dma_inv_range(unsigned long start, unsigned long end)
 {
 	blast_inv_dcache_range(start, end);
-
-	/* secondatory cache skipped */
+	blast_inv_scache_range(start, end);
 }
 
 void r4k_cache_init(void);
