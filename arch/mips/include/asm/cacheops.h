@@ -22,7 +22,9 @@
 #define Index_Store_Tag_D		0x09
 #define Hit_Invalidate_I		0x10
 #define Hit_Invalidate_D		0x11
+#define Hit_Invalidate_SD		0x13
 #define Hit_Writeback_Inv_D		0x15
+#define Hit_Writeback_Inv_SD		0x17
 
 /*
  * R4000SC and R4400SC-specific cacheops
