@@ -26,13 +26,37 @@
 	:								\
 	: "i" (op), "R" (*(unsigned char *)(addr)))
 
+#define __BUILD_BLAST_CACHE_RANGE(pfx, desc, hitop)			\
+static inline void blast_##pfx##cache##_range(unsigned long start,	\
+					      unsigned long end)	\
+{									\
+	unsigned long lsize = current_cpu_data.desc.linesz;		\
+	unsigned long addr = start & ~(lsize - 1);			\
+	unsigned long aend = (end - 1) & ~(lsize - 1);			\
+									\
+	if (current_cpu_data.desc.flags & MIPS_CACHE_NOT_PRESENT)	\
+		return;							\
+									\
+	while (1) {							\
+		cache_op(hitop, addr);					\
+		if (addr == aend)					\
+			break;						\
+		addr += lsize;						\
+	}								\
+}
+
+__BUILD_BLAST_CACHE_RANGE(d, dcache, Hit_Writeback_Inv_D)
+__BUILD_BLAST_CACHE_RANGE(s, scache, Hit_Writeback_Inv_SD)
+__BUILD_BLAST_CACHE_RANGE(inv_d, dcache, Hit_Invalidate_D)
+__BUILD_BLAST_CACHE_RANGE(inv_s, scache, Hit_Invalidate_SD)
+
 void flush_cache_all(void)
 {
 	struct cpuinfo_mips *c = &current_cpu_data;
 	unsigned long lsize;
 	unsigned long addr;
 	unsigned long aend;
-	unsigned int icache_size, dcache_size;
+	unsigned int icache_size, dcache_size, scache_size;
 
 	dcache_size = c->dcache.waysize * c->dcache.ways;
 	lsize = c->dcache.linesz;
@@ -48,7 +72,15 @@ void flush_cache_all(void)
 		cache_op(Index_Invalidate_I, addr);
 	}
 
-	/* secondatory cache skipped */
+	if (c->scache.flags & MIPS_CACHE_NOT_PRESENT)
+		return;
+
+	scache_size = c->scache.waysize * c->scache.ways;
+	lsize = c->scache.linesz;
+	aend = (KSEG0 + scache_size - 1) & ~(lsize - 1);
+	for (addr = KSEG0; addr <= aend; addr += lsize) {
+		cache_op(Index_Writeback_Inv_SD, addr);
+	}
 }
 
 void flush_dcache_all(void)
@@ -63,29 +95,14 @@ void flush_icache_all(void)
 
 void dma_clean_range(unsigned long start, unsigned long end)
 {
-	struct cpuinfo_mips *c = &current_cpu_data;
-	unsigned long lsize = c->dcache.linesz;
-	unsigned long addr = start & ~(lsize - 1);
-	unsigned long aend = (end - 1) & ~(lsize - 1);
-
-	for (; addr <= aend; addr += lsize)
-		cache_op(Hit_Invalidate_D, addr);
-
-	/* secondatory cache skipped */
+	blast_inv_dcache_range(start, end);
+	blast_inv_scache_range(start, end);
 }
 
 void dma_flush_range(unsigned long start, unsigned long end)
 {
-	struct cpuinfo_mips *c = &current_cpu_data;
-	unsigned long lsize = c->dcache.linesz;
-	unsigned long addr = start & ~(lsize - 1);
-	unsigned long aend = (end - 1) & ~(lsize - 1);
-
-	for (; addr <= aend; addr += lsize) {
-		cache_op(Hit_Writeback_Inv_D, addr);
-	}
-
-	/* secondatory cache skipped */
+	blast_dcache_range(start, end);
+	blast_scache_range(start, end);
 }
 
 /*
