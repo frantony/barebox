@@ -46,7 +46,11 @@ static void trap_init(void)
 
 	unsigned long ebase;
 
-	ebase = CKSEG1;
+	if (IS_ENABLED(CONFIG_MMU)) {
+		ebase = CKSEG0;
+	} else {
+		ebase = CKSEG1;
+	}
 
 	/*
 	 * Copy the generic exception handlers to their final destination.
@@ -67,6 +71,8 @@ static void trap_init(void)
 
 	/* FIXME: handle tlb */
 	memcpy((void *)(ebase), &except_vec3_generic, 0x80);
+
+	write_c0_ebase(ebase);
 
 	/* unset BOOT EXCEPTION VECTOR bit */
 	write_c0_status(read_c0_status() & ~ST0_BEV);
