@@ -21,7 +21,7 @@
 #include <mach/hardware.h>
 
 #define DEBUG_LL_UART_ADDR	MALTA_CBUS_UART
-#define DEBUG_LL_UART_SHIFT	2
+#define DEBUG_LL_UART_SHIFT	0
 
 #define DEBUG_LL_UART_CLK       (10000000 / 16)
 #define DEBUG_LL_UART_BPS       CONFIG_BAUDRATE
