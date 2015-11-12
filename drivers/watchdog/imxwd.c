@@ -97,14 +97,14 @@ static int imx21_watchdog_set_timeout(struct imx_wd *priv, int timeout)
 
 	dev_dbg(priv->dev, "%s: %d\n", __func__, timeout);
 
-	if (!timeout || timeout > 128)
+	if (timeout < 0 || timeout > 128)
 		return -EINVAL;
 
-	if (timeout > 0)
-		val = ((timeout * 2 - 1) << 8) | IMX21_WDOG_WCR_SRS |
-			IMX21_WDOG_WCR_WDA;
-	else
-		val = 0;
+	if (timeout == 0) /* bit 2 (WDE) cannot be set to 0 again */
+		return -ENOSYS;
+
+	val = ((timeout * 2 - 1) << 8) | IMX21_WDOG_WCR_SRS |
+		IMX21_WDOG_WCR_WDA;
 
 	writew(val, priv->base + IMX21_WDOG_WCR);
 	writew(IMX21_WDOG_WCR_WDE | val, priv->base + IMX21_WDOG_WCR);
