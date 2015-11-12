@@ -34,6 +34,8 @@ static int do_cpuinfo(int argc, char *argv[])
 	printk(KERN_INFO "CPU revision is: %08x (%s)\n",
 		current_cpu_data.processor_id, __cpu_name);
 
+	printk("cp0 config=%#08x\n", read_c0_config());
+
 	icache_size = c->icache.sets * c->icache.ways * c->icache.linesz;
 	dcache_size = c->dcache.sets * c->dcache.ways * c->dcache.linesz;
 
