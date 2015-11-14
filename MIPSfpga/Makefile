@@ -6,7 +6,7 @@ OBJDUMP=$(CROSS_COMPILE)objdump
 all: mipsfpga_nmon.mif mipsfpga_nmon.txt
 
 mipsfpga_nmon.bin: zbarebox.bin
-	dd if=$< of=$@ bs=1k count=2
+	dd if=$< of=$@ bs=1k count=1
 
 mipsfpga_nmon.mif: mipsfpga_nmon.bin
 	srec_cat $< -binary -offset 0 -o $@ -Memory_Initialization_File

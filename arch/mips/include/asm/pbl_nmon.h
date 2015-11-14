@@ -106,14 +106,6 @@ nmon_main:
 	/* prepare a0 for debug_ll_outc_a0 */
 	move	a0, v0
 
-	li	v1, 'q'
-	bne	v0, v1, 3f
-
-	bal	_nmon_outc_a0
-
-	b	nmon_exit
-
-3:
 	li	v1, 'd'
 	beq	v0, v1, nmon_cmd_d
 
@@ -245,13 +237,14 @@ msg_nl:
 msg_bsp:
 	.asciz "\b \b"
 
+#ifdef CONFIG_NMON_USER_START
 msg_skipping_nmon:
 	.asciz "skipping nmon..."
+#endif /* CONFIG_NMON_USER_START */
 
 #ifdef CONFIG_NMON_HELP
 msg_nmon_help:
 	.ascii "\r\n\r\nnmon commands:\r\n"
-	.ascii " q - quit\r\n"
 	.ascii " d <addr> - read 32-bit word from <addr>\r\n"
 	.ascii " w <addr> <val> - write 32-bit word to <addr>\r\n"
 	.ascii " g <addr> - jump to <addr>\r\n"
