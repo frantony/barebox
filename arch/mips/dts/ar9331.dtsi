@@ -33,12 +33,18 @@
 			#clock-cells = <1>;
 		};
 
-		spi: spi@1f000000{
+		spi: spi@1f000000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "qca,ath79-spi";
 			reg = <0x1f000000 0x01000000>;
 			status = "disabled";
+		};
+
+		timer {
+			compatible = "mti,r4k-timer";
+			clocks = <&ar9331_clk AR933X_CLK_CPU>;
+			status = "okay";
 		};
 	};
 };
