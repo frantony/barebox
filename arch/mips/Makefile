@@ -79,6 +79,7 @@ machine-$(CONFIG_MACH_MIPS_AR231X)	:= ar231x
 machine-$(CONFIG_MACH_MIPS_ATH79)	:= ath79
 machine-$(CONFIG_MACH_MIPS_BCM47XX)	:= bcm47xx
 machine-$(CONFIG_MACH_MIPS_LOONGSON)	:= loongson
+machine-$(CONFIG_MACH_MIPS_RALINK)	:= ralink
 machine-$(CONFIG_MACH_MIPS_XBURST)	:= xburst
 machdirs := $(patsubst %,arch/mips/mach-%/,$(machine-y))
 
