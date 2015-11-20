@@ -1,0 +1,3 @@
+if MACH_MIPS_RALINK
+
+endif
