@@ -1,0 +1,21 @@
+/dts-v1/;
+
+/include/ "skeleton.dtsi"
+
+/ {
+	model = "ASUS RT-N14U";
+	compatible = "asus,rt-n14u";
+
+	memory {
+		reg = <0x00000000 0x04000000>;
+	};
+
+	uart0: serial@10000c00 {
+		compatible = "ns16550a", "ralink,rt2880-uart";
+		reg = <0x10000c00 0x100>;
+		reg-shift = <2>;
+		/* no matter for emulated port */
+		clock-frequency = <1843200>;
+		status = "okay";
+	};
+};
