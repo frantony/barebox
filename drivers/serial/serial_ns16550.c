@@ -49,6 +49,7 @@ struct ns16550_priv {
 	unsigned iobase;
 	void (*write_reg)(struct ns16550_priv *, uint8_t val, unsigned offset);
 	uint8_t (*read_reg)(struct ns16550_priv *, unsigned offset);
+	void (*dl_write)(struct ns16550_priv *, unsigned baud_divisor);
 };
 
 struct ns16550_drvdata {
@@ -195,9 +196,14 @@ static int ns16550_setbaudrate(struct console_device *cdev, int baud_rate)
 	unsigned int baud_divisor = ns16550_calc_divisor(cdev, baud_rate);
 	struct ns16550_priv *priv = to_ns16550_priv(cdev);
 
-	ns16550_write(cdev, LCR_BKSE, lcr);
-	ns16550_write(cdev, baud_divisor & 0xff, dll);
-	ns16550_write(cdev, (baud_divisor >> 8) & 0xff, dlm);
+	if (priv->dl_write) {
+		priv->dl_write(priv, baud_divisor);
+	} else {
+		ns16550_write(cdev, LCR_BKSE, lcr);
+		ns16550_write(cdev, baud_divisor & 0xff, dll);
+		ns16550_write(cdev, (baud_divisor >> 8) & 0xff, dlm);
+	}
+
 	ns16550_write(cdev, LCRVAL, lcr);
 	ns16550_write(cdev, MCRVAL, mcr);
 	ns16550_write(cdev, priv->fcrval, fcr);
