@@ -86,6 +86,14 @@ config DRIVER_SERIAL_NS16550
 	help
 	  Enable this to get support for NS16550 based serial devices
 
+config DRIVER_SERIAL_NS16550_RT288X
+	bool "Ralink RT288x/RT305x/RT3662/RT3883 serial port support"
+	depends on DRIVER_SERIAL_NS16550
+	help
+	  Selecting this option will add support for the alternate register
+	  layout used by Ralink RT288x/RT305x, Alchemy Au1xxx, and some others.
+	  If unsure, say N.
+
 config DRIVER_SERIAL_ATMEL
 	depends on ARCH_AT91
 	default y
