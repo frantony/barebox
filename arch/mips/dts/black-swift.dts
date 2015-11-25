@@ -30,5 +30,10 @@
 		compatible = "m25p80";
 		spi-max-frequency = <104000000>;
 		reg = <0>;
+
+		boot@0 {
+			label = "barebox";
+			reg = <0x0 0x40000>;
+		};
 	};
 };
