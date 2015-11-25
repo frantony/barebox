@@ -46,5 +46,20 @@
 			clocks = <&ar9331_clk AR933X_CLK_CPU>;
 			status = "okay";
 		};
+
+		mac0: mac@19000000 {
+			compatible = "qca,ar7100-gmac";
+			/* драйверу нужен только базовый адрес
+				0x19000000 -> GE0 */
+			reg = <0x18070000 0x00000100>,
+			      <0x19000000 0x01000000>;
+			reg-names = "gmac", "ge0";
+
+			/* на первых порах будем работать без mii
+				в фиксированной конфигурации */
+
+			phy-mode = "mii";
+			status = "disabled";
+		};
 	};
 };
