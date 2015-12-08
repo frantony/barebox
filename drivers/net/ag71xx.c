@@ -299,22 +299,19 @@ static int ag71xx_ether_rx(struct eth_device *edev)
 	unsigned int work_done;
 
 	for (work_done = 0; work_done < NO_OF_RX_FIFOS; work_done++) {
-		unsigned int *next_rx = &priv->next_rx;
 		unsigned int pktlen;
 
-		f = &priv->fifo_rx[*next_rx];
+		f = &priv->fifo_rx[priv->next_rx];
 		pktlen = f->pkt_size;
 
 		if (f->is_empty)
 			break;
 
-		*next_rx = (*next_rx + 1) % NO_OF_RX_FIFOS;
-
 		/* invalidate */
 		dma_sync_single_for_cpu((unsigned long)f->pkt_start_addr, pktlen,
 					DMA_FROM_DEVICE);
 
-		/* PHYS addr to net receive !? */
+		/* FIXME: phys addr to net receive !? */
 		net_receive(edev, (unsigned char *)f->pkt_start_addr, pktlen - 4);
 
 		/* invalidate again !? */
@@ -322,6 +319,8 @@ static int ag71xx_ether_rx(struct eth_device *edev)
 						DMA_FROM_DEVICE);
 
 		f->is_empty = 1;
+
+		priv->next_rx = (priv->next_rx + 1) % NO_OF_RX_FIFOS;
 	}
 
 
@@ -341,6 +340,7 @@ static int ag71xx_ether_send(struct eth_device *edev, void *packet, int length)
 	int i;
 
 	/* flush */
+	/* FIXME: virt2phys(packet) */
 	dma_sync_single_for_device((unsigned long)packet, length, DMA_TO_DEVICE);
 
 	f->pkt_start_addr = virt_to_phys(packet);
@@ -351,6 +351,7 @@ static int ag71xx_ether_send(struct eth_device *edev, void *packet, int length)
 	ag71xx_wr(priv, AG71XX_REG_TX_CTRL, TX_CTRL_TXE);
 
 	/* flush again?! */
+	/* FIXME: virt2phys(packet) */
 	dma_sync_single_for_cpu((unsigned long)packet, length, DMA_TO_DEVICE);
 
 	for (i = 0; i < MAX_WAIT; i++) {
@@ -394,6 +395,7 @@ static int ag71xx_ether_init(struct eth_device *edev)
 		fr->next_desc = virt_to_phys(&priv->fifo_rx[(i + 1) % NO_OF_RX_FIFOS]);
 
 		/* invalidate */
+		/* FIXME: virt2phys */
 		dma_sync_single_for_device((unsigned long)rxbuf, MAX_RBUFF_SZ,
 					DMA_FROM_DEVICE);
 

@@ -54,6 +54,13 @@ Next, setup network on MR3020 and run ``6F01A8C0.img``, e.g.::
   hornet> tftpboot 0x81000000 6F01A8C0.img
   hornet> bootm 0x81000000
 
+WIP: Short form:
+  hornet> set ipaddr 192.168.0.2; set serverip 192.168.0.1
+  hornet> tftpboot 0x81000000 6F01A8C0.img; bootm 0x81000000
+
+u-boot_mod:
+  uboot> setenv ipaddr 192.168.1.12; setenv serverip 192.168.1.2
+  uboot> tftpboot 0x81000000 6F01A8C0.img; bootm 0x81000000
 
 Links
 -----
