@@ -179,4 +179,107 @@
 			| AR933X_GPIO_FUNC_RSRV15, GPIO_FUNC
 .endm
 
+.macro	hornet_1_1_war
+	.set push
+	.set noreorder
+
+/*
+ * WAR: Hornet 1.1 currently need a reset once we boot to let the resetb has
+ *      enough time to stable, so that trigger reset at 1st boot, system team
+ *      is investigaing the issue, will remove in short
+ */
+
+	li  t7, 0xbd000000
+	lw  t8, 0(t7)            // t8 : value of 0xbd000000
+	li  t9, 0x12345678
+	bne t8, t9, do_reset     // if value of 0xbd000000 != 0x12345678 , go to do_reset
+	 nop
+	li  t9, 0xffffffff
+	sw  t9, 0(t7)
+	b   normal_path
+	 nop
+
+do_reset:
+	sw  t9, 0(t7)
+	li  t7, 0xb806001c       // load reset register 0x1806001c
+	lw  t8, 0(t7)
+	li  t9, 0x1000000        // bit24, fullchip reset
+	or  t8, t8, t9
+	sw  t8, 0(t7)
+
+do_reset_loop:
+	b   do_reset_loop
+	 nop
+
+normal_path:
+	.set	pop
+	.endm
+
+.macro	hornet_mips24k_cp0_setup
+	.set push
+	.set noreorder
+
+	/*
+	 * Clearing CP0 registers - This is generally required for the MIPS-24k
+	 * core used by Atheros.
+	 */
+	mtc0	zero, $0
+	mtc0	zero, $1
+	mtc0	zero, $2
+	mtc0	zero, $3
+	mtc0	zero, $4
+	mtc0	zero, $5
+	mtc0	zero, $6
+	mtc0	zero, $7
+	mtc0	zero, $8
+	mtc0	zero, $9
+	mtc0	zero, $10
+	mtc0	zero, $11
+	li	t0, 0x10000004
+	mtc0	t0, $12
+	mtc0	zero, $13
+	mtc0	zero, $14
+	mtc0	zero, $15
+	mtc0	zero, $16
+	mtc0	zero, $17
+	mtc0	zero, $18
+	mtc0	zero, $19
+	mtc0	zero, $20
+	mtc0	zero, $21
+	mtc0	zero, $22
+	mtc0	zero, $23
+	mtc0	zero, $24
+	mtc0	zero, $25
+	mtc0	zero, $26
+	mtc0	zero, $27
+	mtc0	zero, $28
+
+	/*
+	 * Clear watch registers.
+	 */
+
+	mtc0	zero, CP0_WATCHLO
+	mtc0	zero, CP0_WATCHHI
+
+	/* STATUS register */
+	mfc0	k0, CP0_STATUS
+	li	k1, ~ST0_IE
+	and	k0, k1
+	mtc0	zero, CP0_CAUSE
+	mtc0	k0, CP0_STATUS
+
+	/* CAUSE register */
+	mtc0	zero, CP0_CAUSE
+
+	/* Init Timer */
+	mtc0	zero, CP0_COUNT
+	mtc0	zero, CP0_COMPARE
+
+	/* CONFIG0 register */
+	li	t0, CONF_CM_UNCACHED
+	mtc0	t0, CP0_CONFIG
+
+	.set	pop
+.endm
+
 #endif /* __ASM_MACH_ATH79_PBL_MACROS_H */
