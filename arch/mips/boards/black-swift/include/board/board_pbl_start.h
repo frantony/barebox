@@ -26,9 +26,13 @@
 
 	mips_barebox_10h
 
+	hornet_mips24k_cp0_setup
+
 	mips_disable_interrupts
 
 	pbl_blt 0xbf000000 skip_pll_ram_config t8
+
+	hornet_1_1_war
 
 	pbl_ar9331_pll
 	pbl_ar9331_ddr2_config
