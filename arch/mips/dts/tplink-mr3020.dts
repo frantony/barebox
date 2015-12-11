@@ -65,3 +65,7 @@
 		reg = <0>;
 	};
 };
+
+&mac0 {
+	status = "okay";
+};
