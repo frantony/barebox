@@ -51,6 +51,9 @@ static int mips_r4k_timer_probe(struct device_d *dev)
 
 	rate = clk_get_rate(timer_clk);
 
+	/* FIXME: we can use addition .compatible string for pipe half-rate counter */
+	rate = rate / 2;
+
 	clocks_calc_mult_shift(&mips_r4k_cs.mult, &mips_r4k_cs.shift,
 		rate, NSEC_PER_SEC, 10);
 
