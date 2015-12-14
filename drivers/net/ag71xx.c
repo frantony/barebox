@@ -492,7 +492,8 @@ static int ag71xx_probe(struct device_d *dev)
 	ag71xx_wr(priv, AG71XX_REG_FIFO_CFG2, 0xAAA0555);
 
 	ag71xx_wr(priv, AG71XX_REG_FIFO_CFG4, 0x3ffff);
-	ag71xx_wr(priv, AG71XX_REG_FIFO_CFG5, 0x66b82);
+	/* bit 19 should be set to 1 for GE0 */
+	ag71xx_wr(priv, AG71XX_REG_FIFO_CFG5, (0x66b82) | (1 << 19));
 	ag71xx_wr(priv, AG71XX_REG_FIFO_CFG3, 0x1f00140);
 
 	priv->rx_buffer = xmemalign(PAGE_SIZE, NO_OF_RX_FIFOS * MAX_RBUFF_SZ);
