@@ -36,6 +36,37 @@
 static LIST_HEAD(partition_parser_list);
 
 /**
+ * Register a cdev for given partition.  One partition
+ * can have multiple (1-2) cdev's associated with it.
+ * @param blk Block device to register to
+ * @param part Partition description
+ * @param partition_name Name for cdev (NULL is checked for)
+ * @param start Offset of partition start (bytes)
+ * @param size Partition size (bytes)
+ */
+static int register_partition_cdev(struct block_device *blk,
+				   const struct partition *part,
+				   const char *partition_name,
+				   uint64_t start, uint64_t size)
+{
+	struct cdev *cdev;
+
+	if (!partition_name)
+		return -ENOMEM;
+	dev_dbg(blk->dev, "Registering partition %s on drive %s\n",
+				partition_name, blk->cdev.name);
+	cdev = devfs_add_partition(blk->cdev.name,
+				   start, size, 0, partition_name);
+	if (IS_ERR(cdev))
+		return PTR_ERR(cdev);
+
+	cdev->dos_partition_type = part->dos_partition_type;
+	strcpy(cdev->partuuid, part->partuuid);
+
+	return 0;
+}
+
+/**
  * Register one partition on the given block device
  * @param blk Block device to register to
  * @param part Partition description
@@ -49,44 +80,19 @@ static int register_one_partition(struct block_device *blk,
 	int ret;
 	uint64_t start = part->first_sec * SECTOR_SIZE;
 	uint64_t size = part->size * SECTOR_SIZE;
-	struct cdev *cdev;
 
+	/* Make device with partition number */
 	partition_name = asprintf("%s.%d", blk->cdev.name, no);
-	if (!partition_name)
-		return -ENOMEM;
-	dev_dbg(blk->dev, "Registering partition %s on drive %s\n",
-				partition_name, blk->cdev.name);
-	cdev = devfs_add_partition(blk->cdev.name,
-				start, size, 0, partition_name);
-	if (IS_ERR(cdev)) {
-		ret = PTR_ERR(cdev);
-		goto out;
+	ret = register_partition_cdev(blk, part, partition_name, start, size);
+	free(partition_name);
+
+	/* If that worked, try to register with the part name too */
+	if (!ret && part->name[0]) {
+		partition_name = asprintf("%s.%s", blk->cdev.name, part->name);
+		ret = register_partition_cdev(blk, part, partition_name, start, size);
+		free(partition_name);
 	}
 
-	cdev->dos_partition_type = part->dos_partition_type;
-	strcpy(cdev->partuuid, part->partuuid);
-
-	free(partition_name);
-
-	if (!part->name[0])
-		return 0;
-
-	partition_name = asprintf("%s.%s", blk->cdev.name, part->name);
-	if (!partition_name)
-		return -ENOMEM;
-
-	dev_dbg(blk->dev, "Registering partition %s on drive %s\n",
-				partition_name, blk->cdev.name);
-	cdev = devfs_add_partition(blk->cdev.name,
-				start, size, 0, partition_name);
-
-	if (IS_ERR(cdev))
-		dev_warn(blk->dev, "Registering partition %s on drive %s failed\n",
-				partition_name, blk->cdev.name);
-
-	ret = 0;
-out:
-	free(partition_name);
 	return ret;
 }
 
