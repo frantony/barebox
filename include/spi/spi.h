@@ -167,6 +167,12 @@ struct spi_master {
 	struct list_head list;
 };
 
+enum spi_transfer_type {
+	SPI_TRANSFER_GENERIC = 0,
+	SPI_TRANSFER_FLASH_READ_CMD,
+	SPI_TRANSFER_FLASH_READ_DATA,
+};
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -261,6 +267,8 @@ struct spi_transfer {
 	u8		bits_per_word;
 	u16		delay_usecs;
 	u32		speed_hz;
+	enum spi_transfer_type type;
+	bool dummy;
 
 	struct list_head transfer_list;
 };

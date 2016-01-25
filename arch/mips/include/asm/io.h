@@ -11,7 +11,9 @@
 #define __ASM_MIPS_IO_H
 
 #include <linux/compiler.h>
+#include <asm/posix_types.h>
 #include <asm/types.h>
+#include <asm/string.h>
 #include <asm/addrspace.h>
 #include <asm/byteorder.h>
 
@@ -54,6 +56,19 @@ static inline void *phys_to_virt(unsigned long address)
 }
 
 #define	IO_SPACE_LIMIT	0
+
+static inline void memset_io(volatile void __iomem *addr, unsigned char val, int count)
+{
+        memset((void __force *) addr, val, count);
+}
+static inline void memcpy_fromio(void *dst, const volatile void __iomem *src, int count)
+{
+        memcpy(dst, (void __force *) src, count);
+}
+static inline void memcpy_toio(volatile void __iomem *dst, const void *src, int count)
+{
+        memcpy((void __force *) dst, src, count);
+}
 
 /*****************************************************************************/
 /*

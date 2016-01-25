@@ -23,11 +23,21 @@
 #include <io.h>
 #include <clock.h>
 
+enum ath79_spi_state {
+	ATH79_SPI_STATE_WAIT_CMD = 0,
+	ATH79_SPI_STATE_WAIT_READ,
+};
+
 struct ath79_spi {
 	struct spi_master	master;
 	void __iomem		*regs;
 	u32			val;
 	u32			reg_ctrl;
+
+	enum ath79_spi_state	state;
+	u32			clk_div;
+	unsigned long 		read_addr;
+	unsigned long		ahb_rate;
 };
 
 #define AR71XX_SPI_REG_FS	0x00	/* Function Select */
@@ -183,6 +193,117 @@ static int ath79_spi_write(struct spi_device *spi,
 	return 0;
 }
 
+
+static void ath79_spi_enable(struct ath79_spi *sp)
+{
+	/* enable GPIO mode */
+	ath79_spi_wr(sp, AR71XX_SPI_FS_GPIO, AR71XX_SPI_REG_FS);
+
+	/* save CTRL register */
+	sp->reg_ctrl = ath79_spi_rr(sp, AR71XX_SPI_REG_CTRL);
+	sp->val = ath79_spi_rr(sp, AR71XX_SPI_REG_IOC);
+}
+
+static void ath79_spi_disable(struct ath79_spi *sp)
+{
+	/* restore CTRL register */
+	ath79_spi_wr(sp, sp->reg_ctrl, AR71XX_SPI_REG_CTRL);
+	/* disable GPIO mode */
+	ath79_spi_wr(sp, 0, AR71XX_SPI_REG_FS);
+}
+
+static int ath79_spi_do_read_flash_data(struct spi_device *spi,
+					struct spi_transfer *t)
+{
+	struct ath79_spi *sp = ath79_spidev_to_sp(spi);
+
+	/* disable GPIO mode */
+	ath79_spi_wr(sp, 0, AR71XX_SPI_REG_FS);
+
+	memcpy_fromio(t->rx_buf, sp->regs + sp->read_addr, t->len);
+
+	/* enable GPIO mode */
+	ath79_spi_wr(sp, AR71XX_SPI_FS_GPIO, AR71XX_SPI_REG_FS);
+
+	/* restore IOC register */
+	ath79_spi_wr(sp, sp->val, AR71XX_SPI_REG_IOC);
+
+	return t->len;
+}
+
+static int ath79_spi_do_read_flash_cmd(struct spi_device *spi,
+				       struct spi_transfer *t)
+{
+	struct ath79_spi *sp = ath79_spidev_to_sp(spi);
+	int len;
+	const u8 *p;
+
+	sp->read_addr = 0;
+
+	len = t->len - 1;
+
+	if (t->dummy)
+		len -= 1;
+
+	p = t->tx_buf;
+
+	while (len--) {
+		p++;
+		sp->read_addr <<= 8;
+		sp->read_addr |= *p;
+	}
+
+	return t->len;
+}
+
+static bool ath79_spi_is_read_cmd(struct spi_device *spi,
+				 struct spi_transfer *t)
+{
+	return t->type == SPI_TRANSFER_FLASH_READ_CMD;
+}
+
+static bool ath79_spi_is_data_read(struct spi_device *spi,
+				  struct spi_transfer *t)
+{
+	return t->type == SPI_TRANSFER_FLASH_READ_DATA;
+}
+
+static int ath79_spi_txrx_bufs(struct spi_device *spi, struct spi_transfer *t)
+{
+	struct ath79_spi *sp = ath79_spidev_to_sp(spi);
+	int ret;
+
+	switch (sp->state) {
+	case ATH79_SPI_STATE_WAIT_CMD:
+		if (ath79_spi_is_read_cmd(spi, t)) {
+			ret = ath79_spi_do_read_flash_cmd(spi, t);
+			sp->state = ATH79_SPI_STATE_WAIT_READ;
+		} else {
+			if (t->tx_buf)
+				ath79_spi_write(spi, t->tx_buf, t->len);
+
+			if (t->rx_buf)
+				ath79_spi_read(spi, t->rx_buf, t->len);
+		}
+		break;
+
+	case ATH79_SPI_STATE_WAIT_READ:
+		if (ath79_spi_is_data_read(spi, t)) {
+			ret = ath79_spi_do_read_flash_data(spi, t);
+		} else {
+			dev_warn(&spi->dev, "flash data read expected\n");
+			ret = -EIO;
+		}
+		sp->state = ATH79_SPI_STATE_WAIT_CMD;
+		break;
+
+	default:
+		BUG();
+	}
+
+	return ret;
+}
+
 static int ath79_spi_transfer(struct spi_device *spi, struct spi_message *mesg)
 {
 	struct ath79_spi *sc = ath79_spidev_to_sp(spi);
@@ -195,11 +316,7 @@ static int ath79_spi_transfer(struct spi_device *spi, struct spi_message *mesg)
 
 	list_for_each_entry(t, &mesg->transfers, transfer_list) {
 
-		if (t->tx_buf)
-			ath79_spi_write(spi, t->tx_buf, t->len);
-
-		if (t->rx_buf)
-			ath79_spi_read(spi, t->rx_buf, t->len);
+		ath79_spi_txrx_bufs(spi, t);
 
 		mesg->actual_length += t->len;
 	}
@@ -209,27 +326,22 @@ static int ath79_spi_transfer(struct spi_device *spi, struct spi_message *mesg)
 
 	return 0;
 }
-
-static void ath79_spi_enable(struct ath79_spi *sp)
+#if 0
+static int ath79_spi_setup_transfer(struct spi_device *spi,
+				    struct spi_transfer *t)
 {
-	/* enable GPIO mode */
-	ath79_spi_wr(sp, AR71XX_SPI_FS_GPIO, AR71XX_SPI_REG_FS);
+	struct ath79_spi *sp = ath79_spidev_to_sp(spi);
+	int ret;
 
-	/* save CTRL register */
-	sp->reg_ctrl = ath79_spi_rr(sp, AR71XX_SPI_REG_CTRL);
-	sp->val = ath79_spi_rr(sp, AR71XX_SPI_REG_IOC);
+	ret = spi_bitbang_setup_transfer(spi, t);
+	if (ret)
+		return ret;
 
-	/* TODO: setup speed? */
-	ath79_spi_wr(sp, 0x43, AR71XX_SPI_REG_CTRL);
+	sp->bitbang.txrx_bufs = ath79_spi_txrx_bufs;
+
+	return ret;
 }
-
-static void ath79_spi_disable(struct ath79_spi *sp)
-{
-	/* restore CTRL register */
-	ath79_spi_wr(sp, sp->reg_ctrl, AR71XX_SPI_REG_CTRL);
-	/* disable GPIO mode */
-	ath79_spi_wr(sp, 0, AR71XX_SPI_REG_FS);
-}
+#endif
 
 static int ath79_spi_probe(struct device_d *dev)
 {
@@ -264,6 +376,7 @@ static int ath79_spi_probe(struct device_d *dev)
 	}
 
 	ath79_spi->regs = dev_request_mem_region(dev, 0);
+	ath79_spi->state = ATH79_SPI_STATE_WAIT_CMD;
 
 	/* enable gpio mode */
 	ath79_spi_enable(ath79_spi);
