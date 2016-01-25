@@ -130,10 +130,15 @@ static int m25p80_read(struct spi_nor *nor, loff_t from, size_t len,
 	flash->command[0] = nor->read_opcode;
 	m25p_addr2cmd(nor, from, flash->command);
 
+	if (dummy == 1)
+		t[0].dummy = true;
+
+	t[0].type = SPI_TRANSFER_FLASH_READ_CMD;
 	t[0].tx_buf = flash->command;
 	t[0].len = m25p_cmdsz(nor) + dummy;
 	spi_message_add_tail(&t[0], &m);
 
+	t[1].type = SPI_TRANSFER_FLASH_READ_DATA;
 	t[1].rx_buf = buf;
 	t[1].len = len;
 	spi_message_add_tail(&t[1], &m);
