@@ -216,6 +216,7 @@ struct ag71xx {
 
 	void *rx_buffer;
 
+	unsigned char *rx_pkt[NO_OF_RX_FIFOS];
 	ag7240_desc_t *fifo_tx;
 	ag7240_desc_t *fifo_rx;
 
@@ -300,33 +301,31 @@ static int ag71xx_ether_rx(struct eth_device *edev)
 
 	for (work_done = 0; work_done < NO_OF_RX_FIFOS; work_done++) {
 		unsigned int pktlen;
+		unsigned char *rx_pkt;
 
 		f = &priv->fifo_rx[priv->next_rx];
-		pktlen = f->pkt_size;
 
 		if (f->is_empty)
 			break;
 
+		pktlen = f->pkt_size;
+		rx_pkt = priv->rx_pkt[priv->next_rx];
+
 		/* invalidate */
-		dma_sync_single_for_cpu((unsigned long)f->pkt_start_addr, pktlen,
-					DMA_FROM_DEVICE);
-
-		/* FIXME: phys addr to net receive !? */
-		net_receive(edev, (unsigned char *)f->pkt_start_addr, pktlen - 4);
-
-		/* invalidate again !? */
-		dma_sync_single_for_device((unsigned long)f->pkt_start_addr, pktlen,
+		dma_sync_single_for_cpu((unsigned long)rx_pkt, pktlen,
 						DMA_FROM_DEVICE);
+
+		net_receive(edev, rx_pkt, pktlen - 4);
 
 		f->is_empty = 1;
 
 		priv->next_rx = (priv->next_rx + 1) % NO_OF_RX_FIFOS;
 	}
 
-
-	if (!(ag71xx_rr(priv, AG71XX_REG_RX_CTRL))) {
+	if (!(ag71xx_rr(priv, AG71XX_REG_RX_CTRL) & RX_CTRL_RXE)) {
+		f = &priv->fifo_rx[priv->next_rx];
 		ag71xx_wr(priv, AG71XX_REG_RX_DESC, virt_to_phys(f));
-		ag71xx_wr(priv, AG71XX_REG_RX_CTRL, 1);
+		ag71xx_wr(priv, AG71XX_REG_RX_CTRL, RX_CTRL_RXE);
 	}
 
 	return work_done;
@@ -340,7 +339,6 @@ static int ag71xx_ether_send(struct eth_device *edev, void *packet, int length)
 	int i;
 
 	/* flush */
-	/* FIXME: virt2phys(packet) */
 	dma_sync_single_for_device((unsigned long)packet, length, DMA_TO_DEVICE);
 
 	f->pkt_start_addr = virt_to_phys(packet);
@@ -351,11 +349,10 @@ static int ag71xx_ether_send(struct eth_device *edev, void *packet, int length)
 	ag71xx_wr(priv, AG71XX_REG_TX_CTRL, TX_CTRL_TXE);
 
 	/* flush again?! */
-	/* FIXME: virt2phys(packet) */
 	dma_sync_single_for_cpu((unsigned long)packet, length, DMA_TO_DEVICE);
 
 	for (i = 0; i < MAX_WAIT; i++) {
-		mdelay(10);
+		udelay(100);
 		if (f->is_empty) {
 			break;
 		}
@@ -389,13 +386,13 @@ static int ag71xx_ether_init(struct eth_device *edev)
 	for (i = 0; i < NO_OF_RX_FIFOS; i++) {
 		ag7240_desc_t *fr = &priv->fifo_rx[i];
 
-		fr->pkt_start_addr = rxbuf;
+		priv->rx_pkt[i] = rxbuf;
+		fr->pkt_start_addr = virt_to_phys(rxbuf);
 		fr->pkt_size = MAX_RBUFF_SZ;
 		fr->is_empty = 1;
 		fr->next_desc = virt_to_phys(&priv->fifo_rx[(i + 1) % NO_OF_RX_FIFOS]);
 
 		/* invalidate */
-		/* FIXME: virt2phys */
 		dma_sync_single_for_device((unsigned long)rxbuf, MAX_RBUFF_SZ,
 					DMA_FROM_DEVICE);
 
@@ -499,7 +496,7 @@ static int ag71xx_probe(struct device_d *dev)
 	ag71xx_wr(priv, AG71XX_REG_FIFO_CFG5, (0x66b82) | (1 << 19));
 	ag71xx_wr(priv, AG71XX_REG_FIFO_CFG3, 0x1f00140);
 
-	priv->rx_buffer = dma_alloc_coherent(NO_OF_TX_FIFOS * MAX_RBUFF_SZ, DMA_ADDRESS_BROKEN);
+	priv->rx_buffer = xmemalign(PAGE_SIZE, NO_OF_RX_FIFOS * MAX_RBUFF_SZ);
 	priv->fifo_tx = dma_alloc_coherent(NO_OF_TX_FIFOS * sizeof(ag7240_desc_t), DMA_ADDRESS_BROKEN);
 	priv->fifo_rx = dma_alloc_coherent(NO_OF_RX_FIFOS * sizeof(ag7240_desc_t), DMA_ADDRESS_BROKEN);
 	priv->next_tx = 0;
