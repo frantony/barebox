@@ -1311,13 +1311,26 @@ static char *rootnfsopts;
 
 static void nfs_set_rootarg(struct nfs_priv *npriv, struct fs_device_d *fsdev)
 {
-	char *str;
+	char *str, *tmp;
 	const char *ip;
 
 	ip = ip_to_string(npriv->server);
 	str = asprintf("root=/dev/nfs nfsroot=%s:%s%s%s",
 			ip, npriv->path, rootnfsopts[0] ? "," : "",
 			rootnfsopts);
+
+	/* forward specific mount options on demand */
+	if (npriv->nfs_port != PROG_NFS) {
+		tmp = asprintf("%s,port=%hu", str, npriv->nfs_port);
+		free(str);
+		str = tmp;
+	}
+
+	if (npriv->mount_port != PROG_MOUNT) {
+		tmp = asprintf("%s,mountport=%hu", str, npriv->mount_port);
+		free(str);
+		str = tmp;
+	}
 
 	fsdev_set_linux_rootarg(fsdev, str);
 
