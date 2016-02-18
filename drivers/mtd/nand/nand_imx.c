@@ -1174,8 +1174,9 @@ static int __init imxnd_probe(struct device_d *dev)
 		iores = dev_request_mem_resource(dev, 0);
 		if (IS_ERR(iores))
 			return PTR_ERR(iores);
-		host->regs_ip = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-										     1);
+		host->regs_ip = IOMEM(iores->start);
+
+		iores = dev_request_mem_resource(dev, 1);
 		if (IS_ERR(iores))
 			return PTR_ERR(iores);
 		host->base = IOMEM(iores->start);

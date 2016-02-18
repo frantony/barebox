@@ -42,7 +42,6 @@ static int am335x_phy_probe(struct device_d *dev)
 		ret = PTR_ERR(iores);
 		goto err_free;
 	}
-	am_usbphy->base = IOMEM(iores->start);
 
 	am_usbphy->phy_ctrl = am335x_get_phy_control(dev);
 	if (!am_usbphy->phy_ctrl)

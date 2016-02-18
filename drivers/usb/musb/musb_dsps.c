@@ -382,8 +382,9 @@ static int dsps_probe(struct device_d *dev)
 	iores = dev_request_mem_resource(dev, 0);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	glue->musb.mregs = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-										1);
+	glue->musb.mregs = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(dev, 1);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
 	glue->musb.ctrl_base = IOMEM(iores->start);

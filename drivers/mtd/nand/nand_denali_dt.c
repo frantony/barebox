@@ -55,8 +55,9 @@ static int denali_dt_probe(struct device_d *ofdev)
 	iores = dev_request_mem_resource(ofdev, 0);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	denali->flash_mem = IOMEM(iores->start);iores = dev_request_mem_resource(ofdev,
-										 1);
+	denali->flash_mem = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(ofdev, 1);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
 	denali->flash_reg = IOMEM(iores->start);

@@ -710,8 +710,9 @@ static int dove_pinctrl_probe(struct device_d *dev)
 	iores = dev_request_mem_resource(dev, 0);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	mpp_base = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-									1);
+	mpp_base = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(dev, 1);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
 	mpp4_base = IOMEM(iores->start);

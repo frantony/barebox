@@ -168,7 +168,6 @@ static int omap_wdt_probe(struct device_d *dev)
 		ret = PTR_ERR(iores);
 		goto error;
 	}
-	wdev->base = IOMEM(iores->start);
 
 	wdev->timeout = TIMER_MARGIN_DEFAULT;
 

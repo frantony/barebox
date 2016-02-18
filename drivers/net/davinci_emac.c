@@ -538,16 +538,19 @@ static int davinci_emac_probe(struct device_d *dev)
 	iores = dev_request_mem_resource(dev, 0);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	priv->adap_emac = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-									       1);
+	priv->adap_emac = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(dev, 1);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	priv->adap_ewrap = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-										2);
+	priv->adap_ewrap = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(dev, 2);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	priv->adap_mdio = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-									       3);
+	priv->adap_mdio = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(dev, 3);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
 	priv->emac_desc_base = IOMEM(iores->start);

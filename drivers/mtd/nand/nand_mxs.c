@@ -1297,8 +1297,9 @@ static int mxs_nand_probe(struct device_d *dev)
 	iores = dev_request_mem_resource(dev, 0);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	nand_info->io_base = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-										  1);
+	nand_info->io_base = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(dev, 1);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
 	nand_info->bch_base = IOMEM(iores->start);

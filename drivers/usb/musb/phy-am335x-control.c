@@ -150,8 +150,9 @@ static int am335x_control_usb_probe(struct device_d *dev)
 	iores = dev_request_mem_resource(dev, 0);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	ctrl_usb->phy_reg = IOMEM(iores->start);iores = dev_request_mem_resource(dev,
-										 1);
+	ctrl_usb->phy_reg = IOMEM(iores->start);
+
+	iores = dev_request_mem_resource(dev, 1);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
 	ctrl_usb->wkup = IOMEM(iores->start);
