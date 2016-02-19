@@ -99,4 +99,6 @@ config FS_RATP
 	  This enables support for transferring files over RATP. A host can
 	  export a directory which can then be mounted under barebox.
 
++source fs/squashfs/Kconfig
+
 endmenu
