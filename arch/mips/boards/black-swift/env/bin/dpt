@@ -1,0 +1,7 @@
+#!/bin/sh
+
+eth0.ipaddr=192.168.1.22
+eth0.serverip=192.168.1.2
+
+tftp dpt.sh
+sh dpt.sh
