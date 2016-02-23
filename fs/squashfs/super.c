@@ -341,7 +341,7 @@ struct super_block *squashfs_mount(struct fs_device_d *fsdev, int silent)
 
 	if (squashfs_fill_super(sb, fsdev, silent)) {
 		kfree(sb);
-		return NULL;
+		return ERR_PTR(-EINVAL);
 	}
 
 	return sb;
