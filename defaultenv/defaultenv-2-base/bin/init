@@ -56,7 +56,11 @@ if [ "${key}" = "q" ]; then
 fi
 
 if [ "$autoboot" = 0 ]; then
-	boot
+# FIXME
+#	boot
+	mount -t squashfs /dev/spiflash.linux /mnt
+	memcpy -s /mnt/boot/vmlinuz.bin 0 0x80600000
+	go 0x80600000
 fi
 
 if [ -e /env/menu ]; then
