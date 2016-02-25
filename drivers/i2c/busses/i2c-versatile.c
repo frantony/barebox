@@ -66,6 +66,7 @@ static struct i2c_algo_bit_data i2c_versatile_algo = {
 
 static int i2c_versatile_probe(struct device_d *dev)
 {
+	struct resource *iores;
 	struct i2c_versatile *i2c;
 	int ret;
 
@@ -75,9 +76,9 @@ static int i2c_versatile_probe(struct device_d *dev)
 		goto err_release;
 	}
 
-	i2c->base = dev_request_mem_region(dev, 0);
-	if (IS_ERR(i2c->base)) {
-		ret = PTR_ERR(i2c->base);
+	iores = dev_request_mem_resource(dev, 0);
+	if (IS_ERR(iores)) {
+		ret = PTR_ERR(iores);
 		goto err_free;
 	}
 
