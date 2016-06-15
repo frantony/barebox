@@ -7,6 +7,9 @@ config BOARD_WRTNODE
 	bool "WRTnode"
 	select DEBUG_LL_RT2880
 
+config BOARD_WRTNODE2R
+	bool "WRTnode2R"
+
 endchoice
 
 config DEBUG_LL_RT2880
