@@ -1,0 +1,3 @@
+pblb-$(CONFIG_BOARD_WRTNODE2R) += start_wrtnode2r
+FILE_barebox-wrtnode2r.img = start_wrtnode2r.pblb
+image-$(CONFIG_BOARD_WRTNODE2R) += barebox-wrtnode2r.img

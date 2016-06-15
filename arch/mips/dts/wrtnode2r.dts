@@ -1,0 +1,15 @@
+#include "mt7628an.dtsi"
+
+/ {
+	model = "WRTnode2R";
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x10000000>;
+	};
+};
+
+&uartlite {
+	status = "okay";
+	clock-frequency = <39628800>;
+};
