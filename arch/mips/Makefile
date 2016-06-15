@@ -92,6 +92,7 @@ machine-$(CONFIG_MACH_MIPS_LOONGSON)	:= loongson
 board-$(CONFIG_BOARD_LOONGSON_TECH_LS1B)	:= loongson-ls1b
 
 machine-$(CONFIG_MACH_MIPS_RALINK)	:= ralink
+board-$(CONFIG_BOARD_WRTNODE2R)	:= wrtnode2r
 
 machine-$(CONFIG_MACH_MIPS_XBURST)	:= xburst
 board-$(CONFIG_BOARD_RZX50)	:= ritmix-rzx50
