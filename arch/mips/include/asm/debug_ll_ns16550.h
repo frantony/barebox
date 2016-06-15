@@ -38,6 +38,13 @@
 #define UART_LSR_DR     0x01    /* UART received data present */
 #define UART_LSR_THRE	0x20	/* Xmit holding register empty */
 
+#ifdef CONFIG_DEBUG_LL_RT2880
+#undef UART_THR
+#define UART_THR	(0x1 << DEBUG_LL_UART_SHIFT)
+#undef UART_LSR
+#define UART_LSR	(0x7 << DEBUG_LL_UART_SHIFT)
+#endif
+
 #ifndef __ASSEMBLY__
 /*
  * C macros

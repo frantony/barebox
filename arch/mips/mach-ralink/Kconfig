@@ -1,5 +1,9 @@
 if MACH_MIPS_RALINK
 
+config DEBUG_LL_RT2880
+	bool "debug_ll for rt2880-style uart port"
+	depends on DEBUG_LL
+
 config BOARD_WRTNODE2R
 	bool "WRTnode2R"
 	select HAVE_PBL_IMAGE
