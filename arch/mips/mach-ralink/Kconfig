@@ -4,4 +4,10 @@ config ARCH_TEXT_BASE
 	hex
 	default 0xa0800000
 
+config BOARD_WRTNODE2R
+	bool "WRTnode2R"
+	select HAVE_PBL_IMAGE
+	select HAVE_IMAGE_COMPRESSION
+	select HAS_NMON
+
 endif

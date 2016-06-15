@@ -14,5 +14,6 @@ pbl-dtb-$(CONFIG_BOARD_QEMU_MALTA) += qemu-malta.dtb.o
 pbl-dtb-$(CONFIG_BOARD_RZX50) += rzx50.dtb.o
 pbl-dtb-$(CONFIG_BOARD_TPLINK_MR3020) += ar9331_tl_mr3020.dtb.o
 pbl-dtb-$(CONFIG_BOARD_TPLINK_WDR4300) += ar9344-tl-wdr4300-v1.7.dtb.o
+pbl-dtb-$(CONFIG_BOARD_WRTNODE2R) += wrtnode2r.dtb.o
 
 clean-files := *.dtb *.dtb.S .*.dtc .*.pre .*.dts *.dtb.lzo
