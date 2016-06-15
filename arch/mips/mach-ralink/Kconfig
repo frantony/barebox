@@ -1,5 +1,14 @@
 if MACH_MIPS_RALINK
 
+choice
+	prompt "Board type"
+
+config BOARD_WRTNODE
+	bool "WRTnode"
+	select DEBUG_LL_RT2880
+
+endchoice
+
 config DEBUG_LL_RT2880
 	bool "debug_ll for rt2880-style uart port"
 	depends on DEBUG_LL
