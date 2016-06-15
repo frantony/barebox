@@ -22,4 +22,8 @@ config BOARD_OMEGA2
 	select HAVE_IMAGE_COMPRESSION
 	select HAS_NMON
 
+config BOARD_WRTNODE
+	bool "WRTnode"
+	select DEBUG_LL_RT2880
+
 endif
