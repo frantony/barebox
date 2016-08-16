@@ -14,19 +14,17 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/init.h>
-#include <linux/module.h>
+#include <common.h>
+#include <init.h>
+#include <driver.h>
+#include <spi/spi.h>
+#include <io.h>
+#include <clock.h>
 #include <linux/clk.h>
 #include <linux/err.h>
-#include <linux/delay.h>
-#include <linux/io.h>
-#include <linux/reset.h>
-#include <linux/spi/spi.h>
-#include <linux/of_device.h>
-#include <linux/platform_device.h>
-#include <linux/swab.h>
+#include <of_device.h>
 
-#include <ralink_regs.h>
+//#include <ralink_regs.h>
 
 #define SPI_BPW_MASK(bits) BIT((bits) - 1)
 
@@ -60,19 +58,18 @@
 struct mt7621_spi;
 
 struct mt7621_spi {
-	struct spi_master	*master;
+	struct spi_master	master;
 	void __iomem		*base;
 	unsigned int		sys_freq;
 	unsigned int		speed;
 	struct clk		*clk;
-	spinlock_t		lock;
 
 	struct mt7621_spi_ops	*ops;
 };
 
 static inline struct mt7621_spi *spidev_to_mt7621_spi(struct spi_device *spi)
 {
-	return spi_master_get_devdata(spi->master);
+	return container_of(spi->master, struct mt7621_spi, master);
 }
 
 static inline u32 mt7621_spi_read(struct mt7621_spi *rs, u32 reg)
@@ -168,7 +165,6 @@ static inline int mt7621_spi_wait_till_ready(struct spi_device *spi)
 		if ((status & SPITRANS_BUSY) == 0) {
 			return 0;
 		}
-		cpu_relax();
 		udelay(1);
 	}
 
@@ -178,7 +174,7 @@ static inline int mt7621_spi_wait_till_ready(struct spi_device *spi)
 static int mt7621_spi_transfer_half_duplex(struct spi_master *master,
 					   struct spi_message *m)
 {
-	struct mt7621_spi *rs = spi_master_get_devdata(master);
+	struct mt7621_spi *rs = container_of(master, struct mt7621_spi, master);
 	struct spi_device *spi = m->spi;
 	unsigned int speed = spi->max_speed_hz;
 	struct spi_transfer *t = NULL;
@@ -383,7 +379,6 @@ static const struct of_device_id mt7621_spi_match[] = {
 	{ .compatible = "ralink,mt7621-spi" },
 	{},
 };
-MODULE_DEVICE_TABLE(of, mt7621_spi_match);
 
 static int mt7621_spi_probe(struct platform_device *pdev)
 {
@@ -441,7 +436,6 @@ static int mt7621_spi_probe(struct platform_device *pdev)
 	rs->sys_freq = clk_get_rate(rs->clk);
 	rs->ops = ops;
 	dev_info(&pdev->dev, "sys_freq: %u\n", rs->sys_freq);
-	spin_lock_irqsave(&rs->lock, flags);
 
 	device_reset(&pdev->dev);
 
@@ -464,19 +458,13 @@ static int mt7621_spi_remove(struct platform_device *pdev)
 	return 0;
 }
 
-MODULE_ALIAS("platform:" DRIVER_NAME);
-
-static struct platform_driver mt7621_spi_driver = {
-	.driver = {
-		.name = DRIVER_NAME,
-		.owner = THIS_MODULE,
-		.of_match_table = mt7621_spi_match,
-	},
+static struct driver_d mt7621_spi_driver = {
+	.name = DRIVER_NAME,
 	.probe = mt7621_spi_probe,
 	.remove = mt7621_spi_remove,
+	.of_compatible = DRV_OF_COMPAT(mt7621_spi_match),
 };
-
-module_platform_driver(mt7621_spi_driver);
+device_platform_driver(mt7621_spi_driver);
 
 MODULE_DESCRIPTION("MT7621 SPI driver");
 MODULE_AUTHOR("Felix Fietkau <nbd@nbd.name>");
