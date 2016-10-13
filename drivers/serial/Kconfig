@@ -41,7 +41,7 @@ config DRIVER_SERIAL_NETX
 	bool "Netx serial driver"
 
 config DRIVER_SERIAL_LINUX_CONSOLE
-	depends on LINUX
+	depends on LINUX || RISCV
 	default y
 	bool "linux console driver"
 
