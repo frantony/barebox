@@ -15,6 +15,7 @@
 #include <memory.h>
 #include <asm-generic/memory_layout.h>
 #include <asm/sections.h>
+#include <debug_ll.h>
 
 void main_entry(void);
 
@@ -25,11 +26,15 @@ void main_entry(void);
  */
 void main_entry(void)
 {
+//	debug_ll_ns16550_init();
+	puts_ll("main_entry()\n");
+
 	/* clear the BSS first */
 	memset(__bss_start, 0x00, __bss_stop - __bss_start);
 
 	mem_malloc_init((void *)MALLOC_BASE,
 			(void *)(MALLOC_BASE + MALLOC_SIZE - 1));
 
+	puts_ll("start_barebox\n");
 	start_barebox();
 }

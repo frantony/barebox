@@ -2,16 +2,30 @@ CPPFLAGS += -fno-strict-aliasing
 
 ifeq ($(CONFIG_ARCH_RV32I),y)
 	cflags-y += -march=rv32im
+	cflags-y += -mabi=ilp32
+endif
+
+ifeq ($(CONFIG_ARCH_RV64I),y)
+	cflags-y += -march=rv64im
+	cflags-y += -mabi=lp64
+endif
+
+ifeq ($(CONFIG_CMODEL_MEDLOW),y)
+	cflags-y += -mcmodel=medlow
+endif
+ifeq ($(CONFIG_CMODEL_MEDANY),y)
+	cflags-y += -mcmodel=medany
 endif
 
 cflags-y += -fno-pic -pipe
 cflags-y += -Wall -Wstrict-prototypes \
-	-Wno-uninitialized -Wno-format -Wno-main -mcmodel=medany
+	-Wno-uninitialized -Wno-format -Wno-main
 
 LDFLAGS += $(ldflags-y)
 LDFLAGS_barebox += -nostdlib
 
 machine-$(CONFIG_MACH_ERIZO)	:= erizo
+machine-$(CONFIG_MACH_SIFIVE)	:= sifive
 
 TEXT_BASE = $(CONFIG_TEXT_BASE)
 CPPFLAGS += -DTEXT_BASE=$(CONFIG_TEXT_BASE)

@@ -1,0 +1,16 @@
+if MACH_SIFIVE
+
+config ARCH_TEXT_BASE
+	hex
+	default 0x00001000
+
+choice
+	prompt "Board type"
+
+config BOARD_QEMU_SIFIVE_U
+	bool "qemu sifive_u"
+	select HAS_DEBUG_LL
+
+endchoice
+
+endif

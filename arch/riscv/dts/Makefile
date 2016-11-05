@@ -4,6 +4,7 @@ obj-dtb-$(CONFIG_BUILTIN_DTB) += $(BUILTIN_DTB).dtb.o
 endif
 
 obj-dtb-$(CONFIG_BOARD_ERIZO_GENERIC) += erizo-generic.dtb.o
+obj-dtb-$(CONFIG_BOARD_QEMU_SIFIVE_U) += qemu-sifive_u.dtb.o
 
 # just to build a built-in.o. Otherwise compilation fails when no devicetree is
 # created.

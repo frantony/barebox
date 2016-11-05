@@ -24,6 +24,10 @@ config MACH_ERIZO
 	select HAS_DEBUG_LL
 	select HAS_NMON
 
+config MACH_SIFIVE
+	bool "SiFive"
+	select HAS_DEBUG_LL
+
 endchoice
 
 choice
@@ -37,9 +41,20 @@ config ARCH_RV32I
 	select GENERIC_LIB_ASHRDI3
 	select GENERIC_LIB_LSHRDI3
 
+config ARCH_RV64I
+	bool "RV64I"
+	select CPU_SUPPORTS_32BIT_KERNEL
+	select CPU_SUPPORTS_64BIT_KERNEL
+
 endchoice
 
 config CPU_SUPPORTS_32BIT_KERNEL
+	bool
+
+config CPU_SUPPORTS_64BIT_KERNEL
+	bool
+
+config PHYS_ADDR_T_64BIT
 	bool
 
 choice
@@ -52,6 +67,26 @@ config 32BIT
 	help
 	  Select this option to build a 32-bit barebox.
 
+config 64BIT
+	bool "64-bit barebox"
+	depends on CPU_SUPPORTS_64BIT_KERNEL
+	select PHYS_ADDR_T_64BIT
+# FIXME
+#	select GENERIC_LIB_MULDI3
+	help
+	  Select this option to build a 64-bit barebox.
+
+endchoice
+
+choice
+	prompt "Barebox Code Model"
+	default CMODEL_MEDLOW if 32BIT
+	default CMODEL_MEDANY if 64BIT
+
+	config CMODEL_MEDLOW
+		bool "medium low code model"
+	config CMODEL_MEDANY
+		bool "medium any code model"
 endchoice
 
 config BUILTIN_DTB
@@ -63,6 +98,7 @@ config BUILTIN_DTB_NAME
 	depends on BUILTIN_DTB
 
 source "arch/riscv/mach-erizo/Kconfig"
+source "arch/riscv/mach-sifive/Kconfig"
 
 endmenu
 

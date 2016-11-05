@@ -28,11 +28,28 @@
 
 .globl _start
 _start:
-	debug_ll_ns16550_init
+	# The boot ROM may pass the following arguments to coreboot:
+	#   a0: the value of mhartid
+	#   a1: a pointer to the flattened devicetree
+
+	csrr a0, mhartid
+
+	beqz	a0, primary_hart
+
+secondary_hart_loop:
+	wfi
+	j	secondary_hart_loop
+
+primary_hart:
+
+	//debug_ll_ns16550_init
 
 	riscv_nmon
 
 	li	sp, STACK_BASE + STACK_SIZE
+
+	# clear any pending interrupts
+	//csrwi mip, 0
 
 	/* copy barebox to link location */
 
@@ -60,9 +77,14 @@ copy_loop:
 	addi	a1, a1, LONGSIZE * 4
 	bgeu	a2, a0, copy_loop
 
+	//nmon_outs copy_loop_done_message
+
 	/* Alas! At the moment I can't load main_entry __link__ address
 	   into a0 with la. Use CONFIG_TEXT_BASE instead. This solution
 	   leads to extra cycles for repeat sp initialization. */
 
 	li	a0, CONFIG_TEXT_BASE
 	jalr	a0
+
+//copy_loop_done_message:
+//	.asciz "\r\ncopy loop done\r\nrestarting...\r\n"

@@ -2,6 +2,7 @@
 #define __ASM_RISCV_TYPES_H
 
 #ifdef __riscv64
+#error 1
 /*
  * This is used in dlmalloc. On RISCV64 we need it to be 64 bit
  */
@@ -19,6 +20,8 @@
  * __xx is ok: it doesn't pollute the POSIX namespace. Use these in the
  * header files exported to user space
  */
+
+#ifndef __ASSEMBLY__
 
 typedef __signed__ char __s8;
 typedef unsigned char __u8;
@@ -50,6 +53,8 @@ typedef unsigned int u32;
 
 typedef signed long long s64;
 typedef unsigned long long u64;
+
+#endif /* __ASSEMBLY__ */
 
 #include <asm/bitsperlong.h>
 

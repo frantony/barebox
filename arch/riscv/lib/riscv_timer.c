@@ -32,7 +32,7 @@ static uint64_t rdcycle_read(void)
 
 static struct clocksource rdcycle_cs = {
 	.read	= rdcycle_read,
-	.mask	= CLOCKSOURCE_MASK(32),
+	.mask	= CLOCKSOURCE_MASK(64),
 };
 
 static int rdcycle_cs_init(void)
