@@ -51,6 +51,7 @@ config MACH_MIPS_MALTA
 	select HAS_DEBUG_LL
 	select GPIOLIB
 	select HW_HAS_PCI
+	select HAS_KEXEC
 
 config MACH_MIPS_AR231X
 	bool "Atheros ar231x-based boards"
