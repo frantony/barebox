@@ -101,41 +101,87 @@ void add_segment_phys_virt(struct kexec_info *info,
 	}
 }
 
-/*
- *	Load the new kernel
- */
-int kexec_load_file(char *kernel, unsigned long kexec_flags)
+static int kexec_load_one_file(struct kexec_info *info, char *fname, unsigned long kexec_flags)
 {
-	char *kernel_buf;
-	off_t kernel_size;
+	char *buf;
+	size_t fsize;
 	int i = 0;
-	int result;
-	struct kexec_info info;
 
-	memset(&info, 0, sizeof(info));
-	info.segment = NULL;
-	info.nr_segments = 0;
-	info.entry = NULL;
-	info.kexec_flags = kexec_flags;
+	buf = read_file(fname, &fsize);
 
-	kernel_buf = read_file(kernel, &kernel_size);
+	/* FIXME: check buf */
 
 	for (i = 0; i < kexec_file_types; i++) {
-		if (kexec_file_type[i].probe(kernel_buf, kernel_size) >= 0)
+		if (kexec_file_type[i].probe(buf, fsize) >= 0)
 			break;
 	}
 
 	if (i == kexec_file_types) {
 		printf("Cannot determine the file type "
-				"of %s\n", kernel);
+				"of %s\n", fname);
 		return -1;
 	}
 
-	result = kexec_file_type[i].load(kernel_buf, kernel_size, &info);
+	return kexec_file_type[i].load(buf, fsize, info);
+}
+
+static int kexec_load_binary_file(struct kexec_info *info, char *fname, unsigned long base)
+{
+	char *buf;
+	size_t fsize;
+
+	buf = read_file(fname, &fsize);
+
+	/* FIXME: check buf */
+
+	add_segment(info, buf, fsize, base, fsize);
+
+	return 0;
+}
+
+static int print_segments(struct kexec_info *info)
+{
+	int i;
+
+	printf("print_segments\n");
+	for (i = 0; i < info->nr_segments; i++) {
+		struct kexec_segment *seg = &info->segment[i];
+
+		printf("  %d. buf=%#08p bufsz=%#lx mem=%#08p memsz=%#lx\n", i,
+			seg->buf, seg->bufsz, seg->mem, seg->memsz);
+	}
+
+	return 0;
+}
+
+int kexec_load_bootm_data(struct image_data *data)
+{
+	int result;
+	struct kexec_info info;
+
+	memset(&info, 0, sizeof(info));
+
+	result = kexec_load_one_file(&info, data->os_file, 0);
 	if (result < 0) {
-		printf("Cannot load %s\n", kernel);
+		printf("Cannot load %s\n", data->os_file);
 		return result;
 	}
+
+	if (data->oftree_file) {
+		int i;
+		unsigned long base = 0;
+
+		for (i = 0; i < info.nr_segments; i++) {
+			struct kexec_segment *seg = &info.segment[i];
+
+			base = seg->mem + seg->memsz;
+		}
+
+		kexec_load_binary_file(&info, data->oftree_file, base);
+		data->oftree_address = base;
+	}
+
+	print_segments(&info);
 
 	/* Verify all of the segments load to a valid location in memory */
 
@@ -144,8 +190,6 @@ int kexec_load_file(char *kernel, unsigned long kexec_flags)
 		return -1;
 	}
 
-	result = kexec_load(info.entry,
+	return kexec_load(info.entry,
 		info.nr_segments, info.segment, info.kexec_flags);
-
-	return result;
 }

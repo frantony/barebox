@@ -20,6 +20,7 @@
 #include <memory.h>
 #include <boot.h>
 #include <linux/reboot.h>
+#include <bootm.h>
 #include "../../../lib/kexec/kexec.h"
 #include <asm/io.h>
 
@@ -59,7 +60,7 @@ static void prom_set(uint32_t *prom_buf, int index,
 	va_end(ap);
 }
 
-static inline void yamon_prom_set(void)
+static inline void yamon_prom_set(char *fname)
 {
 	void *prom_buf;
 	long prom_size;
@@ -69,7 +70,7 @@ static inline void yamon_prom_set(void)
 	prom_size = ENVP_NB_ENTRIES * (sizeof(int32_t) + ENVP_ENTRY_SIZE);
 	prom_buf = (void *)ENVP_ADDR;
 
-	prom_set(prom_buf, prom_index++, "%s", getenv("global.bootm.image"));
+	prom_set(prom_buf, prom_index++, "%s", fname);
 	prom_set(prom_buf, prom_index++, "%s", linux_bootargs_get());
 
 	prom_set(prom_buf, prom_index++, "memsize");
@@ -79,14 +80,15 @@ static inline void yamon_prom_set(void)
 	prom_set(prom_buf, prom_index++, NULL);
 }
 
-int reboot(int cmd)
+int reboot(int cmd, void *opaque)
 {
 	if (cmd == LINUX_REBOOT_CMD_KEXEC) {
 		extern unsigned long reboot_code_buffer;
 		extern unsigned long kexec_args[4];
 		void (*kexec_code_buffer)(void);
+		struct image_data *data = opaque;
 
-		yamon_prom_set();
+		yamon_prom_set(data->os_file);
 
 		shutdown_barebox();
 

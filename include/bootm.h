@@ -72,6 +72,7 @@ struct image_data {
 
 	char *oftree_file;
 	char *oftree_part;
+	unsigned long oftree_address;
 
 	const void *fit_kernel;
 	unsigned long fit_kernel_size;
