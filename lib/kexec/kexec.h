@@ -37,7 +37,10 @@ extern void add_segment_phys_virt(struct kexec_info *info,
 
 extern long kexec_load(void *entry, unsigned long nr_segments,
                         struct kexec_segment *segments, unsigned long flags);
-extern int kexec_load_file(char *kernel, unsigned long kexec_flags);
+
+#include <bootm.h>
+
+extern int kexec_load_bootm_data(struct image_data *data);
 
 /* Limits of integral types. */
 #ifndef INT8_MIN

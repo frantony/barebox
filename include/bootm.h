@@ -72,6 +72,7 @@ struct image_data {
 
 	char *oftree_file;
 	char *oftree_part;
+	unsigned long oftree_address;
 
 	struct device_node *of_root_node;
 	struct fdt_header *oftree;

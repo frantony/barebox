@@ -9,6 +9,6 @@
 
 #define	LINUX_REBOOT_CMD_KEXEC		0x45584543
 
-extern int reboot(int cmd);
+extern int reboot(int cmd, void *opaque);
 
 #endif /* _LINUX_REBOOT_H */

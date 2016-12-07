@@ -9,9 +9,9 @@
 
 static int do_bootm_elf(struct image_data *data)
 {
-	kexec_load_file(data->os_file, 0);
-	setenv("global.bootm.image", data->os_file);
-	reboot(LINUX_REBOOT_CMD_KEXEC);
+	kexec_load_bootm_data(data);
+
+	reboot(LINUX_REBOOT_CMD_KEXEC, data);
 
 	return -ERESTARTSYS;
 }
