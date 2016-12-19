@@ -51,6 +51,9 @@ static int sifive_serial_setbaudrate(struct console_device *cdev, int baudrate)
 
 static void sifive_serial_putc(struct console_device *cdev, char c)
 {
+//	while (sifive_serial_readl(cdev, UART_TX_COUNT_OFFSET) > 0)
+//		;
+
 	sifive_serial_writel(cdev, c, UART_TX_OFFSET);
 }
 
