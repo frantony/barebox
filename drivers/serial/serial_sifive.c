@@ -19,12 +19,15 @@
 #include <init.h>
 #include <malloc.h>
 #include <io.h>
+#include <kfifo.h>
 
-#define UART_RX_OFFSET 0
-#define UART_TX_OFFSET 0
-#define UART_TX_COUNT_OFFSET 0x4
-#define UART_RX_COUNT_OFFSET 0x8
-#define UART_DIVIDER_OFFSET  0xC
+#define UART_TXR	0x00
+#define UART_RXR	0x04
+#define UART_TXC	0x08
+# define UART_TXEN	0x1
+#define UART_RXC	0x0c
+# define UART_RXEN	0x1
+#define UART_DIV	0x18
 
 static inline uint32_t sifive_serial_readl(struct console_device *cdev,
 						uint32_t offset)
@@ -44,35 +47,53 @@ static inline void sifive_serial_writel(struct console_device *cdev,
 
 static int sifive_serial_setbaudrate(struct console_device *cdev, int baudrate)
 {
-	/* FIXME: no baudrate setup at the momement :( */
+	/* FIXME: no baudrate setup at the moment :( */
 
 	return 0;
 }
 
+#define BUFFER_SIZE	16
+
+static struct kfifo *rxfifo;
+
 static void sifive_serial_putc(struct console_device *cdev, char c)
 {
-//	while (sifive_serial_readl(cdev, UART_TX_COUNT_OFFSET) > 0)
-//		;
+	while (sifive_serial_readl(cdev, UART_TXR) & 0x80000000)
+		;
 
-	sifive_serial_writel(cdev, c, UART_TX_OFFSET);
-}
-
-static int sifive_serial_getc(struct console_device *cdev)
-{
-	uint32_t rxcnt;
-
-	do {
-		rxcnt = sifive_serial_readl(cdev, UART_RX_COUNT_OFFSET);
-	} while (!rxcnt);
-
-	return sifive_serial_readl(cdev, UART_RX_OFFSET);
+	sifive_serial_writel(cdev, c, UART_TXR);
 }
 
 static int sifive_serial_tstc(struct console_device *cdev)
 {
-	uint32_t rxcnt = sifive_serial_readl(cdev, UART_RX_COUNT_OFFSET);
+	uint32_t t;
 
-	return (rxcnt != 0);
+	if (kfifo_len(rxfifo)) {
+		return 1;
+	}
+
+	t = sifive_serial_readl(cdev, UART_RXR);
+
+	if (t & 0x80000000) {
+		return 0;
+	}
+
+	kfifo_putc(rxfifo, t);
+
+	return 1;
+}
+
+static int sifive_serial_getc(struct console_device *cdev)
+{
+	unsigned char ch;
+
+	if (!kfifo_len(rxfifo)) {
+		return -1;
+	}
+
+	kfifo_getc(rxfifo, &ch);
+
+	return ch;
 }
 
 static int sifive_serial_probe(struct device_d *dev)
@@ -86,10 +107,12 @@ static int sifive_serial_probe(struct device_d *dev)
 		return PTR_ERR(iores);
 	dev->priv = IOMEM(iores->start);
 	cdev->dev = dev;
-	cdev->tstc = &sifive_serial_tstc;
 	cdev->putc = &sifive_serial_putc;
+	cdev->tstc = &sifive_serial_tstc;
 	cdev->getc = &sifive_serial_getc;
 	cdev->setbrg = &sifive_serial_setbaudrate;
+
+	rxfifo = kfifo_alloc(BUFFER_SIZE);
 
 	console_register(cdev);
 
