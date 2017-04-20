@@ -3,17 +3,18 @@
 #include "skeleton.dtsi"
 
 / {
-	model = "QEMU SiFive";
-	compatible = "sifive,qemu";
+	model = "QEMU MIET board";
+	compatible = "miet,qemu";
 
-	/* Digilent Arty has 256MB DDR3L */
 	memory {
 		device_type = "memory";
-		reg = <0 0x80000000 0x10000000>;
+		reg = <0 0x40000000 0x00030000>;
 	};
 
 	uart: uart {
-		compatible = "sifive,uart";
-		reg = <0 0x40002000 0x10>;
+		compatible = "ns16550a";
+		reg = <0 0x90000000 0x20>;
+		reg-shift = <2>;
+		clock-frequency = <10000000>;
 	};
 };
