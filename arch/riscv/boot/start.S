@@ -38,6 +38,6 @@ _start:
 	sw t0, 0(t1)
 
 	# clear any pending interrupts
-	csrwi mip, 0
+	//csrwi mip, 0
 
 	tail main_entry

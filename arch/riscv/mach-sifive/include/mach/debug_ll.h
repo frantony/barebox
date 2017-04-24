@@ -25,6 +25,7 @@
 #include <linux/kconfig.h>
 #include <asm/io.h>
 
+#if 0
 #define UART_BASE 0x40002000
 #define R_DATA          (0 << 2)
 #define R_RXCNT         (2 << 2)
@@ -34,5 +35,14 @@ static inline void PUTC_LL(int ch)
 	if (IS_ENABLED(CONFIG_DEBUG_LL))
 		__raw_writeb(ch, (u8 *)UART_BASE + R_DATA);
 }
+#else
+#define DEBUG_LL_UART_ADDR	0x90000000
+#define DEBUG_LL_UART_SHIFT	2
+#define DEBUG_LL_UART_IOSIZE8
 
+#define DEBUG_LL_UART_CLK       10000000
+#define DEBUG_LL_UART_BPS       CONFIG_BAUDRATE
+#define DEBUG_LL_UART_DIVISOR   (DEBUG_LL_UART_CLK / DEBUG_LL_UART_BPS)
+#include <asm/debug_ll_ns16550.h>
+#endif
 #endif /* __MACH_SIFIVE_DEBUG_LL__ */

@@ -70,6 +70,19 @@
 static inline void PUTC_LL(char ch)
 {
 #ifdef CONFIG_DEBUG_LL
+	while (!(__raw_readl((u8 *)DEBUG_LL_UART_ADDR + UART_LSR) & UART_LSR_THRE))
+		;
+	__raw_writel(ch, (u8 *)DEBUG_LL_UART_ADDR + UART_THR);
+#endif /* CONFIG_DEBUG_LL */
+}
+
+static inline void debug_ll_ns16550_init(void)
+{
+#ifdef CONFIG_DEBUG_LL
+	__raw_writel(UART_LCR_DLAB, (u8 *)DEBUG_LL_UART_ADDR + UART_LCR);
+	__raw_writel(DEBUG_LL_UART_DIVISOR & 0xff, (u8 *)DEBUG_LL_UART_ADDR + UART_DLL);
+	__raw_writel((DEBUG_LL_UART_DIVISOR >> 8) & 0xff, (u8 *)DEBUG_LL_UART_ADDR + UART_DLM);
+	__raw_writel(UART_LCR_W, (u8 *)DEBUG_LL_UART_ADDR + UART_LCR);
 #endif /* CONFIG_DEBUG_LL */
 }
 #else /* __ASSEMBLY__ */
