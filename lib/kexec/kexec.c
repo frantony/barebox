@@ -125,16 +125,16 @@ static int kexec_load_one_file(struct kexec_info *info, char *fname, unsigned lo
 	return kexec_file_type[i].load(buf, fsize, info);
 }
 
-static int kexec_load_binary_file(struct kexec_info *info, char *fname, unsigned long base)
+static int kexec_load_binary_file(struct kexec_info *info, char *fname,
+					size_t *fsize, unsigned long base)
 {
 	char *buf;
-	size_t fsize;
 
-	buf = read_file(fname, &fsize);
+	buf = read_file(fname, fsize);
+	if (!buf)
+		return -1;
 
-	/* FIXME: check buf */
-
-	add_segment(info, buf, fsize, base, fsize);
+	add_segment(info, buf, *fsize, base, *fsize);
 
 	return 0;
 }
@@ -154,12 +154,46 @@ static int print_segments(struct kexec_info *info)
 	return 0;
 }
 
+static unsigned long find_unused_base(struct kexec_info *info, int *padded)
+{
+	unsigned long base = 0;
+
+	if (info->nr_segments) {
+		int i = info->nr_segments - 1;
+		struct kexec_segment *seg = &info->segment[i];
+
+		base = (unsigned long)seg->mem + seg->memsz;
+	}
+
+	if (!*padded) {
+		/*
+		 * Pad it; the kernel scribbles over memory
+		 * beyond its load address.
+		 * see grub-core/loader/mips/linux.c
+		 */
+		base += 0x100000;
+		*padded = 1;
+	}
+
+	return base;
+}
+
+#include <environment.h>
+
 int kexec_load_bootm_data(struct image_data *data)
 {
 	int result;
 	struct kexec_info info;
+	char *cmdline;
+	const char *t;
+	size_t tlen;
+	size_t fsize;
+	char initrd_cmdline[40];
+	int padded = 0;
 
 	memset(&info, 0, sizeof(info));
+
+	initrd_cmdline[0] = 0;
 
 	result = kexec_load_one_file(&info, data->os_file, 0);
 	if (result < 0) {
@@ -168,20 +202,87 @@ int kexec_load_bootm_data(struct image_data *data)
 	}
 
 	if (data->oftree_file) {
-		int i;
-		unsigned long base = 0;
+		unsigned long base = find_unused_base(&info, &padded);
 
-		for (i = 0; i < info.nr_segments; i++) {
-			struct kexec_segment *seg = &info.segment[i];
+		base = ALIGN(base, 8);
 
-			base = seg->mem + seg->memsz;
+		result = kexec_load_binary_file(&info,
+				data->oftree_file, &fsize, base);
+		if (result < 0) {
+			printf("Cannot load %s\n", data->oftree_file);
+			return result;
 		}
-
-		kexec_load_binary_file(&info, data->oftree_file, base);
 		data->oftree_address = base;
 	}
 
-	print_segments(&info);
+	if (data->ofoverlay_file) {
+		unsigned long base = find_unused_base(&info, &padded);
+
+		base = ALIGN(base, 8);
+
+		result = kexec_load_binary_file(&info,
+				data->ofoverlay_file, &fsize, base);
+		if (result < 0) {
+			printf("Cannot load %s\n", data->ofoverlay_file);
+			return result;
+		}
+		data->ofoverlay_address = base;
+	}
+
+	if (data->initrd_file) {
+		unsigned long base = find_unused_base(&info, &padded);
+
+		/*
+		 * initrd start must be page aligned,
+		 * max page size for mips is 64k.
+		 */
+		base = ALIGN(base, 0x10000);
+
+		result = kexec_load_binary_file(&info,
+				data->initrd_file, &fsize, base);
+		if (result < 0) {
+			printf("Cannot load %s\n", data->initrd_file);
+			return result;
+		}
+		data->initrd_address = base;
+
+		if (bootm_verbose(data)) {
+			printf("initrd: rd_start=0x%08x rd_size=0x%08x\n",
+					data->initrd_address, fsize);
+		}
+		snprintf(initrd_cmdline, sizeof(initrd_cmdline),
+				" rd_start=0x%08x rd_size=0x%08x",
+					phys_to_virt(data->initrd_address),
+					fsize);
+	}
+
+	/* FIXME: we can snprintf to cmdline directly */
+	t = getenv_nonempty("bootargs");
+	if (t)
+		tlen = strlen(t);
+	else
+		tlen = 0;
+
+	cmdline = xzalloc(tlen + sizeof(initrd_cmdline));
+	if (tlen) {
+		memcpy(cmdline, t, tlen);
+	}
+	memcpy(cmdline + tlen, initrd_cmdline, sizeof(initrd_cmdline));
+
+	if (cmdline) {
+		int cmdlinelen = strlen(cmdline) + 1;
+		unsigned long base = find_unused_base(&info, &padded);
+
+		base = ALIGN(base, 8);
+
+		/* FIXME */
+		add_segment(&info, cmdline, cmdlinelen, base, cmdlinelen);
+		data->cmdline_address = base;
+	}
+
+	if (bootm_verbose(data)) {
+		print_segments(&info);
+	}
 
 	/* Verify all of the segments load to a valid location in memory */
 
