@@ -215,20 +215,6 @@ int kexec_load_bootm_data(struct image_data *data)
 		data->oftree_address = base;
 	}
 
-	if (data->ofoverlay_file) {
-		unsigned long base = find_unused_base(&info, &padded);
-
-		base = ALIGN(base, 8);
-
-		result = kexec_load_binary_file(&info,
-				data->ofoverlay_file, &fsize, base);
-		if (result < 0) {
-			printf("Cannot load %s\n", data->ofoverlay_file);
-			return result;
-		}
-		data->ofoverlay_address = base;
-	}
-
 	if (data->initrd_file) {
 		unsigned long base = find_unused_base(&info, &padded);
 
