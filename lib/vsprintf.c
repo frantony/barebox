@@ -346,6 +346,8 @@ static char *pointer(const char *fmt, char *buf, char *end, void *ptr, int field
 }
 #endif
 
+#include <debug_ll.h>
+
 /**
  * vsnprintf - Format a string and place it in a buffer
  * @buf: The buffer to place the result into
@@ -385,11 +387,13 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 				/* 'z' changed to 'Z' --davidm 1/25/99 */
 				/* 't' added for ptrdiff_t */
 
+//	puts_ll("vsnprintf1\n");
 	/* Reject out-of-range values early.  Large positive sizes are
 	   used for unknown buffer sizes. */
 	if (unlikely((int) size < 0))
 		return 0;
 
+//	puts_ll("vsnprintf2\n");
 	str = buf;
 	end = buf + size;
 
@@ -399,6 +403,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 		size = end - buf;
 	}
 
+//	puts_ll("vsnprintf3\n");
 	for (; *fmt ; ++fmt) {
 		if (*fmt != '%') {
 			if (str < end)
@@ -575,6 +580,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 		else
 			end[-1] = '\0';
 	}
+//	puts_ll("vsnprintf4\n");
 	/* the trailing null byte doesn't count towards the total */
 	return str-buf;
 }

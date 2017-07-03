@@ -488,31 +488,41 @@ void console_putc(unsigned int ch, char c)
 	struct console_device *cdev;
 	int init = initialized;
 
+	//puts_ll("console_putc1\n");
 	switch (init) {
 	case CONSOLE_UNINITIALIZED:
+	//puts_ll("console_putc2\n");
 		console_init_early();
 		/* fall through */
 
 	case CONSOLE_INITIALIZED_BUFFER:
+	//puts_ll("console_putc3\n");
 		kfifo_putc(console_output_fifo, c);
 		putc_ll(c);
 		return;
 
 	case CONSOLE_INIT_FULL:
+	//puts_ll("console_putc4\n");
 		for_each_console(cdev) {
+	//puts_ll("console_putc5\n");
 			if (cdev->f_active & ch) {
+	//puts_ll("console_putc6\n");
 				if (c == '\n')
 					cdev->putc(cdev, '\r');
+	//puts_ll("console_putc7\n");
 				cdev->putc(cdev, c);
 			}
 		}
+	//puts_ll("console_putc8\n");
 		return;
 	default:
 		/* If we have problems inititalizing our data
 		 * get them early
 		 */
+	//puts_ll("console_putc9\n");
 		hang();
 	}
+	//puts_ll("console_putc10\n");
 }
 EXPORT_SYMBOL(console_putc);
 
@@ -522,16 +532,25 @@ int console_puts(unsigned int ch, const char *str)
 	const char *s = str;
 	int n = 0;
 
+//	puts_ll("console_puts1\n");
+
 	if (initialized == CONSOLE_INIT_FULL) {
+//	puts_ll("console_puts2\n");
 		for_each_console(cdev) {
+//	puts_ll("console_puts3\n");
 			if (cdev->f_active & ch) {
+//	puts_ll("console_puts4\n");
 				n = cdev->puts(cdev, str);
 			}
+//	puts_ll("console_puts6\n");
 		}
+//	puts_ll("console_puts4\n");
 		return n;
 	}
+//	puts_ll("console_puts6\n");
 
 	while (*s) {
+//	puts_ll("console_puts7\n");
 		if (*s == '\n') {
 			console_putc(ch, '\r');
 			n++;
@@ -539,7 +558,9 @@ int console_puts(unsigned int ch, const char *str)
 		console_putc(ch, *s);
 		n++;
 		s++;
+//	puts_ll("console_puts8\n");
 	}
+//	puts_ll("console_puts9\n");
 	return n;
 }
 EXPORT_SYMBOL(console_puts);

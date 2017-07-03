@@ -70,37 +70,51 @@ void log_clean(unsigned int limit)
 	}
 }
 
+#include <debug_ll.h>
+
 static void pr_puts(int level, const char *str)
 {
 	struct log_entry *log;
 
+	//puts_ll("pr_puts1\n");
 	if (IS_ENABLED(CONFIG_LOGBUF) && mem_malloc_is_initialized()) {
+	//puts_ll("pr_puts2\n");
 		if (barebox_log_max_messages > 0)
 			log_clean(barebox_log_max_messages - 1);
 
+	//puts_ll("pr_puts3\n");
 		if (barebox_log_max_messages >= 0) {
+	//puts_ll("pr_puts4\n");
 			log = malloc(sizeof(*log));
 			if (!log)
 				goto nolog;
+	//puts_ll("pr_puts5\n");
 
 			log->msg = strdup(str);
 			if (!log->msg) {
+	//puts_ll("pr_puts5.1\n");
 				free(log);
 				goto nolog;
 			}
 
+	//puts_ll("pr_puts6\n");
 			log->timestamp = get_time_ns();
 			log->level = level;
 			list_add_tail(&log->list, &barebox_logbuf);
 			barebox_logbuf_num_messages++;
+	//puts_ll("pr_puts7\n");
 		}
 	}
 nolog:
+	//puts_ll("pr_puts8\n");
 	if (level > barebox_loglevel)
 		return;
+	//puts_ll("pr_puts9\n");
 
 	puts(str);
 }
+
+#include <debug_ll.h>
 
 int pr_print(int level, const char *fmt, ...)
 {
@@ -108,14 +122,20 @@ int pr_print(int level, const char *fmt, ...)
 	int i;
 	char printbuffer[CFG_PBSIZE];
 
+//	puts_ll("pr_print1\n");
 	if (!IS_ENABLED(CONFIG_LOGBUF) && level > barebox_loglevel)
 		return 0;
 
+//	puts_ll("pr_print2\n");
 	va_start(args, fmt);
+//	puts_ll("pr_print3\n");
 	i = vsprintf(printbuffer, fmt, args);
+//	puts_ll("pr_print4\n");
 	va_end(args);
 
+//	puts_ll("pr_print5\n");
 	pr_puts(level, printbuffer);
+//	puts_ll("pr_print6\n");
 
 	return i;
 }

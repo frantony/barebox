@@ -97,12 +97,21 @@ void __noreturn start_barebox(void)
 	int result;
 	struct stat s;
 
+	puts_ll("start1\n");
+
 	if (!IS_ENABLED(CONFIG_SHELL_NONE))
 		barebox_main = run_shell;
 
+	puts_ll("start2\n");
+
 	for (initcall = __barebox_initcalls_start;
 			initcall < __barebox_initcalls_end; initcall++) {
+		puts_ll("start3\n");
+		puthex_ll(initcall);
+		puts_ll("\n");
+		puts_ll("start3.1\n");
 		pr_debug("initcall-> %pS\n", *initcall);
+		puts_ll("start4\n");
 		result = (*initcall)();
 		if (result)
 			pr_err("initcall %pS failed: %s\n", *initcall,

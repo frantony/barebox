@@ -79,8 +79,11 @@ static inline int printf(const char *fmt, ...)
 }
 #endif
 
+#include <debug_ll.h>
+
 static inline int puts(const char *s)
 {
+//	puts_ll("inline puts0\n");
 	return console_puts(CONSOLE_STDOUT, s);
 }
 
