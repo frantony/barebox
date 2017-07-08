@@ -13,6 +13,12 @@ board-$(CONFIG_BOARD_QEMU_SIFIVE)	:= qemu-sifive
 TEXT_BASE = $(CONFIG_TEXT_BASE)
 CPPFLAGS += -DTEXT_BASE=$(CONFIG_TEXT_BASE)
 
+ifndef CONFIG_MODULES
+# Add cleanup flags
+CPPFLAGS += -fdata-sections -ffunction-sections
+LDFLAGS_barebox += -static --gc-sections
+endif
+
 machdirs := $(patsubst %,arch/riscv/mach-%/,$(machine-y))
 
 ifneq ($(board-y),)
