@@ -17,6 +17,7 @@
 typedef int (*initcall_t)(void);
 typedef void (*exitcall_t)(void);
 
+#if 0
 #define __define_initcall(level,fn,id) \
 	static initcall_t __initcall_##fn##id __attribute__((__used__)) \
 	__attribute__((__section__(".initcall." level))) = fn
@@ -24,7 +25,10 @@ typedef void (*exitcall_t)(void);
 #define __define_exitcall(level,fn,id) \
 	static exitcall_t __exitcall_##fn##id __attribute__((__used__)) \
 	__attribute__((__section__(".exitcall." level))) = fn
+#endif
 
+#define __define_initcall(level,fn,id)
+#define __define_exitcall(level,fn,id)
 
 /*
  * A "pure" initcall has no dependencies on anything else, and purely
