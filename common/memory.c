@@ -56,25 +56,15 @@ int mem_malloc_is_initialized(void)
 	return mem_malloc_initialized;
 }
 
-#include <debug_ll.h>
-
 void mem_malloc_init(void *start, void *end)
 {
-
-	puts_ll("mem_malloc_init0()\n");
-
 	malloc_start = (unsigned long)start;
-	puts_ll("mem_malloc_init1()\n");
 	malloc_end = (unsigned long)end;
-	puts_ll("mem_malloc_init2()\n");
 	malloc_brk = malloc_start;
-	puts_ll("mem_malloc_init3()\n");
 #ifdef CONFIG_MALLOC_TLSF
 	tlsf_mem_pool = tlsf_create(start, end - start + 1);
 #endif
-	puts_ll("mem_malloc_init4()\n");
 	mem_malloc_initialized = 1;
-	puts_ll("mem_malloc_init5()\n");
 }
 
 #if !defined __SANDBOX__ && !defined CONFIG_EFI_BOOTUP
