@@ -75,9 +75,14 @@ copy_loop:
 	addi	a1, a1, LONGSIZE * 2
 	bgeu	a2, a0, copy_loop
 
+	nmon_outs copy_loop_done_message
+
 	/* Halas! At the moment I can't load main_entry __link__ address
 	   into a0 with la. Use CONFIG_TEXT_BASE instead. This solution
 	   leads to extra cycles for repeat sp initialization. */
 
 	li	a0, CONFIG_TEXT_BASE
 	jalr	a0
+
+copy_loop_done_message:
+	.asciz "\r\ncopy loop done\r\nrestarting...\r\n"
