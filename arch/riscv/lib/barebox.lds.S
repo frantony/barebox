@@ -27,8 +27,7 @@ SECTIONS
 	.text      :
 	{
 		_start = .;
-		*(.text_entry*)
-		_stext = .;
+		KEEP(*(.text_entry*))
 		_text = .;
 		__bare_init_start = .;
 		*(.text_bare_init*)
@@ -73,6 +72,8 @@ SECTIONS
 	__usymtab_start = .;
 	__usymtab : { BAREBOX_SYMS }
 	__usymtab_end = .;
+
+	.rela.dyn : { *(.rela*) }
 
 	.oftables : { BAREBOX_CLK_TABLE() }
 
