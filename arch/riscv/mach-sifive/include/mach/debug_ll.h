@@ -23,7 +23,10 @@
  */
 
 #include <linux/kconfig.h>
+
+#ifndef __ASSEMBLY__
 #include <asm/io.h>
+#endif
 
 #if 0
 #define UART_BASE 0x40002000
@@ -38,9 +41,9 @@ static inline void PUTC_LL(int ch)
 #else
 #define DEBUG_LL_UART_ADDR	0x90000000
 #define DEBUG_LL_UART_SHIFT	2
-#define DEBUG_LL_UART_IOSIZE8
+#define DEBUG_LL_UART_IOSIZE32
 
-#define DEBUG_LL_UART_CLK       10000000
+#define DEBUG_LL_UART_CLK       (24000000 / 16)
 #define DEBUG_LL_UART_BPS       CONFIG_BAUDRATE
 #define DEBUG_LL_UART_DIVISOR   (DEBUG_LL_UART_CLK / DEBUG_LL_UART_BPS)
 #include <asm/debug_ll_ns16550.h>
