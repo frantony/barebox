@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-$a = 0x80000000;
+$a = 0x40000000;
 
 while (<>) {
 	chop;
