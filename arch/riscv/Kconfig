@@ -1,7 +1,7 @@
 config RISCV
 	bool
 	select GENERIC_FIND_NEXT_BIT
-	select OFTREE
+	#select OFTREE
 	select HAVE_CONFIGURABLE_MEMORY_LAYOUT
 	select HAVE_CONFIGURABLE_TEXT_BASE
 	default y
