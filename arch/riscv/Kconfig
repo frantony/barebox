@@ -4,6 +4,7 @@ config RISCV
 	#select OFTREE
 	select HAVE_CONFIGURABLE_MEMORY_LAYOUT
 	select HAVE_CONFIGURABLE_TEXT_BASE
+	select HAS_NMON
 	default y
 
 config GENERIC_LINKER_SCRIPT
@@ -64,6 +65,30 @@ config BUILTIN_DTB_NAME
 	depends on BUILTIN_DTB
 
 source arch/riscv/mach-sifive/Kconfig
+
+endmenu
+
+menu "RISC-V specific settings"
+
+config HAS_NMON
+	bool
+
+config NMON
+	bool "nmon"
+	depends on HAS_NMON
+	depends on DEBUG_LL
+	help
+	  Say yes here to add the nmon to pbl.
+	  nmon -- nano-monitor program for the RISC-V processors.
+	  It can operate with NO working RAM, using only
+	  the processor registers.
+
+config NMON_HELP
+	bool "nmon help message"
+	depends on NMON
+	help
+	  Say yes here to get the nmon commands message on
+	  every nmon start.
 
 endmenu
 
