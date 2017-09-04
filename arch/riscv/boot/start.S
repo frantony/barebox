@@ -21,12 +21,21 @@
 
 #include <asm-generic/memory_layout.h>
 
+#include "mach/debug_ll.h"
+
+#include "asm/riscv_nmon.h"
+
 	.text
 	.section ".text_entry"
 	.align 2
 
 .globl _start
 _start:
+
+	debug_ll_ns16550_init
+
+	riscv_nmon
+
 	li sp, STACK_BASE + STACK_SIZE
 
 	# make room for HLS and initialize it
@@ -66,9 +75,14 @@ copy_loop:
 	addi	a1, a1, LONGSIZE * 4
 	bgeu	a2, a0, copy_loop
 
+	nmon_outs copy_loop_done_message
+
 	/* Alas! At the moment I can't load main_entry __link__ address
 	   into a0 with la. Use CONFIG_TEXT_BASE instead. This solution
 	   leads to extra cycles for repeat sp initialization. */
 
 	li	a0, CONFIG_TEXT_BASE
 	jalr	a0
+
+copy_loop_done_message:
+	.asciz "\r\ncopy loop done\r\nrestarting...\r\n"
