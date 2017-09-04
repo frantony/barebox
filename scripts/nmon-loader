@@ -1,0 +1,31 @@
+#!/usr/bin/expect -f
+
+# device
+set image [lindex $argv 0];
+set modem [lindex $argv 1];
+set speed [lindex $argv 2];
+
+if {$argc != 3} {
+    puts "Usage:"
+    puts "    nmon-loader.expect <file> <device> <speed>"
+    exit 2
+}
+
+# keep it open
+exec sh -c "sleep 3 < $modem" &
+
+# serial port parameters
+exec stty -F $modem $speed raw -clocal -echo -istrip -hup
+
+# connect
+send_user "connecting to $modem, exit with ~.\n"
+spawn -open [open $modem w+]
+send_user "connected\n"
+send "\r"
+
+source $image
+
+interact {
+    ~- exit
+    ~~ {send "\034"}
+}
