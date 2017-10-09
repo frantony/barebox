@@ -32,19 +32,16 @@ config MACH_ERIZO
 endchoice
 
 choice
-	prompt "CPU selection"
+	prompt "Base ISA"
 	default CPU_RV_GENERIC
 
-config CPU_RV_GENERIC
-	bool "Generic RISC-V"
+config ARCH_RV32I
+	bool "RV32I"
 	select CPU_SUPPORTS_32BIT_KERNEL
-	select CPU_SUPPORTS_64BIT_KERNEL
 
 endchoice
 
 config CPU_SUPPORTS_32BIT_KERNEL
-	bool
-config CPU_SUPPORTS_64BIT_KERNEL
 	bool
 
 choice
