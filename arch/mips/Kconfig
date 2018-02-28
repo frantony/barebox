@@ -74,6 +74,7 @@ config MACH_MIPS_ATH79
 	select CLKDEV_LOOKUP
 	select OFTREE
 	select GPIOLIB
+	select HAS_KEXEC
 
 config MACH_MIPS_BCM47XX
 	bool "Broadcom BCM47xx-based boards"
