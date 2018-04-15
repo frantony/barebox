@@ -11,6 +11,9 @@ cflags-y += -Wall -Wmissing-prototypes -Wstrict-prototypes \
 LDFLAGS += $(ldflags-y)
 LDFLAGS_barebox += -nostdlib
 
+machine-$(CONFIG_MACH_ERIZO)	:= erizo
+board-$(CONFIG_BOARD_ERIZO_GENERIC)	:= erizo-generic
+
 TEXT_BASE = $(CONFIG_TEXT_BASE)
 CPPFLAGS += -DTEXT_BASE=$(CONFIG_TEXT_BASE)
 
