@@ -16,6 +16,7 @@
 #define PRE_IMAGE
 #endif
 
+#if 0
 #define INITCALLS			\
 	KEEP(*(.initcall.0))			\
 	KEEP(*(.initcall.1))			\
@@ -43,6 +44,11 @@
 	KEEP(*(.exitcall.6))
 
 #define BAREBOX_CMDS	KEEP(*(SORT_BY_NAME(.barebox_cmd*)))
+#else
+#define INITCALLS
+#define EXITCALLS
+#define BAREBOX_CMDS
+#endif
 
 #define BAREBOX_RATP_CMDS	KEEP(*(SORT_BY_NAME(.barebox_ratp_cmd*)))
 
