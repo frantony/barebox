@@ -49,6 +49,7 @@ static LIST_HEAD(ethaddr_list);
 
 int eth_set_ethaddr(struct eth_device *edev, const char *ethaddr)
 {
+	struct pico_device *picodev = edev->picodev;
 	int ret;
 
 	ret = edev->set_ethaddr(edev, ethaddr);
@@ -56,6 +57,8 @@ int eth_set_ethaddr(struct eth_device *edev, const char *ethaddr)
 		return ret;
 
 	memcpy(edev->ethaddr, ethaddr, ETH_ALEN);
+	if (picodev)
+		memcpy(picodev->eth->mac.addr, edev->ethaddr, ETH_ALEN);
 
 	return 0;
 }
@@ -394,17 +397,14 @@ static void pico_adapter_destroy(struct pico_device *dev)
 
 static void pico_adapter_init(struct eth_device *edev)
 {
-	/* FIXME: get macaddr for edev */
-	static unsigned char macaddr0[6] = { 0, 0, 0, 0xa, 0xb, 0xc };
-
 	struct pico_device_barebox_eth *pif = PICO_ZALLOC(sizeof(struct pico_device_barebox_eth));
 
 	struct pico_device *picodev;
 
-	char *name = strdup(edev->dev.name);
+	char *name = strdup(edev->devname);
 
 	picodev = &pif->dev;
-	if (0 != pico_device_init(picodev, name, macaddr0)) {
+	if (0 != pico_device_init(picodev, name, edev->ethaddr)) {
 		pr_info("pico_adapter_init failed.\n");
 		pico_adapter_destroy(picodev);
 		return;
