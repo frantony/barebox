@@ -401,10 +401,10 @@ static void pico_adapter_init(struct eth_device *edev)
 
 	struct pico_device *picodev;
 
-	char *name = strdup(edev->dev.name);
+	char *name = strdup(edev->devname);
 
 	picodev = &pif->dev;
-	if (0 != pico_device_init(picodev, name, macaddr0)) {
+	if (0 != pico_device_init(picodev, name, edev->ethaddr)) {
 		pr_info("pico_adapter_init failed.\n");
 		pico_adapter_destroy(picodev);
 		return;
