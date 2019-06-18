@@ -14,7 +14,7 @@
 
 struct tap_priv {
 	int fd;
-	char *name;
+	char name[128];
 	char *rx_buf;
 };
 
@@ -66,7 +66,7 @@ static int tap_probe(struct device *dev)
 	int ret = 0;
 
 	priv = xzalloc(sizeof(struct tap_priv));
-	priv->name = "barebox";
+	strncpy(priv->name, "barebox", sizeof(priv->name));
 
 	priv->fd = tap_alloc(priv->name);
 	if (priv->fd < 0) {
