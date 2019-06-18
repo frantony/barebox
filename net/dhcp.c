@@ -269,7 +269,7 @@ static int bootp_request(void)
 
 	dhcp_state = SELECTING;
 
-	ret = net_udp_send(dhcp_con, payload, sizeof(*bp) + ext_len);
+	ret = net_udp_send(dhcp_con, bp, sizeof(*bp) + ext_len);
 
 	return ret;
 }
@@ -382,7 +382,7 @@ static void dhcp_send_request_packet(struct bootp *bp_offer)
 			dhcp_result->dhcp_serverip, dhcp_result->ip);
 
 	debug("Transmitting DHCPREQUEST packet\n");
-	net_udp_send(dhcp_con, payload, sizeof(*bp) + extlen);
+	net_udp_send(dhcp_con, bp, sizeof(*bp) + extlen);
 }
 
 /*
