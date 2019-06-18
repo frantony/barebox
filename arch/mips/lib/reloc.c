@@ -37,6 +37,7 @@
 #include <asm/mipsregs.h>
 #include <asm/relocs.h>
 #include <asm/sections.h>
+#include <asm/cpu-features.h>
 #include <linux/sizes.h>
 #include <asm-generic/memory_layout.h>
 
@@ -155,6 +156,17 @@ void relocate_code(void *fdt, u32 fdt_size, u32 ram_size)
 
 		addr += read_uint(&buf) << 2;
 		apply_reloc(type, (void *)addr, off);
+	}
+
+	/* clear the BSS first */
+	memset(__bss_start, 0x00, bss_len);
+
+	cpu_probe();
+
+	if (cpu_has_4k_cache) {
+		extern void r4k_cache_init(void);
+
+		r4k_cache_init();
 	}
 
 	/* Ensure the icache is coherent */
