@@ -411,7 +411,7 @@ out:
 static void picotcp_udp_cb(uint16_t ev, struct pico_socket *sock)
 {
 	struct net_connection *con = sock->priv;
-	udp_rx_handler_f *handler = con->handler;
+	rx_handler_f *handler = con->handler;
 	int len;
 	union pico_address ep;
 	char *pkt = con->packet;
