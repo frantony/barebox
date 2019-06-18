@@ -514,7 +514,7 @@ extern struct list_head netdev_list;
 /* NB! return port in network byte order */
 static inline uint16_t getudppeerport(struct net_connection *con)
 {
-	struct udphdr *udp = net_eth_to_udphdr(con->rpacket);
+	struct udphdr *udp = net_eth_to_udphdr(con->packet);
 
 	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
 		return con->remote_port;
