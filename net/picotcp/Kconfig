@@ -25,12 +25,6 @@ config NET_PICO_SUPPORT_DEVLOOP
 	bool
 	default y if NET_PICOTCP
 
-comment "Misc options"
-
-config NET_PICO_BIGENDIAN
-	bool
-	prompt "bigendian picotcp"
-
 comment "Commands"
 
 config CMD_PICOTCP_TEST_IPV4
