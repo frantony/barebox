@@ -24,6 +24,7 @@
 #include <linux/string.h>	/* memcpy */
 #include <asm/byteorder.h>	/* for nton* / ntoh* stuff */
 
+#include <pico_device.h>
 #include <pico_stack.h>
 #include <pico_socket.h>
 #include <pico_ipv4.h>
