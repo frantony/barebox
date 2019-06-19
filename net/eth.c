@@ -228,9 +228,6 @@ static int eth_check_open(struct eth_device *edev)
 
 	edev->active = 1;
 
-#ifdef CONFIG_NET_PICO_SUPPORT_ETH
-	pico_adapter_init(edev);
-#endif
 	return eth_carrier_check(edev, 1);
 }
 
@@ -489,6 +486,10 @@ int eth_register(struct eth_device *edev)
 	if (IS_ENABLED(CONFIG_OFDEVICE) && edev->parent &&
 			edev->parent->device_node)
 		edev->nodepath = xstrdup(edev->parent->device_node->full_name);
+
+#ifdef CONFIG_NET_PICO_SUPPORT_ETH
+	pico_adapter_init(edev);
+#endif
 
 	return 0;
 }
