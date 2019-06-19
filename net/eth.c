@@ -57,7 +57,8 @@ int eth_set_ethaddr(struct eth_device *edev, const char *ethaddr)
 		return ret;
 
 	memcpy(edev->ethaddr, ethaddr, ETH_ALEN);
-	memcpy(picodev->eth->mac.addr, ethaddr, ETH_ALEN);
+	if (picodev)
+		memcpy(picodev->eth->mac.addr, edev->ethaddr, ETH_ALEN);
 
 	return 0;
 }
