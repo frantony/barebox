@@ -480,8 +480,16 @@ int eth_register(struct eth_device *edev)
 			found = 1;
 	}
 
-	if (found)
-		register_preset_mac_address(edev, ethaddr);
+	if (!is_valid_ether_addr(ethaddr)) {
+		char str[sizeof("xx:xx:xx:xx:xx:xx")];
+		ethaddr_to_string(ethaddr, str);
+		dev_warn(&edev->dev, "not valid MAC address set: %s\n", str);
+		random_ether_addr(ethaddr);
+		ethaddr_to_string(ethaddr, str);
+		dev_warn(&edev->dev, "Using random address %s\n", str);
+	}
+
+	register_preset_mac_address(edev, ethaddr);
 
 	if (IS_ENABLED(CONFIG_OFDEVICE) && edev->parent &&
 			edev->parent->device_node)
