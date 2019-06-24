@@ -113,4 +113,5 @@ static int do_ifconfig(int argc, char *argv[])
 
 BAREBOX_CMD_START(ifconfig)
 	.cmd		= do_ifconfig,
+	BAREBOX_CMD_COMPLETE(eth_complete)
 BAREBOX_CMD_END
