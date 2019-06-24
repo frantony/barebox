@@ -75,4 +75,5 @@ static int do_dhclient(int argc, char *argv[])
 
 BAREBOX_CMD_START(dhclient)
 	.cmd		= do_dhclient,
+	BAREBOX_CMD_COMPLETE(eth_complete)
 BAREBOX_CMD_END
