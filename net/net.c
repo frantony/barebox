@@ -354,14 +354,6 @@ static struct net_connection *net_new(struct eth_device *edev, IPaddr_t dest,
 			return ERR_PTR(-EHOSTUNREACH);
 	}
 
-	if (!is_valid_ether_addr(edev->ethaddr)) {
-		char str[sizeof("xx:xx:xx:xx:xx:xx")];
-		random_ether_addr(edev->ethaddr);
-		ethaddr_to_string(edev->ethaddr, str);
-		dev_warn(&edev->dev, "No MAC address set. Using random address %s\n", str);
-		eth_set_ethaddr(edev, edev->ethaddr);
-	}
-
 	/* If we don't have an ip only broadcast is allowed */
 	if (!edev->ipaddr && dest != IP_BROADCAST)
 		return ERR_PTR(-ENETDOWN);
