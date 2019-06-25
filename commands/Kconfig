@@ -1118,7 +1118,6 @@ menu "Network"
 config CMD_DHCP
 	bool
 	select NET_DHCP
-	depends on NET_LEGACY
 	prompt "dhcp"
 	help
 	  DHCP client to obtain IP or boot params

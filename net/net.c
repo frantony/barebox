@@ -335,17 +335,6 @@ static struct net_connection *net_new(struct eth_device *edev, IPaddr_t dest,
 	struct net_connection *con;
 	int ret;
 
-	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
-		con = xzalloc(sizeof(*con));
-		con->handler = handler;
-		con->packet = net_alloc_packet();
-		memset(con->packet, 0, PKTSIZE);
-
-		list_add_tail(&con->list, &connection_list);
-
-		return con;
-	}
-
 	if (!edev) {
 		edev = net_route(dest);
 		if (!edev && net_gateway)
@@ -421,9 +410,12 @@ static void picotcp_udp_cb(uint16_t ev, struct pico_socket *sock)
 		return;
 	}
 
-	len = pico_socket_recvfrom(sock, pkt, UDP_PAYLOAD_SIZE, &ep, &con->remote_port);
+	char *data = xzalloc(2048);
 
-	handler(con, pkt, len);
+	len = pico_socket_recvfrom(sock, data, UDP_PAYLOAD_SIZE, &ep, &con->remote_port);
+
+	handler(con, data, len);
+	free(data);
 }
 
 struct net_connection *net_udp_eth_new(struct eth_device *edev, IPaddr_t dest,

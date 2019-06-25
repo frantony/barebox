@@ -38,7 +38,6 @@ config NET_IFUP
 
 config NET_DHCP
 	bool
-	depends on NET_LEGACY
 	prompt "dhcp support"
 
 config NET_SNTP
