@@ -1298,7 +1298,6 @@ config CMD_MIITOOL
 
 config CMD_PING
 	tristate
-	depends on NET_LEGACY
 	prompt "ping"
 	help
 	  Send ICMP echo requests.
