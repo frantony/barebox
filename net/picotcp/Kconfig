@@ -59,4 +59,9 @@ config CMD_PICOTCP_DHCLIENT
 	select NET_PICO_SUPPORT_DHCP_CLIENT
 	prompt "dhclient command"
 
+config CMD_PICOTCP_PICOPING
+	bool
+	depends on NET_PICO_SUPPORT_ICMP4
+	prompt "picoping command"
+
 endif # NET_PICOTCP
