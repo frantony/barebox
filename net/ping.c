@@ -9,7 +9,6 @@
 #include <pico_stack.h>
 #include <pico_ipv4.h>
 #include <pico_dev_null.h>
-#include <pico_dhcp_client.h>
 #include <pico_icmp4.h>
 
 static uint16_t ping_sequence_number;
