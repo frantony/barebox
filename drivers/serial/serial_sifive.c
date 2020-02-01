@@ -27,6 +27,7 @@
 # define UART_TXEN	0x1
 #define UART_RXC	0x0c
 # define UART_RXEN	0x1
+#define SIFIVE_SERIAL_IP_OFFS                   0x14
 #define UART_DIV	0x18
 
 static inline uint32_t sifive_serial_readl(struct console_device *cdev,
@@ -64,9 +65,17 @@ static void sifive_serial_putc(struct console_device *cdev, char c)
 	sifive_serial_writel(cdev, c, UART_TXR);
 }
 
+#include <debug_ll.h>
+
 static int sifive_serial_tstc(struct console_device *cdev)
 {
 	uint32_t t;
+
+#if 0
+	t = sifive_serial_readl(cdev, SIFIVE_SERIAL_IP_OFFS);
+	if (t)
+		pr_err("IP_OFFS=%08x\n", t);
+#endif
 
 	if (kfifo_len(rxfifo)) {
 		return 1;
