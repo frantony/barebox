@@ -1,0 +1,35 @@
+#include "mt7628an.dtsi"
+
+/ {
+	model = "Linkit Smart 7688";
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x08000000>;
+	};
+};
+
+&cpupll {
+	clock-frequency = <580000000>;
+};
+
+&bbppll12 {
+	clock-frequency = <40000000>;
+};
+
+&uart2 {
+	status = "okay";
+	clock-frequency = <39628800>;
+};
+
+&spi {
+	status = "okay";
+
+	spiflash: MX25L25735F@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		spi-max-frequency = <1000000>;
+		reg = <0>;
+	};
+};
