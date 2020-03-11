@@ -10,4 +10,10 @@ config BOARD_WRTNODE2R
 	select HAVE_IMAGE_COMPRESSION
 	select HAS_NMON
 
+config BOARD_LINKIT
+	bool "Linkit Smart 7688"
+	select HAVE_PBL_IMAGE
+	select HAVE_IMAGE_COMPRESSION
+	select HAS_NMON
+
 endif
