@@ -14,8 +14,19 @@
 		cpu@0 {
 			device_type = "cpu";
 			compatible = "mips,mips24KEc";
+			clocks = <&cpupll>;
 			reg = <0>;
 		};
+	};
+
+	cpupll: cpupll {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+	};
+
+	bbppll12: bbppll12 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
 	};
 
 	palmbus@10000000 {
