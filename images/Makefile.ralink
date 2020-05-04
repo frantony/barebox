@@ -5,3 +5,7 @@ image-$(CONFIG_BOARD_WRTNODE2R) += barebox-wrtnode2r.img
 pblb-$(CONFIG_BOARD_LINKIT) += start_linkit
 FILE_barebox-linkit.img = start_linkit.pblb
 image-$(CONFIG_BOARD_LINKIT) += barebox-linkit.img
+
+pblb-$(CONFIG_BOARD_OMEGA2) += start_omega2
+FILE_barebox-omega2.img = start_omega2.pblb
+image-$(CONFIG_BOARD_OMEGA2) += barebox-omega2.img

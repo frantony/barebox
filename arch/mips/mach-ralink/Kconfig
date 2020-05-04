@@ -16,4 +16,10 @@ config BOARD_LINKIT
 	select HAVE_IMAGE_COMPRESSION
 	select HAS_NMON
 
+config BOARD_OMEGA2
+	bool "Onion Omega2"
+	select HAVE_PBL_IMAGE
+	select HAVE_IMAGE_COMPRESSION
+	select HAS_NMON
+
 endif

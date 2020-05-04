@@ -1,0 +1,35 @@
+#include "mt7628an.dtsi"
+
+/ {
+	model = "Onion Omega2";
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x04000000>;
+	};
+};
+
+&cpupll {
+	clock-frequency = <580000000>;
+};
+
+&bbppll12 {
+	clock-frequency = <40000000>;
+};
+
+&uartlite {
+	status = "okay";
+	clock-frequency = <39628800>;
+};
+
+&spi {
+	status = "okay";
+
+	spiflash: m25p80@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		spi-max-frequency = <1000000>;
+		reg = <0>;
+	};
+};
