@@ -12,3 +12,4 @@ obj-$(CONFIG_BOARD_TPLINK_MR3020) += tplink-mr3020/
 obj-$(CONFIG_BOARD_TPLINK_WDR4300) += tplink-wdr4300/
 obj-$(CONFIG_BOARD_WRTNODE2R) += wrtnode2r/
 obj-$(CONFIG_BOARD_LINKIT) += linkit/
+obj-$(CONFIG_BOARD_OMEGA2) += onion-omega2/

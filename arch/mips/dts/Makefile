@@ -16,5 +16,6 @@ pbl-dtb-$(CONFIG_BOARD_TPLINK_MR3020) += ar9331_tl_mr3020.dtb.o
 pbl-dtb-$(CONFIG_BOARD_TPLINK_WDR4300) += ar9344-tl-wdr4300-v1.7.dtb.o
 pbl-dtb-$(CONFIG_BOARD_WRTNODE2R) += wrtnode2r.dtb.o
 pbl-dtb-$(CONFIG_BOARD_LINKIT) += linkit-smart.dtb.o
+pbl-dtb-$(CONFIG_BOARD_OMEGA2) += omega2.dtb.o
 
 clean-files := *.dtb *.dtb.S .*.dtc .*.pre .*.dts *.dtb.lzo
