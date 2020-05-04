@@ -18,14 +18,25 @@ ENTRY_FUNCTION(BOARD_PBL_START)
 
 	mips_disable_interrupts
 
+	pbl_blt 0x9c000000 skip_init t8
+
+	/* Initialize cache and setup stack in there */
+	PTR_LA	t9, mt7628_sram_init
+	jalr	t9
+	 nop
+
+	/* Initialize any external memory */
+	PTR_LA	t9, mt7628_lowlevel_init
+	jalr	t9
+	 nop
+
 	/* Initialize caches... */
-	//mips_cache_reset
+	mips_cache_reset
 
 	/* ... and enable them */
-	//dcache_enable
+	dcache_enable
 
-	//debug_ll_init
-
+skip_init:
 	.set	pop
 
 ENTRY_FUNCTION_END(BOARD_PBL_START, linkit_smart, SZ_128M)
