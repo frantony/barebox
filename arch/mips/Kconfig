@@ -135,6 +135,7 @@ config MACH_MIPS_RALINK
 	select CLKDEV_LOOKUP
 	select GPIOLIB
 	select CSRC_R4K_LIB
+	select ARCH_HAS_RESET_CONTROLLER
 
 config MACH_MIPS_XBURST
 	bool "Ingenic XBurst-based boards"

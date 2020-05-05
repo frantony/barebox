@@ -36,6 +36,17 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
+		sysc: system-controller@0 {
+			compatible = "ralink,mt7620a-sysc", "syscon";
+			reg = <0x0 0x60>;
+		};
+
+		resetc: reset-controller {
+			compatible = "ralink,rt2880-reset";
+			#reset-cells = <1>;
+			reg = <0x34 0x4>;
+		};
+
 		pinmux: pinmux@60 {
 			compatible = "pinctrl-single";
 			reg = <0x60 0x8>;
@@ -185,5 +196,23 @@
 
 			status = "disabled";
 		};
+	};
+
+	usb_phy: usb-phy@10120000 {
+		compatible = "mediatek,mt7628-usbphy";
+		reg = <0x10120000 0x1000>;
+		#phy-cells = <0>;
+
+		ralink,sysctl = <&sysc>;
+		resets = <&resetc 22 &resetc 25>;
+		reset-names = "host", "device";
+	};
+
+	ehci@101c0000 {
+		compatible = "generic-ehci";
+		reg = <0x101c0000 0x1000>;
+
+		phys = <&usb_phy>;
+		phy-names = "usb";
 	};
 };
