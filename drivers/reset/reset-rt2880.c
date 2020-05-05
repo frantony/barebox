@@ -24,6 +24,7 @@ static int rt2880_assert_device(struct reset_controller_dev *rcdev,
 						     rcdev);
 	u32 val;
 
+	pr_err("rt2880_assert_device id=%d\n", id);
 	if (id < 8)
 		return -1;
 
@@ -42,6 +43,7 @@ static int rt2880_deassert_device(struct reset_controller_dev *rcdev,
 						     rcdev);
 	u32 val;
 
+	pr_err("rt2880_deassert_device id=%d\n", id);
 	if (id < 8)
 		return -1;
 
