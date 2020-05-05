@@ -1359,6 +1359,9 @@ struct ehci_host *ehci_register(struct device_d *dev, struct ehci_data *data)
 	ehci->hccr = data->hccr;
 	ehci->dev = dev;
 
+dev_err(dev, "ehci_register2: ehci->hccr=%p\n", ehci->hccr);
+dev_err(dev, "ehci_register2: &cr_capbase=%p\n", &ehci->hccr->cr_capbase);
+dev_err(dev, "ehci_register2: cr_capbase=%p\n", ehci_readl(&ehci->hccr->cr_capbase));
 	if (data->hcor)
 		ehci->hcor = data->hcor;
 	else
