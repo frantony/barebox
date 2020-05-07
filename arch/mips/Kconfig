@@ -31,8 +31,8 @@ config PHYS_ADDR_T_64BIT
 	bool
 
 config ARCH_TEXT_BASE
-	hex
-	default 0xa0800000
+	hex "PBL link address"
+	default 0
 
 menu "Machine selection"
 

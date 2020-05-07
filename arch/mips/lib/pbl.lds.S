@@ -8,12 +8,22 @@
 #include <asm-generic/memory_layout.h>
 #include <linux/sizes.h>
 
-#define BASE    (TEXT_BASE - SZ_2M)
+
+#define RAM_BASE	(TEXT_BASE - SZ_2M)
+MEMORY { .ram : ORIGIN = RAM_BASE, LENGTH = SZ_2M }
+
+#if (CONFIG_ARCH_TEXT_BASE != 0)
+# define BASE    CONFIG_ARCH_TEXT_BASE
+MEMORY { .rom : ORIGIN = BASE, LENGTH = SZ_1M }
+#else
+# define BASE    RAM_BASE
+REGION_ALIAS(".rom", .ram)
+#endif
 
 OUTPUT_ARCH("mips")
 SECTIONS
 {
-	. = BASE;
+	. = 0;
 
 	PRE_IMAGE
 
@@ -27,19 +37,19 @@ SECTIONS
 		*(.text_bare_init*)
 		__bare_init_end = .;
 		*(.text*)
-	}
+	} > .rom
 
 	BAREBOX_BARE_INIT_SIZE
 
 	. = ALIGN(4);
-	.rodata : { *(.rodata*) }
+	.rodata : { *(.rodata*) } > .rom
 
-	.barebox_imd : { BAREBOX_IMD }
+	.barebox_imd : { BAREBOX_IMD } > .rom
 
 	_etext = .;			/* End of text and rodata section */
 
 	. = ALIGN(4);
-	.data : { *(.data*) }
+	.data : { *(.data*) } > .rom
 
 	pbl_code_size =  . - BASE;
 
@@ -47,15 +57,18 @@ SECTIONS
 	__piggydata_start = .;
 	.piggydata : {
 		*(.piggydata)
-	}
-	__piggydata_end = . - BASE;
+	} > .rom
+	__piggydata_end = .;
 
-	pbl_image_size =  .;
+	pbl_image_size =  . - BASE;
 
-	. = ALIGN(4);
-	__bss_start = .;
-	.bss : { *(.bss*) }
-	__bss_stop = .;
 	pbl_memory_size =  . - BASE;
 	_end = .;
+
+	.bss (NOLOAD) : {
+		. = ALIGN(4);
+		__bss_start = .;
+		*(.bss*)
+		__bss_stop = .;
+	} > .ram
 }
