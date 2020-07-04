@@ -16,6 +16,11 @@ ENTRY_FUNCTION(BOARD_PBL_START)
 
 	mips_barebox_10h
 
+	b start
+	 nop
+
+	.org 0x380
+start:
 	mips_disable_interrupts
 
 	pbl_blt 0x9c000000 skip_init t8
