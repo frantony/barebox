@@ -87,8 +87,9 @@ do_abort_\@:
  * exception handlers
  */
 	.section ".text","ax"
-	.arm
+	//.arm
 
+#if 0
 	.align  5
 undefined_instruction:
 	get_bad_stack
@@ -125,6 +126,7 @@ fiq:
 	get_bad_stack
 	bad_save_user_regs
 	bl 	do_fiq
+#endif
 
 #if defined(CONFIG_RELOCATABLE) && defined(CONFIG_ARM_EXCEPTIONS)
 /*

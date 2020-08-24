@@ -21,7 +21,7 @@ config ARM_USE_COMPRESSED_DTB
 
 config TEXT_BASE
 	hex
-	default 0x0
+	default 0x20000000
 
 menu "System Type"
 

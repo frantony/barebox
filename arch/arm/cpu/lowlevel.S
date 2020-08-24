@@ -5,6 +5,7 @@
 
 .section ".text_bare_init_","ax"
 ENTRY(arm_cpu_lowlevel_init)
+#if 0
 	/* save lr, since it may be banked away with a processor mode change */
 	mov	r2, lr
 
@@ -76,6 +77,7 @@ THUMB(	orr	r12, r12, #PSR_T_BIT	)
 	mcr	p15, 0, r12, c1, c0, 0		/* SCTLR */
 
 	mov	pc, r2
+#endif
 ENDPROC(arm_cpu_lowlevel_init)
 
 ENTRY(cortex_a7_lowlevel_init)

@@ -25,11 +25,13 @@
  */
 void icache_enable(void)
 {
+#if 0
 	u32 r;
 
 	r = get_cr();
 	r |= CR_I;
 	set_cr(r);
+#endif
 }
 
 /**
@@ -37,11 +39,13 @@ void icache_enable(void)
  */
 void icache_disable(void)
 {
+#if 0
 	u32 r;
 
 	r = get_cr();
 	r &= ~CR_I;
 	set_cr(r);
+#endif
 }
 
 /**
@@ -50,7 +54,10 @@ void icache_disable(void)
  */
 int icache_status(void)
 {
+#if 0
 	return (get_cr () & CR_I) != 0;
+#endif
+	return 0;
 }
 
 /*
@@ -61,6 +68,7 @@ struct outer_cache_fns outer_cache;
 
 static void disable_interrupts(void)
 {
+#if 0
 #if __LINUX_ARM_ARCH__ <= 7
 	uint32_t r;
 
@@ -72,6 +80,7 @@ static void disable_interrupts(void)
 	__asm__ __volatile__("mrs %0, cpsr" : "=r"(r));
 	r |= PSR_I_BIT;
 	__asm__ __volatile__("msr cpsr, %0" : : "r"(r));
+#endif
 #endif
 }
 
@@ -85,12 +94,14 @@ static void disable_interrupts(void)
 static void arch_shutdown(void)
 {
 
+#if 0
 #ifdef CONFIG_MMU
 	mmu_disable();
 #endif
 	icache_invalidate();
 
 	disable_interrupts();
+#endif
 }
 archshutdown_exitcall(arch_shutdown);
 
