@@ -16,13 +16,34 @@
 
 #define USART_ISR_TXE	BIT(7)
 
+
+#define PERIPH_BASE	(0x40000000U)
+#define PERIPH_BASE_APB2		(PERIPH_BASE + 0x10000)
+#define USART1_BASE			(PERIPH_BASE_APB2 + 0x1000)
+#define USART1				USART1_BASE
+
+#define MMIO32(addr)		(*(volatile uint32_t *)(addr))
+#define USART_SR(usart_base)		MMIO32((usart_base) + 0x00)
+#define USART_SR_TXE			(1 << 7)
+#define USART_DR(usart_base)		MMIO32((usart_base) + 0x04)
+#define USART_DR_MASK                   0x1FF
+
 static inline void PUTC_LL(int c)
 {
+	void __iomem *usart = (void *)USART1;
+
+	while ((USART_SR(usart) & USART_SR_TXE) == 0);
+
+	/* Send data. */
+	USART_DR(usart) = (c & USART_DR_MASK);
+
+#if 0
 	void __iomem *base = IOMEM(DEBUG_LL_UART_ADDR);
 
 	writel(c, base + TDR_OFFSET);
 
 	while ((readl(base + ISR_OFFSET) & USART_ISR_TXE) == 0);
+#endif
 }
 
 #endif /* __MACH_STM32MP1_DEBUG_LL_H */

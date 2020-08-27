@@ -1,10 +1,10 @@
-obj-y += cpu.o
+#obj-y += cpu.o
 
 obj-$(CONFIG_ARM_EXCEPTIONS) += exceptions$(S64).o interrupts$(S64).o
 obj-$(CONFIG_MMU) += mmu$(S64).o mmu-common.o
-obj-pbl-y += lowlevel$(S64).o
+#obj-pbl-y += lowlevel$(S64).o
 obj-pbl-$(CONFIG_MMU) += mmu-early$(S64).o
-obj-pbl-$(CONFIG_CPU_32v7) += hyp.o
+#obj-pbl-$(CONFIG_CPU_32v7) += hyp.o
 AFLAGS_hyp.o :=-Wa,-march=armv7-a -Wa,-mcpu=all
 AFLAGS_hyp.pbl.o :=-Wa,-march=armv7-a -Wa,-mcpu=all
 
@@ -31,7 +31,7 @@ endif
 
 obj-$(CONFIG_ARM_PSCI) += psci.o
 obj-$(CONFIG_ARM_PSCI_OF) += psci-of.o
-obj-pbl-$(CONFIG_ARM_SMCCC) += smccc-call$(S64).o
+#obj-pbl-$(CONFIG_ARM_SMCCC) += smccc-call$(S64).o
 AFLAGS_smccc-call$(S64).o :=-Wa,-march=armv$(if $(S64),8,7)-a
 AFLAGS_smccc-call$(S64).pbl.o :=-Wa,-march=armv$(if $(S64),8,7)-a
 obj-$(CONFIG_ARM_SECURE_MONITOR) += sm.o sm_as.o
@@ -40,7 +40,7 @@ AFLAGS_sm_as.o		:=-Wa,-march=armv7-a
 obj-pbl-$(CONFIG_CPU_32v4T) += cache-armv4.o
 obj-pbl-$(CONFIG_CPU_32v5) += cache-armv5.o
 obj-pbl-$(CONFIG_CPU_32v6) += cache-armv6.o
-obj-pbl-$(CONFIG_CPU_32v7) += cache-armv7.o
+#obj-pbl-$(CONFIG_CPU_32v7) += cache-armv7.o
 AFLAGS_cache-armv7.o       :=-Wa,-march=armv7-a
 AFLAGS_cache-armv7.pbl.o   :=-Wa,-march=armv7-a
 obj-$(CONFIG_CACHE_L2X0) += cache-l2x0.o
