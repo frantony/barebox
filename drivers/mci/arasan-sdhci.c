@@ -33,7 +33,6 @@
 struct arasan_sdhci_host {
 	struct mci_host		mci;
 	struct sdhci		sdhci;
-	void __iomem		*ioaddr;
 	unsigned int		quirks; /* Arasan deviations from spec */
 /* Controller does not have CD wired and will not function normally without */
 #define SDHCI_ARASAN_QUIRK_FORCE_CDTEST		BIT(0)
@@ -51,48 +50,6 @@ static inline
 struct arasan_sdhci_host *sdhci_to_arasan(struct sdhci *sdhci)
 {
 	return container_of(sdhci, struct arasan_sdhci_host, sdhci);
-}
-
-static void arasan_sdhci_writel(struct sdhci *sdhci, int reg, u32 val)
-{
-	struct arasan_sdhci_host *p = sdhci_to_arasan(sdhci);
-
-	writel(val, p->ioaddr + reg);
-}
-
-static void arasan_sdhci_writew(struct sdhci *sdhci, int reg, u16 val)
-{
-	struct arasan_sdhci_host *p = sdhci_to_arasan(sdhci);
-
-	writew(val, p->ioaddr + reg);
-}
-
-static void arasan_sdhci_writeb(struct sdhci *sdhci, int reg, u8 val)
-{
-	struct arasan_sdhci_host *p = sdhci_to_arasan(sdhci);
-
-	writeb(val, p->ioaddr + reg);
-}
-
-static u32 arasan_sdhci_readl(struct sdhci *sdhci, int reg)
-{
-	struct arasan_sdhci_host *p = sdhci_to_arasan(sdhci);
-
-	return readl(p->ioaddr + reg);
-}
-
-static u16 arasan_sdhci_readw(struct sdhci *sdhci, int reg)
-{
-	struct arasan_sdhci_host *p = sdhci_to_arasan(sdhci);
-
-	return readw(p->ioaddr + reg);
-}
-
-static u8 arasan_sdhci_readb(struct sdhci *sdhci, int reg)
-{
-	struct arasan_sdhci_host *p = sdhci_to_arasan(sdhci);
-
-	return readb(p->ioaddr + reg);
 }
 
 static int arasan_sdhci_card_present(struct mci_host *mci)
@@ -124,7 +81,7 @@ static int arasan_sdhci_reset(struct arasan_sdhci_host *host, u8 mask)
 		u8 ctrl;
 
 		ctrl = sdhci_read8(&host->sdhci, SDHCI_HOST_CONTROL);
-		ctrl |= SDHCI_CARD_DETECT_TEST_LEVEL | SDHCI_CARD_DETECT_SIGNAL_SELECTION;
+		ctrl |= SDHCI_CTRL_CDTEST_INS | SDHCI_CTRL_CDTEST_INS;
 		sdhci_write8(&host->sdhci, ctrl, SDHCI_HOST_CONTROL);
 	}
 
@@ -152,23 +109,6 @@ static int arasan_sdhci_init(struct mci_host *mci, struct device_d *dev)
 	return 0;
 }
 
-#define SDHCI_MAX_DIV_SPEC_300		2046
-
-static u16 arasan_sdhci_get_clock_divider(struct arasan_sdhci_host *host,
-					  unsigned int reqclk)
-{
-	u16 div;
-
-	for (div = 1; div < SDHCI_MAX_DIV_SPEC_300; div += 2)
-		if ((host->mci.f_max / div) <= reqclk)
-			break;
-	div /= 2;
-
-	return div;
-}
-
-#define SDHCI_FREQ_SEL_10_BIT(x)	(((x) & 0x300) >> 2)
-
 static void arasan_sdhci_set_ios(struct mci_host *mci, struct mci_ios *ios)
 {
 	struct arasan_sdhci_host *host = to_arasan_sdhci_host(mci);
@@ -177,46 +117,17 @@ static void arasan_sdhci_set_ios(struct mci_host *mci, struct mci_ios *ios)
 	/* stop clock */
 	sdhci_write16(&host->sdhci, SDHCI_CLOCK_CONTROL, 0);
 
-	if (ios->clock) {
-		u64 start;
+	if (ios->clock)
+		sdhci_set_clock(&host->sdhci, ios->clock, host->sdhci.max_clk);
 
-		/* set & start clock */
-		val = arasan_sdhci_get_clock_divider(host, ios->clock);
-		/* Bit 6 & 7 are upperbits of 10bit divider */
-		val = SDHCI_FREQ_SEL(val) | SDHCI_FREQ_SEL_10_BIT(val);
-		val |= SDHCI_INTCLOCK_EN;
-		sdhci_write16(&host->sdhci, SDHCI_CLOCK_CONTROL, val);
+	sdhci_set_bus_width(&host->sdhci, ios->bus_width);
 
-		start = get_time_ns();
-		while (!(sdhci_read16(&host->sdhci, SDHCI_CLOCK_CONTROL) &
-			SDHCI_INTCLOCK_STABLE)) {
-			if (is_timeout(start, 20 * MSECOND)) {
-				dev_err(host->mci.hw_dev,
-						"SDHCI clock stable timeout\n");
-				return;
-			}
-		}
-		/* enable bus clock */
-		sdhci_write16(&host->sdhci, SDHCI_CLOCK_CONTROL,
-				    val | SDHCI_SDCLOCK_EN);
-	}
-
-	val = sdhci_read8(&host->sdhci, SDHCI_HOST_CONTROL) &
-			~(SDHCI_DATA_WIDTH_4BIT | SDHCI_DATA_WIDTH_8BIT);
-
-	switch (ios->bus_width) {
-	case MMC_BUS_WIDTH_8:
-		val |= SDHCI_DATA_WIDTH_8BIT;
-		break;
-	case MMC_BUS_WIDTH_4:
-		val |= SDHCI_DATA_WIDTH_4BIT;
-		break;
-	}
+	val = sdhci_read8(&host->sdhci, SDHCI_HOST_CONTROL);
 
 	if (ios->clock > 26000000)
-		val |= SDHCI_HIGHSPEED_EN;
+		val |= SDHCI_CTRL_HISPD;
 	else
-		val &= ~SDHCI_HIGHSPEED_EN;
+		val &= ~SDHCI_CTRL_HISPD;
 
 	sdhci_write8(&host->sdhci, SDHCI_HOST_CONTROL, val);
 }
@@ -277,16 +188,18 @@ static int arasan_sdhci_send_cmd(struct mci_host *mci, struct mci_cmd *cmd,
 	sdhci_write32(&host->sdhci, SDHCI_INT_STATUS, ~0);
 
 	mask = SDHCI_INT_CMD_COMPLETE;
-	if (data)
+	if (data && data->flags == MMC_DATA_READ)
 		mask |= SDHCI_INT_DATA_AVAIL;
 
 	sdhci_set_cmd_xfer_mode(&host->sdhci, cmd, data, false, &command, &xfer);
 
 	sdhci_write8(&host->sdhci, SDHCI_TIMEOUT_CONTROL, TIMEOUT_VAL);
-	sdhci_write16(&host->sdhci, SDHCI_TRANSFER_MODE, xfer);
-	sdhci_write16(&host->sdhci, SDHCI_BLOCK_SIZE, SDHCI_DMA_BOUNDARY_512K |
-			    SDHCI_TRANSFER_BLOCK_SIZE(data->blocksize));
-	sdhci_write16(&host->sdhci, SDHCI_BLOCK_COUNT, data->blocks);
+	if (data) {
+		sdhci_write16(&host->sdhci, SDHCI_TRANSFER_MODE, xfer);
+		sdhci_write16(&host->sdhci, SDHCI_BLOCK_SIZE,
+			      SDHCI_DMA_BOUNDARY_512K | SDHCI_TRANSFER_BLOCK_SIZE(data->blocksize));
+		sdhci_write16(&host->sdhci, SDHCI_BLOCK_COUNT, data->blocks);
+	}
 	sdhci_write32(&host->sdhci, SDHCI_ARGUMENT, cmd->cmdarg);
 	sdhci_write16(&host->sdhci, SDHCI_COMMAND, command);
 
@@ -300,7 +213,7 @@ static int arasan_sdhci_send_cmd(struct mci_host *mci, struct mci_cmd *cmd,
 	sdhci_write32(&host->sdhci, SDHCI_INT_STATUS, mask);
 
 	if (data)
-		ret = sdhci_transfer_data(&host->sdhci, data);
+		ret = sdhci_transfer_data_pio(&host->sdhci, data);
 
 error:
 	if (ret) {
@@ -311,32 +224,6 @@ error:
 
 	sdhci_write32(&host->sdhci, SDHCI_INT_STATUS, ~0);
 	return ret;
-}
-
-
-static void arasan_sdhci_set_mci_caps(struct arasan_sdhci_host *host)
-{
-	u16 caps = sdhci_read16(&host->sdhci, SDHCI_CAPABILITIES_1);
-
-	if ((caps & SDHCI_HOSTCAP_VOLTAGE_180) &&
-	    !(host->quirks & SDHCI_ARASAN_QUIRK_NO_1_8_V))
-		host->mci.voltages |= MMC_VDD_165_195;
-	if (caps & SDHCI_HOSTCAP_VOLTAGE_300)
-		host->mci.voltages |= MMC_VDD_29_30 | MMC_VDD_30_31;
-	if (caps & SDHCI_HOSTCAP_VOLTAGE_330)
-		host->mci.voltages |= MMC_VDD_32_33 | MMC_VDD_33_34;
-
-	if (caps & SDHCI_HOSTCAP_HIGHSPEED)
-		host->mci.host_caps |= (MMC_CAP_MMC_HIGHSPEED_52MHZ |
-					MMC_CAP_MMC_HIGHSPEED |
-					MMC_CAP_SD_HIGHSPEED);
-
-	/* parse board supported bus width capabilities */
-	mci_of_parse(&host->mci);
-
-	/* limit bus widths to controller capabilities */
-	if (!(caps & SDHCI_HOSTCAP_8BIT))
-		host->mci.host_caps &= ~MMC_CAP_8_BIT_DATA;
 }
 
 static int arasan_sdhci_probe(struct device_d *dev)
@@ -355,7 +242,6 @@ static int arasan_sdhci_probe(struct device_d *dev)
 	iores = dev_request_mem_resource(dev, 0);
 	if (IS_ERR(iores))
 		return PTR_ERR(iores);
-	arasan_sdhci->ioaddr = IOMEM(iores->start);
 
 	clk_ahb = clk_get(dev, "clk_ahb");
 	if (IS_ERR(clk_ahb)) {
@@ -387,12 +273,8 @@ static int arasan_sdhci_probe(struct device_d *dev)
 	if (of_property_read_bool(np, "no-1-8-v"))
 		arasan_sdhci->quirks |= SDHCI_ARASAN_QUIRK_NO_1_8_V;
 
-	arasan_sdhci->sdhci.read32 = arasan_sdhci_readl;
-	arasan_sdhci->sdhci.read16 = arasan_sdhci_readw;
-	arasan_sdhci->sdhci.read8 = arasan_sdhci_readb;
-	arasan_sdhci->sdhci.write32 = arasan_sdhci_writel;
-	arasan_sdhci->sdhci.write16 = arasan_sdhci_writew;
-	arasan_sdhci->sdhci.write8 = arasan_sdhci_writeb;
+	arasan_sdhci->sdhci.base = IOMEM(iores->start);
+	arasan_sdhci->sdhci.mci = mci;
 	mci->send_cmd = arasan_sdhci_send_cmd;
 	mci->set_ios = arasan_sdhci_set_ios;
 	mci->init = arasan_sdhci_init;
@@ -403,7 +285,10 @@ static int arasan_sdhci_probe(struct device_d *dev)
 	mci->f_max = clk_get_rate(clk_xin);
 	mci->f_min = 50000000 / 256;
 
-	arasan_sdhci_set_mci_caps(arasan_sdhci);
+	/* parse board supported bus width capabilities */
+	mci_of_parse(&arasan_sdhci->mci);
+
+	sdhci_setup_host(&arasan_sdhci->sdhci);
 
 	dev->priv = arasan_sdhci;
 
