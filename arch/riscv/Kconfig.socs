@@ -40,4 +40,11 @@ config BOARD_HIFIVE
 
 endif
 
+config BOARD_BEAGLEV
+	bool "BeagleV"
+	depends on ARCH_RV64I
+	select USE_COMPRESSED_DTB
+	select HAS_ASM_DEBUG_LL
+	select HAS_NMON
+
 endmenu

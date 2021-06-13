@@ -24,6 +24,18 @@
 
 #include <asm/debug_ll_ns16550.h>
 
+#elif defined(CONFIG_BOARD_BEAGLEV)
+
+#define DEBUG_LL_UART_ADDR	0x12440000
+#define DEBUG_LL_UART_SHIFT	2
+#define DEBUG_LL_UART_IOSIZE32
+
+#define DEBUG_LL_UART_CLK	(100000000 / 16)
+#define DEBUG_LL_UART_BPS	CONFIG_BAUDRATE
+#define DEBUG_LL_UART_DIVISOR	(DEBUG_LL_UART_CLK / DEBUG_LL_UART_BPS)
+
+#include <asm/debug_ll_ns16550.h>
+
 #elif defined CONFIG_DEBUG_SIFIVE
 
 #include <io.h>
