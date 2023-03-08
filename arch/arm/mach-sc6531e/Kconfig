@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+if ARCH_SC6531E
+
+choice
+	prompt "board type"
+
+config MACH_EZZY4
+	bool "F+ Ezzy 4"
+
+endchoice
+
+config ARCH_TEXT_BASE
+	hex
+	default 0x00001900 if MACH_EZZY4
+
+endif

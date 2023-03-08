@@ -84,6 +84,14 @@ config ARCH_DIGIC
 	help
 	  Support for Canon's digital cameras that use the DIGIC4 chip.
 
+config ARCH_SC6531E
+	bool "SC6531E-based devices"
+	depends on 32BIT
+	select CPU_ARM926T
+	select GPIOLIB
+	help
+	  Support for feature phones based on the SC6531E chipset.
+
 config ARCH_EP93XX
 	bool "Cirrus Logic EP93xx"
 	depends on 32BIT
@@ -330,6 +338,7 @@ source "arch/arm/mach-nomadik/Kconfig"
 source "arch/arm/mach-omap/Kconfig"
 source "arch/arm/mach-pxa/Kconfig"
 source "arch/arm/mach-rockchip/Kconfig"
+source "arch/arm/mach-sc6531e/Kconfig"
 source "arch/arm/mach-socfpga/Kconfig"
 source "arch/arm/mach-stm32mp/Kconfig"
 source "arch/arm/mach-versatile/Kconfig"
