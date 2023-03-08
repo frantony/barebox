@@ -1,0 +1,22 @@
+/dts-v1/;
+
+/ {
+	model = "F+ Ezzy 4";
+	compatible = "f+,ezzy-4";
+
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	chosen { };
+
+	memory {
+		device_type = "memory";
+		reg = <0x14000000 0x00400000>;
+	};
+
+	timer: timer@81003000 {
+		compatible = "sc6531e-timer";
+		reg = <0x81003000 0x100>;
+		status = "okay";
+	};
+};

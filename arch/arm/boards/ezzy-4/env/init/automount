@@ -1,0 +1,27 @@
+#!/bin/sh
+
+version
+echo
+help
+echo
+cpuinfo
+echo
+iomem
+echo
+meminfo
+echo
+of_dump
+echo
+drvinfo
+echo
+
+timeout 3
+echo
+
+echo sleep 0
+sleep 1
+echo sleep 1
+sleep 1
+echo sleep 2
+sleep 1
+echo sleep 3
