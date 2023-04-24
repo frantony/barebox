@@ -79,6 +79,13 @@ void __noreturn barebox_pbl_start(unsigned long membase, unsigned long memsize,
 
 	setup_c();
 
+	if (IS_ENABLED(CONFIG_ARCH_SC6531E) && IS_ENABLED(CONFIG_DEBUG_LL)) {
+		usb_debug_ll_init();
+
+		puts_ll("Hello world\n");
+		puts_ll("\n");
+	}
+
 	pr_debug("memory at 0x%08lx, size 0x%08lx\n", membase, memsize);
 
 	if (IS_ENABLED(CONFIG_MMU))
