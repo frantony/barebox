@@ -64,6 +64,8 @@
 #include <mach/clps711x/debug_ll.h>
 #elif defined CONFIG_ARCH_AT91
 #include <mach/at91/debug_ll.h>
+#elif defined CONFIG_ARCH_SC6531E
+#include <mach/sc6531e/debug_ll.h>
 #endif
 
 #endif

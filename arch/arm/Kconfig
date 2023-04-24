@@ -88,6 +88,7 @@ config ARCH_SC6531E
 	bool "SC6531E-based devices"
 	depends on 32BIT
 	select CPU_ARM926T
+	select HAS_DEBUG_LL
 	select GPIOLIB
 	help
 	  Support for feature phones based on the SC6531E chipset.
