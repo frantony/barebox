@@ -1,0 +1,187 @@
+SC6531E
+=======
+
+F+ Ezzy 4
+---------
+
+Barebox has limited support for the SC6531E-based feature phones::
+
+  ARCH=arm make ezzy-4_defconfig
+  ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- make
+
+The resulting ``./images/barebox.img`` can be loaded with
+``spd_dump`` utility::
+
+  git clone https://github.com/ilyakurdyukov/spreadtrum_flash
+  ( cd spreadtrum_flash && git log -1 --pretty='%h %s' && make )
+  6886a85 Readme update about smartphones.
+  
+  wget https://github.com/ilyakurdyukov/fpdoom/releases/download/1.20230513/fpdoom.zip
+  unzip fpdoom.zip nor_fdl1.bin
+  
+  git clone https://github.com/ilyakurdyukov/fpdoom
+  ( cd fpdoom/libc_server && git log -1 --pretty='%h %s' && make )
+  cc90d2a faster usb io
+  
+  ./spreadtrum_flash/spd_dump --wait 300 fdl nor_fdl1.bin 0x40004000 fdl images/barebox.img ram && ./fpdoom/libc_server/libc_server
+
+  BSL_REP_VER: "SPRD3\0"
+  BSL_REP_VER: "Custom FDL1: CHIP ID = 0x65620001\0"
+  + ./fpdoom/libc_server/libc_server
+  !!! debug_ll
+  
+  Hello world
+  
+  start.c: memory at 0x14000000, size 0x00400000
+  start.c: found DTB in boarddata, copying to 0x142ffe80
+  start.c: initializing malloc pool at 0x141ffe80 (size 0x00100000)
+  start.c: starting barebox...
+  initcall-> 0x143021fc
+  initcall-> 0x14307040
+  initcall-> 0x1430d598
+  initcall-> 0x1430dfd8
+  initcall-> 0x143263f4
+  initcall-> 0x1432a9c0
+  start.c: barebox_arm_boot_dtb: using barebox_boarddata
+  initcall-> 0x143012fc
+  initcall-> 0x143120f0
+  initcall-> 0x1432602c
+  initcall-> 0x14312060
+  initcall-> 0x14310844
+  initcall-> 0x14300058
+  initcall-> 0x14312390
+  initcall-> 0x14300590
+  initcall-> 0x1430bfe8
+  initcall-> 0x1430d6e4
+  initcall-> 0x143233fc
+  initcall-> 0x14324b7c
+  initcall-> 0x14325a10
+  initcall-> 0x14329c74
+  initcall-> 0x14301238
+  initcall-> 0x143090bc
+  initcall-> 0x14300dc8
+  initcall-> 0x143018ac
+  initcall-> 0x14304b8c
+  initcall-> 0x1430dbd0
+  initcall-> 0x1430de24
+  initcall-> 0x14312268
+  initcall-> 0x143127fc
+  initcall-> 0x143127bc
+  initcall-> 0x1431277c
+  initcall-> 0x1431273c
+  initcall-> 0x14323224
+  initcall-> 0x1432a228
+  initcall-> 0x143109ac
+  initcall-> 0x143000cc
+  initcall-> 0x14300b00
+  initcall-> 0x14303244
+  initcall-> 0x143049c0
+  initcall-> 0x14308588
+  malloc space: 0x141ffe80 -> 0x142ffe7f (size 1 MiB)
+  initcall-> 0x143088a0
+  initcall-> 0x1430b920
+  initcall-> 0x1430cf14
+  initcall-> 0x1430d794
+  initcall-> 0x14310fe4
+  initcall-> 0x1432af50
+  initcall-> 0x143012bc
+  environment load /dev/env0: No such file or directory
+  Maybe you have to create the partition.
+  initcalls done
+  Executing '/env/init/automount'...
+  
+  barebox 2023.05.0-00182-g726a6ded65fc-dirty #1 Sat Jun 10 10:50:06 MSK 2023
+  
+  
+  
+  Information commands:
+    ?, cpuinfo, devinfo, drvinfo, gpioinfo, help, iomem, meminfo, version
+  Boot commands:
+    boot, go
+  Partition commands:
+    automount
+  Environment commands:
+    export, global, nv, setenv
+  File commands:
+    basename, cat, cd, cp, digest, dirname, ll, ls, md5sum, mkdir, readlink, rm
+    rmdir, sha1sum
+  Scripting commands:
+    ., :, [, exit, false, getopt, let, msleep, sh, sleep, source, test, true
+  Console commands:
+    echo, edit, sedit, timeout, vi
+  Memory commands:
+    md, memcmp, memcpy, memset, memtest, mm, mw
+  Hardware manipulation commands:
+    gpio_direction_input, gpio_direction_output, gpio_get_value, gpio_set_value
+    led
+  Miscellaneous commands:
+    of_dump, of_node, of_property, oftree, time, uptime
+  Use 'help COMMAND' for more details.
+  
+  
+  implementer: ARM
+  architecture: v5TEJ
+  I-cache: 8192 bytes (linelen = 32)
+  D-cache: 8192 bytes (linelen = 32)
+  Control register: A W P D L I DT IT 
+  
+  0x00000000 - 0xffffffff (size 0x00000000) iomem
+    0x14000000 - 0x143fffff (size 0x00400000) ram0
+      0x141ffe80 - 0x142ffe7f (size 0x00100000) malloc space
+      0x142ffe80 - 0x142ffffe (size 0x0000017f) board data
+      0x14300000 - 0x1433149f (size 0x000314a0) barebox
+      0x143314a0 - 0x14333fbf (size 0x00002b20) barebox data
+      0x14333fc0 - 0x14336973 (size 0x000029b4) bss
+      0x143f0000 - 0x143f7fff (size 0x00008000) stack
+    0x81003000 - 0x810030ff (size 0x00000100) 81003000.timer@81003000.of
+  
+  Maximum system memory: 139648
+  Current system memory: 139648
+  in use: 136240
+  
+   {
+          model = "F+ Ezzy 4";
+          compatible = "f+,ezzy-4";
+          #address-cells = <0x1>;
+          #size-cells = <0x1>;
+          chosen {
+          };
+          memory {
+                  device_type = "memory";
+                  reg = <0x14000000 0x400000>;
+          };
+          timer@81003000 {
+                  compatible = "sc6531e-timer";
+                  reg = <0x81003000 0x100>;
+                  status = "okay";
+          };
+  };
+  
+  Driver	Device(s)
+  --------------------
+  sc6531e-timer
+  	81003000.timer@81003000.of
+  ramfs
+  	ramfs0
+  devfs
+  	devfs0
+  gpio-leds
+  mem
+  	mem0
+  	mem1
+  
+  Use 'devinfo DEVICE' for more information
+  
+     1
+  
+  sleep 0
+  sleep 1
+  sleep 2
+  sleep 3
+  Executing '/env/init/automount-ratp'...
+  Executing '/env/init/ps1'...
+  
+  Hit any to stop autoboot:    0
+  Booting entry 'net'
+  ifup: No such file or directory
+  host: No such file or directory
