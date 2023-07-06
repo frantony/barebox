@@ -8,3 +8,4 @@ obj-$(CONFIG_KEYBOARD_IMX_KEYPAD) += imx_keypad.o
 obj-$(CONFIG_KEYBOARD_QT1070) += qt1070.o
 obj-$(CONFIG_INPUT_SPECIALKEYS)	+= specialkeys.o
 obj-$(CONFIG_VIRTIO_INPUT) += virtio_input.o
+obj-y += sprd_keypad.o
