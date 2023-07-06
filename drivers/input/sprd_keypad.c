@@ -3,12 +3,16 @@
  * Copyright (C) 2018 Spreadtrum Communications Inc.
  */
 
-#include <linux/module.h>
-#include <linux/platform_device.h>
-#include <linux/input/matrix_keypad.h>
-#include <linux/io.h>
-#include <linux/interrupt.h>
-#include <linux/clk.h>
+#include <common.h>
+#include <errno.h>
+#include <init.h>
+#include <io.h>
+#include <poller.h>
+#include <kfifo.h>
+#include <malloc.h>
+#include <input/matrix_keypad.h>
+#include <linux/err.h>
+#include <input/input.h>
 
 #define SPRD_KPD_CTRL			0x0
 #define SPRD_KPD_INT_EN			0x4
@@ -70,12 +74,26 @@ struct sprd_keypad_data {
 	u32 num_cols;
 	u32 capabilities;
 	u32 debounce_ms;
+	struct device *dev;
 	void __iomem *base;
-	struct input_dev *input_dev;
-	struct clk *enable;
-	struct clk *rtc;
+	struct poller_struct poller;
+	struct input_device input;
+//	struct clk *enable;
+//	struct clk *rtc;
+
+	unsigned short *keycodes;
+
+	u32 int_status;
+	u32 key_status;
 };
 
+static inline struct sprd_keypad_data *
+poller_to_sprd_pdata(struct poller_struct *poller)
+{
+	return container_of(poller, struct sprd_keypad_data, poller);
+}
+
+#if 0
 static int sprd_keypad_enable(struct sprd_keypad_data *data)
 {
 	struct device *dev = data->input_dev->dev.parent;
@@ -102,21 +120,30 @@ static void sprd_keypad_disable(struct sprd_keypad_data *data)
 	clk_disable_unprepare(data->enable);
 	clk_disable_unprepare(data->rtc);
 }
+#endif
 
-static irqreturn_t sprd_keypad_handler(int irq, void *id)
+static void sprd_keypad_poller(struct poller_struct *poller)
 {
-	struct platform_device *pdev = id;
-	struct device *dev = &pdev->dev;
-	struct sprd_keypad_data *data = platform_get_drvdata(pdev);
+	struct sprd_keypad_data *data = poller_to_sprd_pdata(poller);
+	struct device *dev = data->dev;
 	u32 int_status = readl_relaxed(data->base +
-						SPRD_KPD_INT_MASK_STATUS);
+						SPRD_KPD_INT_RAW_STATUS);
 	u32 key_status = readl_relaxed(data->base +
 						SPRD_KPD_KEY_STATUS);
-	unsigned short *keycodes = data->input_dev->keycode;
+	unsigned short *keycodes = data->keycodes;
 	u32 row_shift = get_count_order(data->num_cols);
 	unsigned short key;
 	int col, row;
 	u32 i;
+
+	if (int_status == data->int_status && key_status == data->key_status) {
+		return;
+	}
+
+	data->int_status = int_status;
+	data->key_status = key_status;
+
+	//dev_err(dev, "int_status=%08x key_status=%08x\n", int_status, key_status);
 
 	writel_relaxed(SPRD_KPD_INT_ALL, data->base + SPRD_KPD_INT_CLR);
 
@@ -125,21 +152,19 @@ static irqreturn_t sprd_keypad_handler(int irq, void *id)
 			col = SPRD_KPD_INTX_COL(i, key_status);
 			row = SPRD_KPD_INTX_ROW(i, key_status);
 			key = keycodes[MATRIX_SCAN_CODE(row, col, row_shift)];
-			input_report_key(data->input_dev, key, 1);
-			input_sync(data->input_dev);
+			input_report_key_event(&data->input, key, 1);
 			dev_dbg(dev, "%dD\n", key);
+			dev_dbg(dev, "%d %d down\n", col, row);
 		}
 		if (SPRD_KPD_RELEASE_INTX(i, int_status)) {
 			col = SPRD_KPD_INTX_COL(i, key_status);
 			row = SPRD_KPD_INTX_ROW(i, key_status);
 			key = keycodes[MATRIX_SCAN_CODE(row, col, row_shift)];
-			input_report_key(data->input_dev, key, 0);
-			input_sync(data->input_dev);
+			input_report_key_event(&data->input, key, 0);
 			dev_dbg(dev, "%dU\n", key);
+			dev_dbg(dev, "%d %d up\n", col, row);
 		}
 	}
-
-	return IRQ_HANDLED;
 }
 
 static u32 sprd_keypad_time_to_counter(u32 array_size, u32 time_ms)
@@ -163,9 +188,28 @@ static u32 sprd_keypad_time_to_counter(u32 array_size, u32 time_ms)
 	return value;
 }
 
+// FIXME
+static void sprd_keypad_ll_hw_init(void)
+{
+	//// sprd_keypad_enable()
+	// keypad_init
+	// APB_PWR_ON(0x80040);
+	writel(0x00080040, 0x8b0010a8);
+
+	writel(0x0000208a, 0x8c000034);
+	writel(0x0000208a, 0x8c000038);
+	writel(0x0000208a, 0x8c00003c);
+
+	writel(0x00002001, 0x8c000048); // (row=2?)
+	writel(0x00002001, 0x8c00004c); // row=3
+	writel(0x00002001, 0x8c000050); // row=4
+}
+
 static int sprd_keypad_hw_init(struct sprd_keypad_data *data)
 {
 	u32 value;
+
+	sprd_keypad_ll_hw_init();
 
 	writel_relaxed(SPRD_KPD_INT_ALL, data->base + SPRD_KPD_INT_CLR);
 	writel_relaxed(SPRD_KPD_ROW_POLARITY | SPRD_KPD_COL_POLARITY,
@@ -183,6 +227,7 @@ static int sprd_keypad_hw_init(struct sprd_keypad_data *data)
 	value = SPRD_KPD_INT_DOWNUP;
 	if (data->capabilities & SPRD_CAP_LONG_KEY)
 		value |= SPRD_KPD_INT_LONG;
+
 	writel_relaxed(value, data->base + SPRD_KPD_INT_EN);
 
 	value = SPRD_KPD_RTC_HZ - 1;
@@ -196,41 +241,14 @@ static int sprd_keypad_hw_init(struct sprd_keypad_data *data)
 	if (data->capabilities & SPRD_CAP_LONG_KEY)
 		value |= SPRD_KPD_LONG_KEY_EN;
 	writel_relaxed(value, data->base + SPRD_KPD_CTRL);
+	pr_err("%s:%d ctrl value =%08x\n", __FUNCTION__, __LINE__, value);
 
 	return 0;
 }
 
-static int __maybe_unused sprd_keypad_suspend(struct device *dev)
+static int sprd_keypad_parse_dt(struct sprd_keypad_data *data)
 {
-	struct sprd_keypad_data *data = dev_get_drvdata(dev);
-
-	if (!device_may_wakeup(dev))
-		sprd_keypad_disable(data);
-
-	return 0;
-}
-
-static int __maybe_unused sprd_keypad_resume(struct device *dev)
-{
-	struct sprd_keypad_data *data = dev_get_drvdata(dev);
-	int ret = 0;
-
-	if (!device_may_wakeup(dev)) {
-		ret = sprd_keypad_enable(data);
-		if (ret)
-			return ret;
-		ret = sprd_keypad_hw_init(data);
-	}
-
-	return ret;
-}
-
-static SIMPLE_DEV_PM_OPS(sprd_keypad_pm_ops,
-			sprd_keypad_suspend, sprd_keypad_resume);
-
-static int sprd_keypad_parse_dt(struct device *dev)
-{
-	struct sprd_keypad_data *data = dev_get_drvdata(dev);
+	struct device *dev = data->dev;
 	struct device_node *np = dev->of_node;
 	int ret;
 
@@ -239,6 +257,7 @@ static int sprd_keypad_parse_dt(struct device *dev)
 						&data->num_cols);
 	if (ret)
 		return ret;
+
 	if (data->num_rows > SPRD_KPD_ROWS_MAX
 		|| data->num_cols > SPRD_KPD_COLS_MAX) {
 		dev_err(dev, "invalid num_rows or num_cols\n");
@@ -255,9 +274,8 @@ static int sprd_keypad_parse_dt(struct device *dev)
 		data->capabilities |= SPRD_CAP_REPEAT;
 	if (of_get_property(np, "sprd,support_long_key", NULL))
 		data->capabilities |= SPRD_CAP_LONG_KEY;
-	if (of_get_property(np, "wakeup-source", NULL))
-		data->capabilities |= SPRD_CAP_WAKEUP;
 
+#if 0
 	data->enable = devm_clk_get(dev, "enable");
 	if (IS_ERR(data->enable)) {
 		if (PTR_ERR(data->enable) != -EPROBE_DEFER)
@@ -271,51 +289,43 @@ static int sprd_keypad_parse_dt(struct device *dev)
 			dev_err(dev, "get rtc clk failed.\n");
 		return PTR_ERR(data->rtc);
 	}
+#endif
 
 	return 0;
 }
 
-static int sprd_keypad_probe(struct platform_device *pdev)
+static int sprd_keypad_probe(struct device *dev)
 {
 	struct sprd_keypad_data *data;
 	struct resource *res;
-	int ret, irq, i, j, row_shift;
+	int ret, i, j, row_shift;
 	unsigned long rows, cols;
 	unsigned short *keycodes;
 
-	data = devm_kzalloc(&pdev->dev, sizeof(*data), GFP_KERNEL);
-	if (!data)
-		return -ENOMEM;
+	data = xzalloc(sizeof(*data));
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	data->base = devm_ioremap_resource(&pdev->dev, res);
-	if (IS_ERR(data->base))
-		return PTR_ERR(data->base);
+	data->dev = dev;
 
-	platform_set_drvdata(pdev, data);
-	ret = sprd_keypad_parse_dt(&pdev->dev);
+	res = dev_request_mem_resource(dev, 0);
+	if (IS_ERR(res))
+		return PTR_ERR(res);
+	data->base = IOMEM(res->start);
+
+	ret = sprd_keypad_parse_dt(data);
 	if (ret)
 		return ret;
 
-	data->input_dev = devm_input_allocate_device(&pdev->dev);
-	if (IS_ERR(data->input_dev)) {
-		dev_err(&pdev->dev, "alloc input dev failed.\n");
-		return PTR_ERR(data->input_dev);
-	}
+	row_shift = get_count_order(data->num_cols);
 
-	data->input_dev->name = "sprd-keypad";
-	data->input_dev->phys = "sprd-key/input0";
+	keycodes = xzalloc(MATRIX_SCAN_CODE(SPRD_KPD_ROWS_MAX + 1, SPRD_KPD_COLS_MAX + 1, row_shift) * sizeof(*keycodes));
+	data->keycodes = keycodes;
 
-	ret = matrix_keypad_build_keymap(NULL, NULL,
-					data->num_rows,
-					data->num_cols,
-					NULL, data->input_dev);
+	ret = matrix_keypad_build_keymap(dev, NULL, row_shift, keycodes);
 	if (ret)
 		return ret;
 
 	rows = cols = 0;
-	row_shift = get_count_order(data->num_cols);
-	keycodes = data->input_dev->keycode;
+
 	for (i = 0; i < data->num_rows; i++) {
 		for (j = 0; j < data->num_cols; j++) {
 			if (!!keycodes[MATRIX_SCAN_CODE(i, j, row_shift)]) {
@@ -324,84 +334,50 @@ static int sprd_keypad_probe(struct platform_device *pdev)
 			}
 		}
 	}
+
 	data->rows_en = rows;
 	data->cols_en = cols;
 
-	if (data->capabilities & SPRD_CAP_REPEAT)
-		set_bit(EV_REP, data->input_dev->evbit);
-
-	input_set_drvdata(data->input_dev, data);
-
+#if 0
 	ret = sprd_keypad_enable(data);
 	if (ret)
 		return ret;
+#endif
 
 	ret = sprd_keypad_hw_init(data);
 	if (ret) {
-		sprd_keypad_disable(data);
+		//sprd_keypad_disable(data);
 		return ret;
 	}
 
-	irq = platform_get_irq(pdev, 0);
-	if (irq < 0) {
-		dev_err(&pdev->dev, "get irq failed.\n");
-		sprd_keypad_disable(data);
-		return irq;
-	}
+	data->poller.func = sprd_keypad_poller;
 
-	ret = devm_request_irq(&pdev->dev, irq, sprd_keypad_handler,
-				IRQF_NO_SUSPEND, dev_name(&pdev->dev), pdev);
+	ret = poller_register(&data->poller, dev_name(dev));
+	if (ret)
+		return ret;
+
+	ret = input_device_register(&data->input);
 	if (ret) {
-		dev_err(&pdev->dev, "request irq failed.\n");
-		sprd_keypad_disable(data);
+		// FIXME: poller is registered
+		//dev_err(&pdev->dev, "register input dev failed\n");
+		//sprd_keypad_disable(data);
 		return ret;
 	}
-
-	ret = input_register_device(data->input_dev);
-	if (ret) {
-		dev_err(&pdev->dev, "register input dev failed\n");
-		sprd_keypad_disable(data);
-		return ret;
-	}
-
-	if (data->capabilities & SPRD_CAP_WAKEUP)
-		device_init_wakeup(&pdev->dev, true);
 
 	return 0;
 }
 
-static int sprd_keypad_remove(struct platform_device *pdev)
-{
-	struct sprd_keypad_data *data = platform_get_drvdata(pdev);
-	int irq = platform_get_irq(pdev, 0);
-
-	if (data->capabilities & SPRD_CAP_WAKEUP)
-		device_init_wakeup(&pdev->dev, false);
-
-	input_unregister_device(data->input_dev);
-	devm_free_irq(&pdev->dev, irq, pdev);
-	sprd_keypad_disable(data);
-
-	return 0;
-}
-
-static const struct of_device_id sprd_keypad_match[] = {
+static const struct of_device_id sprd_keypad_dt_ids[] = {
 	{ .compatible = "sprd,s9820e-keypad", },
 	{},
 };
 
-static struct platform_driver sprd_keypad_driver = {
-	.driver = {
-		.name = "sprd-keypad",
-		.owner = THIS_MODULE,
-		.of_match_table = sprd_keypad_match,
-		.pm = &sprd_keypad_pm_ops,
-	},
+static struct driver sprd_keypad_driver = {
+	.name = "sprd-keypad",
 	.probe = sprd_keypad_probe,
-	.remove = sprd_keypad_remove,
+	.of_compatible = DRV_OF_COMPAT(sprd_keypad_dt_ids),
 };
-
-module_platform_driver(sprd_keypad_driver);
+device_platform_driver(sprd_keypad_driver);
 
 MODULE_DESCRIPTION("Spreadtrum KPD Driver");
 MODULE_LICENSE("GPL v2");

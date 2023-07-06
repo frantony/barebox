@@ -1,5 +1,7 @@
 /dts-v1/;
 
+#include <dt-bindings/input/input.h>
+
 / {
 	model = "F+ Ezzy 4";
 	compatible = "f+,ezzy-4";
@@ -17,6 +19,33 @@
 	timer: timer@81003000 {
 		compatible = "sc6531e-timer";
 		reg = <0x81003000 0x100>;
+		status = "okay";
+	};
+
+	keypad: keypad@87000000 {
+		compatible = "sprd,s9820e-keypad";
+		reg = <0x87000000 0x1000>;
+		keypad,num-rows= <5>;
+		keypad,num-columns = <5>;
+		debounce-interval = <25>;
+		linux,keymap = <MATRIX_KEY(4, 1, KEY_A)
+				MATRIX_KEY(2, 4, KEY_B) // UP
+				MATRIX_KEY(1, 1, KEY_C)
+				MATRIX_KEY(2, 2, KEY_ENTER)
+				MATRIX_KEY(4, 3, KEY_D) // OK
+				MATRIX_KEY(2, 3, KEY_E) // DOWN
+				MATRIX_KEY(0, 0, KEY_1)
+				MATRIX_KEY(0, 3, KEY_2)
+				MATRIX_KEY(3, 3, KEY_3)
+				MATRIX_KEY(1, 0, KEY_4)
+				MATRIX_KEY(1, 2, KEY_5)
+				MATRIX_KEY(1, 4, KEY_6)
+				MATRIX_KEY(2, 0, KEY_7)
+				MATRIX_KEY(0, 2, KEY_8)
+				MATRIX_KEY(0, 4, KEY_9)
+				MATRIX_KEY(3, 0, KEY_X)
+				MATRIX_KEY(3, 2, KEY_0)
+				MATRIX_KEY(4, 2, KEY_Y)>;
 		status = "okay";
 	};
 };

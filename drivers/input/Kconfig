@@ -49,6 +49,13 @@ config KEYBOARD_QT1070
 	  Say Y here if you want to use Atmel AT42QT1070 QTouch
 	  Sensor chip as input device.
 
+config KEYBOARD_SPRD
+	tristate "Spreadtrum keyboard support"
+	depends on ARCH_SC6531E || COMPILE_TEST
+	select INPUT
+	select INPUT_MATRIXKMAP
+	select POLLER
+
 config KEYBOARD_TWL6030
 	tristate "TWL6030 power button"
 	depends on MFD_TWL6030
