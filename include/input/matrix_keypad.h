@@ -33,5 +33,7 @@ struct matrix_keymap_data {
 int matrix_keypad_build_keymap(struct device *dev,
 			       const struct matrix_keymap_data *keymap_data,
 			       unsigned int row_shift, unsigned short *keymap);
+int matrix_keypad_parse_properties(struct device *dev,
+				   unsigned int *rows, unsigned int *cols);
 
 #endif /* _MATRIX_KEYPAD_H */

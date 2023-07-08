@@ -3,6 +3,32 @@
 #include <common.h>
 #include <input/matrix_keypad.h>
 
+/**
+ * matrix_keypad_parse_properties() - Read properties of matrix keypad
+ *
+ * @dev: Device containing properties
+ * @rows: Returns number of matrix rows
+ * @cols: Returns number of matrix columns
+ * @return 0 if OK, <0 on error
+ */
+int matrix_keypad_parse_properties(struct device *dev,
+				   unsigned int *rows, unsigned int *cols)
+{
+	struct device_node *np = dev->of_node;
+
+	*rows = *cols = 0;
+
+	of_property_read_u32(np, "keypad,num-rows", rows);
+	of_property_read_u32(np, "keypad,num-columns", cols);
+
+	if (!*rows || !*cols) {
+		dev_err(dev, "number of keypad rows/columns not specified\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int matrix_keypad_parse_of_keymap(struct device *dev,
 					 unsigned int row_shift,
 					 unsigned short *keymap)
