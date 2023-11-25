@@ -2,16 +2,23 @@
 #include <poller.h>
 #include <pico_stack.h>
 
+struct pico_stack *picostack;
+
 static struct poller_struct picotcp_poller;
 
 static void picotcp_poller_cb(struct poller_struct *poller)
 {
-	pico_stack_tick();
+	pico_stack_tick(picostack);
 }
 
 static int picotcp_net_init(void)
 {
-	pico_stack_init();
+	if (pico_stack_init(&picostack) < 0) {
+		pr_err("PicoTCP: cannot initialize stack\n");
+		picostack = NULL;
+
+		return -EINVAL;
+	}
 
 	picotcp_poller.func = picotcp_poller_cb;
 

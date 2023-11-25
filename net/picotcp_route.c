@@ -11,7 +11,7 @@ static int do_route(int argc, char *argv[])
 	printf("picotcp IPv4 routing table\n");
 	printf("Destination     Gateway         Genmask         Metric Iface\n");
 
-	pico_tree_foreach(index, &Routes) {
+	pico_tree_foreach(index, &picostack->Routes) {
 		char ipstr[32];
 
 		r = index->keyValue;

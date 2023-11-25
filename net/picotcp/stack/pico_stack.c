@@ -31,22 +31,34 @@
 #include "pico_protocol.h"
 #include "pico_stack.h"
 #include "pico_addressing.h"
+#ifdef PICO_SUPPORT_DNS_CLIENT
 #include "pico_dns_client.h"
+#endif
+#ifdef PICO_SUPPORT_MDNS
 #include "pico_mdns.h"
+#endif
 #include "pico_fragments.h"
 #include "pico_ipfilter.h"
 
+#ifdef PICO_SUPPORT_6LOWPAN
 #include "pico_6lowpan_ll.h"
+#endif
 #include "pico_ethernet.h"
+#ifdef PICO_SUPPORT_6LOWPAN
 #include "pico_6lowpan.h"
+#endif
+#ifdef PICO_SUPPORT_OLSR
 #include "pico_olsr.h"
+#endif
 #include "pico_aodv.h"
 #include "pico_eth.h"
 #include "pico_arp.h"
 #include "pico_ipv4.h"
 #include "pico_nat.h"
 #include "pico_ipv6.h"
+#ifdef PICO_SUPPORT_IPV6PMTU
 #include "pico_ipv6_pmtu.h"
+#endif
 #include "pico_icmp4.h"
 #include "pico_icmp6.h"
 #include "pico_igmp.h"
@@ -55,10 +67,16 @@
 #include "pico_socket.h"
 #include "pico_socket_multicast.h"
 #include "pico_ethernet.h"
+#ifdef PICO_SUPPORT_DHCPC
 #include "pico_dhcp_server.h"
+#endif
+#ifndef __BAREBOX__
 #include "pico_hotplug_detection.h"
+#endif
 #include "heap.h"
+#ifndef __BAREBOX__
 #include "pico_jobs.h"
+#endif
 
 /* Globals (common to all instances) */
 PICO_THREAD_LOCAL volatile pico_err_t pico_err;

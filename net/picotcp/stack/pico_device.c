@@ -35,9 +35,13 @@
 #include "pico_nat.h"
 #include "pico_icmp6.h"
 #include "pico_eth.h"
+#ifdef PICO_SUPPORT_802154
 #include "pico_802154.h"
+#endif
+#ifdef PICO_SUPPORT_6LOWPAN
 #include "pico_6lowpan.h"
 #include "pico_6lowpan_ll.h"
+#endif
 #include "pico_addressing.h"
 #define PICO_DEVICE_DEFAULT_MTU (1500)
 

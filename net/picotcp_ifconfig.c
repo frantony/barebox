@@ -3,9 +3,6 @@
 #include <complete.h>
 #include <net.h>
 
-extern struct pico_tree Device_tree;
-extern struct pico_tree Tree_dev_link;
-
 static void printf_iface(struct pico_device *dev)
 {
 	struct pico_ipv4_link *link;
@@ -24,7 +21,7 @@ static void printf_iface(struct pico_device *dev)
 	}
 	printf("\n");
 
-	pico_tree_foreach(index, &Tree_dev_link) {
+	pico_tree_foreach(index, &picostack->Tree_dev_link) {
 		link = index->keyValue;
 		if (dev == link->dev) {
 			char ipstr[16];
@@ -46,14 +43,15 @@ static int do_ifconfig(int argc, char *argv[])
 	if (argc == 1) {
 		struct pico_tree_node *index;
 
-		pico_tree_foreach(index, &Device_tree) {
+		pico_tree_foreach(index, &picostack->Device_tree) {
 			printf_iface(index->keyValue);
 		}
 
 		return 0;
 	}
 
-	picodev = pico_get_device(argv[1]);
+	picodev = pico_get_device(picostack, argv[1]);
+
 	if (!picodev) {
 		struct pico_device *dev;
 		struct pico_tree_node *index;
@@ -62,7 +60,7 @@ static int do_ifconfig(int argc, char *argv[])
 
 		printf("available interfaces:\n");
 
-		pico_tree_foreach(index, &Device_tree) {
+		pico_tree_foreach(index, &picostack->Device_tree) {
 			dev = index->keyValue;
 			printf("%s\n", dev->name);
 		}
@@ -73,7 +71,7 @@ static int do_ifconfig(int argc, char *argv[])
 	if (argc == 2) {
 		struct pico_tree_node *index;
 
-		pico_tree_foreach(index, &Device_tree) {
+		pico_tree_foreach(index, &picostack->Device_tree) {
 			struct pico_device *dev = index->keyValue;
 
 			if (!strcmp(dev->name, argv[1])) {
@@ -101,7 +99,7 @@ static int do_ifconfig(int argc, char *argv[])
 		return 1;
 	}
 
-	pico_ipv4_link_add(picodev, ipaddr, nm);
+	pico_ipv4_link_add(picostack, picodev, ipaddr, nm);
 
 	return 0;
 }
