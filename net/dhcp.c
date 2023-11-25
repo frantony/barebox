@@ -470,7 +470,6 @@ static struct pico_ip4 inaddr_any = {
     0
 };
 
-
 int dhcp_request(struct eth_device *edev, const struct dhcp_req_param *param,
 		 struct dhcp_result **res)
 {
@@ -503,7 +502,7 @@ int dhcp_request(struct eth_device *edev, const struct dhcp_req_param *param,
 	if (!dhcp_param.retries)
 		dhcp_param.retries = global_dhcp_retries;
 
-	pico_ipv4_link_add(edev->picodev, inaddr_any, bcast_netmask);
+	pico_ipv4_link_add(picostack, edev->picodev, inaddr_any, bcast_netmask);
 
 	dhcp_con = net_udp_eth_new(edev, IP_BROADCAST, PORT_BOOTPS, dhcp_handler, NULL);
 	if (IS_ERR(dhcp_con)) {
@@ -586,14 +585,14 @@ int dhcp_set_result(struct eth_device *edev, struct dhcp_result *res)
 	struct pico_ip4 ipaddr, nm;
 	char t[] = "xxx.xxx.xxx.xxx";
 
-	pico_ipv4_link_del(edev->picodev, inaddr_any);
+	pico_ipv4_link_del(picostack, edev->picodev, inaddr_any);
 
 	snprintf(t, sizeof(t), "%pI4", &res->ip);
 	pico_string_to_ipv4(t, &ipaddr.addr);
 	snprintf(t, sizeof(t), "%pI4", &res->netmask);
 	pico_string_to_ipv4(t, &nm.addr);
 
-	pico_ipv4_link_add(edev->picodev, ipaddr, nm);
+	pico_ipv4_link_add(picostack, edev->picodev, ipaddr, nm);
 
 	net_set_ip(edev, res->ip);
 	net_set_netmask(edev, res->netmask);

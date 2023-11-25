@@ -28,6 +28,8 @@
 #include <pico_socket.h>
 #include <pico_ipv4.h>
 
+extern struct pico_stack *picostack;
+
 /* How often do we retry to send packages */
 #define PKT_NUM_RETRIES 4
 
