@@ -441,13 +441,12 @@ static void pico_adapter_destroy(struct pico_device *dev)
 static void pico_adapter_init(struct eth_device *edev)
 {
 	struct pico_device_barebox_eth *pif = PICO_ZALLOC(sizeof(struct pico_device_barebox_eth));
-
 	struct pico_device *picodev;
 
 	char *name = strdup(edev->devname);
 
 	picodev = &pif->dev;
-	if (0 != pico_device_init(picodev, name, edev->ethaddr)) {
+	if (0 != pico_device_init(picostack, picodev, name, edev->ethaddr)) {
 		pr_info("pico_adapter_init failed.\n");
 		pico_adapter_destroy(picodev);
 		return;

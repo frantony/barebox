@@ -158,7 +158,7 @@ static int do_picoping(char *argv[])
 {
 	int id;
 
-	id = pico_icmp4_ping(argv[1], NUM_PING, 1000, 5000, 48, cb_ping);
+	id = pico_icmp4_ping(picostack, argv[1], NUM_PING, 1000, 5000, 48, cb_ping);
 
 	if (id == -1) {
 		return -EIO;
@@ -175,7 +175,7 @@ static int do_picoping(char *argv[])
 		poller_call();
 	}
 
-	pico_icmp4_ping_abort(id);
+	pico_icmp4_ping_abort(picostack, id);
 
 	if (ping_code != PICO_PING_ERR_REPLIED) {
 		return -EIO;

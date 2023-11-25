@@ -254,7 +254,7 @@ void net_poll(void)
 
 	in_net_poll = false;
 	} else if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
-		pico_stack_tick();
+		pico_stack_tick(picostack);
 	}
 }
 
@@ -513,7 +513,7 @@ struct net_connection *net_udp_eth_new(struct eth_device *edev, IPaddr_t dest,
 
 		remote_address.ip4.addr = dest;
 
-		con->sock = pico_socket_open(PICO_PROTO_IPV4,
+		con->sock = pico_socket_open(picostack, PICO_PROTO_IPV4,
 						PICO_PROTO_UDP, picotcp_udp_cb);
 
 		if (!con->sock)
