@@ -4,10 +4,6 @@ config NET_PICO_SUPPORT_IPV4
 	bool
 	default y if NET_PICOTCP
 
-config NET_PICO_SUPPORT_IPFRAG
-	bool
-	default y if NET_PICO_SUPPORT_IPV4
-
 config NET_PICO_SUPPORT_ICMP4
 	bool
 	default y if NET_PICO_SUPPORT_IPV4
