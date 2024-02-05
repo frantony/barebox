@@ -485,13 +485,14 @@ static void picotcp_udp_cb(uint16_t ev, struct pico_socket *sock)
 	rx_handler_f *handler = con->handler;
 	int len;
 	union pico_address ep;
+	char *data;
 
 	if (ev == PICO_SOCK_EV_ERR) {
 		printf(">>>>>> PICO_SOCK_EV_ERR (%d)\n", pico_err);
 		return;
 	}
 
-	char *data = xzalloc(2048);
+	data = xzalloc(2048);
 
 	len = pico_socket_recvfrom(sock, data, UDP_PAYLOAD_SIZE, &ep, &con->remote_port);
 
@@ -580,6 +581,8 @@ static int net_ip_send(struct net_connection *con, int len)
 int net_udp_send(struct net_connection *con, int len)
 {
 	if (IS_ENABLED(CONFIG_NET_PICOTCP)) {
+		void *payload = net_udp_get_payload(con);
+
 		/* FIXME: pico_socket_send() ret code is ignored */
 		pico_socket_send(con->sock, payload, len);
 
