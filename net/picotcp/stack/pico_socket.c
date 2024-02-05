@@ -1474,7 +1474,7 @@ int MOCKABLE pico_socket_sendto_extended(struct pico_socket *s, const void *buf,
     remote_endpoint = pico_socket_sendto_destination(s, dst, remote_port);
 
     if (PROTO(s) == PICO_PROTO_ICMP4) {
-        if (pico_socket_icmp4_sendto_check(s, buf, len, dst, remote_port) < 0)
+        if (pico_socket_icmp4_sendto_check(s, (void *)buf, len, dst, remote_port) < 0)
             return -1;
     }
     if ((PROTO(s) == PICO_PROTO_UDP) || (PROTO(s) == PICO_PROTO_TCP)) {
