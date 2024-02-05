@@ -271,7 +271,6 @@ static struct pico_eth *pico_ethernet_mcast6_translate(struct pico_frame *f, uin
 
     return (struct pico_eth *)pico_mcast6_mac;
 }
-#endif
 
 static int pico_ethernet_ipv6_dst(struct pico_stack *S, struct pico_frame *f, struct pico_eth *const dstmac)
 {
@@ -302,6 +301,7 @@ static int pico_ethernet_ipv6_dst(struct pico_stack *S, struct pico_frame *f, st
     #endif
     return retval;
 }
+#endif
 
 
 /* Ethernet send, first attempt: try our own address.
