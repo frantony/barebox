@@ -56,6 +56,8 @@ void pico_adapter_receive(struct eth_device *edev, unsigned char *pkt, int len)
 				edev->devname, len);
 	}
 
+	tcpdump(pkt, len);
+
 	pico_stack_recv(edev->picodev, pkt, len);
 }
 
@@ -75,6 +77,8 @@ static int pico_adapter_send(struct pico_device *dev, void *buf, int len)
 		pr_warning("%s: sending packet (len=%d) via %s\n",
 				__func__, len, edev->devname);
 	}
+
+	tcpdump(buf, len);
 
 	ret = eth_send(edev, buf, len);
 	if (!ret)
