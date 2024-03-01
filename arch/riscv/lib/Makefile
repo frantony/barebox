@@ -10,3 +10,6 @@ obj-$(CONFIG_RISCV_SBI) += sbi.o
 obj-$(CONFIG_CMD_RISCV_CPUINFO) += cpuinfo.o
 obj-$(CONFIG_BOOTM) += bootm.o
 obj-$(CONFIG_RISCV_UNWIND) += stacktrace.o
+
+# libgcc-style stuff needed in the kernel
+obj-y += bswapsi.o bswapdi.o
