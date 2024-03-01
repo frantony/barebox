@@ -321,7 +321,6 @@ int ipv4_link_compare(void *ka, void *kb)
     return 0;
 }
 
-
 static int pico_ipv4_process_bcast_in(struct pico_stack *S, struct pico_frame *f)
 {
     struct pico_ipv4_hdr *hdr = (struct pico_ipv4_hdr *) f->net_hdr;
