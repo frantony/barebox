@@ -144,8 +144,10 @@ static int virtio_net_write_hwaddr(struct eth_device *edev, const unsigned char 
 	 * v1.0 compliant device's MAC address is set through control channel,
 	 * which we don't support for now.
 	 */
-	if (virtio_has_feature(priv->vdev, VIRTIO_F_VERSION_1))
+	if (virtio_has_feature(priv->vdev, VIRTIO_F_VERSION_1)) {
+		dev_err(&edev->dev, "%s: can't set MAC\n", __func__);
 		return -ENOSYS;
+	}
 
 	for (i = 0; i < 6; i++)
 		virtio_cwrite8(priv->vdev, offsetof(struct virtio_net_config, mac) + i, adr[i]);
