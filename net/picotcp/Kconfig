@@ -73,4 +73,10 @@ config CMD_PICOTCP_PICOHOST
 	depends on NET_PICO_SUPPORT_DNS_CLIENT
 	prompt "picohost command"
 
+config CMD_PICOTCP_APP_WGET
+	bool
+	depends on NET_PICO_SUPPORT_DNS_CLIENT
+	depends on NET_PICO_SUPPORT_HTTP_CLIENT
+	prompt "app_wget command"
+
 endif # NET_PICOTCP
