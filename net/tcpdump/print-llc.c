@@ -207,6 +207,7 @@ llc_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 		hdrlen = 4;	/* DSAP, SSAP, 2-byte control field */
 	}
 
+#ifndef __BAREBOX__
 	if (ssap_field == LLCSAP_GLOBAL && dsap_field == LLCSAP_GLOBAL) {
 		/*
 		 * This is an Ethernet_802.3 IPX frame; it has an
@@ -229,6 +230,7 @@ llc_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
             ipx_print(ndo, p, length);
             return (0);		/* no LLC header */
 	}
+#endif
 
 	dsap = dsap_field & ~LLC_IG;
 	ssap = ssap_field & ~LLC_GSAP;
@@ -274,11 +276,13 @@ llc_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 			return (hdrlen + 5);	/* include LLC and SNAP header */
 	}
 
+#ifndef __BAREBOX__
 	if (ssap == LLCSAP_8021D && dsap == LLCSAP_8021D &&
 	    control == LLC_UI) {
 		stp_print(ndo, p, length);
 		return (hdrlen);
 	}
+#endif
 
 	if (ssap == LLCSAP_IP && dsap == LLCSAP_IP &&
 	    control == LLC_UI) {
@@ -292,6 +296,7 @@ llc_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 		return (hdrlen);
 	}
 
+#ifndef __BAREBOX__
 	if (ssap == LLCSAP_IPX && dsap == LLCSAP_IPX &&
 	    control == LLC_UI) {
 		/*
@@ -305,6 +310,7 @@ llc_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 		ipx_print(ndo, p, length);
 		return (hdrlen);
 	}
+#endif
 
 #ifdef ENABLE_SMB
 	if (ssap == LLCSAP_NETBEUI && dsap == LLCSAP_NETBEUI
@@ -323,11 +329,13 @@ llc_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 		return (hdrlen);
 	}
 #endif
+#ifndef __BAREBOX__
 	if (ssap == LLCSAP_ISONS && dsap == LLCSAP_ISONS
 	    && control == LLC_UI) {
 		isoclns_print(ndo, p, length);
 		return (hdrlen);
 	}
+#endif
 
 	if (!ndo->ndo_eflag) {
 		if (ssap == dsap) {
@@ -466,6 +474,7 @@ snap_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 			return (ret);
 		break;
 
+#ifndef __BAREBOX__
 	case OUI_APPLETALK:
 		if (et == ETHERTYPE_ATALK) {
 			/*
@@ -504,6 +513,7 @@ snap_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
                         break;
                 }
 		break;
+#endif
 
 	case OUI_RFC2684:
 		switch (et) {
@@ -528,6 +538,7 @@ snap_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 			ether_print(ndo, p, length, caplen, NULL, NULL);
 			return (1);
 
+#ifndef __BAREBOX__
 		case PID_RFC2684_802_5_FCS:
 		case PID_RFC2684_802_5_NOFCS:
 			/*
@@ -573,6 +584,7 @@ snap_print(netdissect_options *ndo, const u_char *p, u_int length, u_int caplen,
 		case PID_RFC2684_BPDU:
 			stp_print(ndo, p, length);
 			return (1);
+#endif
 		}
 	}
 	if (!ndo->ndo_eflag) {

@@ -236,6 +236,7 @@ ts_frac_print(netdissect_options *ndo, long usec)
 #endif
 }
 
+#ifndef __BAREBOX__
 /*
  * Print the timestamp as [YY:MM:DD] HH:MM:SS.FRAC.
  *   if time_flag == LOCAL_TIME print local time else UTC/GMT time
@@ -357,6 +358,7 @@ ts_print(netdissect_options *ndo,
 		break;
 	}
 }
+#endif
 
 /*
  * Print an unsigned relative number of seconds (e.g. hold time, prune timer)
@@ -386,6 +388,7 @@ unsigned_relts_print(netdissect_options *ndo,
 	}
 }
 
+#ifndef __BAREBOX__
 /*
  * Print a signed relative number of seconds (e.g. hold time, prune timer)
  * in the form 5m1s.  This does no truncation, so 32230861 seconds
@@ -441,6 +444,7 @@ nd_format_time(char *buf, size_t bufsize, const char *format,
 	} else
 		return ("[localtime() or gmtime() couldn't convert the date and time]");
 }
+#endif
 
 /* Print the truncated string */
 void nd_print_trunc(netdissect_options *ndo)

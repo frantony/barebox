@@ -119,6 +119,7 @@ get_ipaddr_string(netdissect_options *ndo, const u_char *p)
         return ipaddr_string(ndo, p);
 }
 
+#ifndef __BAREBOX__
 static inline const char *
 get_ip6addr_string(netdissect_options *ndo, const u_char *p)
 {
@@ -126,6 +127,7 @@ get_ip6addr_string(netdissect_options *ndo, const u_char *p)
                 nd_trunc_longjmp(ndo);
         return ip6addr_string(ndo, p);
 }
+#endif
 
 #define GET_LINKADDR_STRING(p, type, len) get_linkaddr_string(ndo, (const u_char *)(p), type, len)
 #define GET_MAC48_STRING(p) get_mac48_string(ndo, (const u_char *)(p))

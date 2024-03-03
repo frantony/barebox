@@ -51,8 +51,8 @@ __RCSID("$NetBSD: print-tcp.c,v 1.8 2007/07/24 11:53:48 drochner Exp $");
 #include "ip.h"
 #include "ip6.h"
 #include "ipproto.h"
-#include "rpc_auth.h"
-#include "rpc_msg.h"
+//#include "rpc_auth.h"
+//#include "rpc_msg.h"
 
 #ifdef HAVE_LIBCRYPTO
 #include <openssl/md5.h>
@@ -149,6 +149,7 @@ tcp_cksum(netdissect_options *ndo,
                                 IPPROTO_TCP);
 }
 
+#ifndef __BAREBOX__
 static uint16_t
 tcp6_cksum(netdissect_options *ndo,
            const struct ip6_hdr *ip6,
@@ -158,6 +159,7 @@ tcp6_cksum(netdissect_options *ndo,
         return nextproto6_cksum(ndo, ip6, (const uint8_t *)tp, len, len,
                                 IPPROTO_TCP);
 }
+#endif
 
 void
 tcp_print(netdissect_options *ndo,
@@ -186,11 +188,15 @@ tcp_print(netdissect_options *ndo,
                 ip6 = NULL;
         ch = '\0';
         if (!ND_TTEST_2(tp->th_dport)) {
+#ifndef __BAREBOX__
                 if (ip6) {
                         ND_PRINT("%s > %s:",
                                  GET_IP6ADDR_STRING(ip6->ip6_src),
                                  GET_IP6ADDR_STRING(ip6->ip6_dst));
                 } else {
+#else
+		{
+#endif
                         ND_PRINT("%s > %s:",
                                  GET_IPADDR_STRING(ip->ip_src),
                                  GET_IPADDR_STRING(ip->ip_dst));
@@ -201,6 +207,7 @@ tcp_print(netdissect_options *ndo,
         sport = GET_BE_U_2(tp->th_sport);
         dport = GET_BE_U_2(tp->th_dport);
 
+#ifndef __BAREBOX__
         if (ip6) {
                 if (GET_U_1(ip6->ip6_nxt) == IPPROTO_TCP) {
                         ND_PRINT("%s.%s > %s.%s: ",
@@ -213,6 +220,9 @@ tcp_print(netdissect_options *ndo,
                                  tcpport_string(ndo, sport), tcpport_string(ndo, dport));
                 }
         } else {
+#else
+	{
+#endif
                 if (GET_U_1(ip->ip_p) == IPPROTO_TCP) {
                         ND_PRINT("%s.%s > %s.%s: ",
                                  GET_IPADDR_STRING(ip->ip_src),
@@ -401,6 +411,7 @@ tcp_print(netdissect_options *ndo,
                                 else
                                         ND_PRINT(" (correct)");
                         }
+#ifndef __BAREBOX__
                 } else if (IP_V(ip) == 6) {
                         if (ND_TTEST_LEN(tp->th_sport, length)) {
                                 sum = tcp6_cksum(ndo, ip6, tp, length);
@@ -414,6 +425,7 @@ tcp_print(netdissect_options *ndo,
                                         ND_PRINT(" (correct)");
 
                         }
+#endif
                 }
         }
 
@@ -560,6 +572,7 @@ tcp_print(netdissect_options *ndo,
 #endif
                                 break;
 
+#ifndef __BAREBOX__
                         case TCPOPT_SCPS:
                                 datalen = 2;
                                 LENCHECK(datalen);
@@ -592,6 +605,7 @@ tcp_print(netdissect_options *ndo,
                                         }
                                 }
                                 break;
+#endif
 
                         case TCPOPT_EOL:
                         case TCPOPT_NOP:
@@ -614,6 +628,7 @@ tcp_print(netdissect_options *ndo,
                                 ND_PRINT(" %u", utoval);
                                 break;
 
+#ifndef __BAREBOX__
                         case TCPOPT_MPTCP:
                             {
                                 const u_char *snapend_save;
@@ -642,6 +657,7 @@ tcp_print(netdissect_options *ndo,
                                         goto bad;
                                 break;
                             }
+#endif
 
                         case TCPOPT_FASTOPEN:
                                 datalen = len - 2;
@@ -730,6 +746,7 @@ tcp_print(netdissect_options *ndo,
                 return;
         }
 
+#ifndef __BAREBOX__
         if (ndo->ndo_packettype) {
                 switch (ndo->ndo_packettype) {
                 case PT_ZMTP1:
@@ -830,6 +847,7 @@ tcp_print(netdissect_options *ndo,
                         }
                 }
         }
+#endif
 
         return;
 bad:

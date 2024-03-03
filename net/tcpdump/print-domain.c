@@ -410,8 +410,12 @@ eopt_print(netdissect_options *ndo,
             if (data_len != 2)
                 nd_print_invalid(ndo);
             else
+                #ifndef __BAREBOX__
                 /* keepalive is in increments of 100ms. Convert to seconds */
                 ND_PRINT("%0.1f sec", (GET_BE_U_2(cp) / 10.0));
+                #else
+                ND_PRINT("%d * 100 ms", GET_BE_U_2(cp));
+                #endif
             break;
         case E_EXPIRE:
             if (data_len != 4)

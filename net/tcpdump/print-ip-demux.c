@@ -48,6 +48,7 @@ ip_demux_print(netdissect_options *ndo,
 again:
 	switch (nh) {
 
+#ifndef __BAREBOX__
 	case IPPROTO_AH:
 		if (!ND_TTEST_1(bp)) {
 			ndo->ndo_protocol = "ah";
@@ -93,6 +94,7 @@ again:
 	case IPPROTO_DCCP:
 		dccp_print(ndo, bp, iph, length);
 		break;
+#endif
 
 	case IPPROTO_TCP:
 		tcp_print(ndo, bp, length, iph, fragmented);
@@ -112,6 +114,7 @@ again:
 		}
 		break;
 
+#ifndef __BAREBOX__
 	case IPPROTO_ICMPV6:
 		if (ver == 6)
 			icmp6_print(ndo, bp, length, iph, fragmented);
@@ -219,6 +222,7 @@ again:
 	case IPPROTO_NHRP:
 		nhrp_print(ndo, bp, length);
 		break;
+#endif
 
 	case IPPROTO_NONE:
 		ND_PRINT("no next header");
