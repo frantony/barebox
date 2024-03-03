@@ -9,7 +9,9 @@
    - Andrei Carp <andrei.carp@tass.be>
  *********************************************************************/
 #include <string.h>
+#ifndef __BAREBOX__
 #include <stdint.h>
+#endif
 #include <stdio.h>
 #if defined __BAREBOX__
 #include <linux/ctype.h>
