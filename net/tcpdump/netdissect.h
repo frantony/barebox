@@ -28,9 +28,13 @@
 #ifdef HAVE_OS_PROTO_H
 #include "os-proto.h"
 #endif
+#ifndef __BAREBOX__
 #include <sys/types.h>
 #include <setjmp.h>
 #include <time.h>
+#else
+#include <asm/setjmp.h>
+#endif
 #include "status-exit-codes.h"
 #include "funcattrs.h" /* for PRINTFLIKE_FUNCPTR() */
 #include "diag-control.h" /* for ND_UNREACHABLE */
@@ -131,7 +135,14 @@ typedef unsigned char nd_byte;
 #endif
 
 #include <stdarg.h>
+#ifndef __BAREBOX__
 #include <pcap.h>
+#else
+struct pcap_pkthdr {
+    uint32_t caplen;
+    uint32_t len;
+};
+#endif
 
 #include "ip.h" /* struct ip for nextproto4_cksum() */
 #include "ip6.h" /* struct ip6 for nextproto6_cksum() */
@@ -432,15 +443,23 @@ goto invalid; \
 #define ND_ICHECK_ZU(expression_1, operator, expression_2) \
 ND_ICHECKMSG_ZU((#expression_1), (expression_1), operator, (expression_2))
 
+#ifndef __BAREBOX__
 #define ND_PRINT(...) (ndo->ndo_printf)(ndo, __VA_ARGS__)
+#else
+#define ND_PRINT(...) printf(__VA_ARGS__)
+#endif
 #define ND_DEFAULTPRINT(ap, length) (*ndo->ndo_default_print)(ndo, ap, length)
 
+#ifndef __BAREBOX__
 extern void ts_print(netdissect_options *, const struct timeval *);
+#endif
 extern void signed_relts_print(netdissect_options *, int32_t);
 extern void unsigned_relts_print(netdissect_options *, uint32_t);
 
+#ifndef __BAREBOX__
 extern const char *nd_format_time(char *buf, size_t bufsize,
     const char *format, const struct tm *timeptr);
+#endif
 
 extern void fn_print_char(netdissect_options *, u_char);
 extern void fn_print_str(netdissect_options *, const u_char *);

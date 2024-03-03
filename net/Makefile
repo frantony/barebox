@@ -14,3 +14,5 @@ obj-$(CONFIG_NET_FASTBOOT) += fastboot.o
 
 obj-$(CONFIG_NET_PICOTCP) += picotcp/
 obj-$(CONFIG_NET_PICOTCP) += picotcp.o
+
+obj-y += tcpdump/

@@ -36,6 +36,8 @@
 #include <smi.h>
 #endif
 
+#include <asm/setjmp.h>
+
 /*
  * Initialize anything that must be initialized before dissecting
  * packets.

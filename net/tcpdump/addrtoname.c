@@ -95,12 +95,14 @@
   #endif /* !defined(HAVE_DECL_ETHER_NTOHOST) */
 #endif /* USE_ETHER_NTOHOST */
 
+#ifndef __BAREBOX__
 #include <pcap.h>
 #include <pcap-namedb.h>
 #ifndef HAVE_GETSERVENT
 #include <getservent.h>
 #endif
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -130,8 +132,10 @@ struct hnamemem {
 static struct hnamemem hnametable[HASHNAMESIZE];
 static struct hnamemem tporttable[HASHNAMESIZE];
 static struct hnamemem uporttable[HASHNAMESIZE];
+#ifndef __BAREBOX__
 static struct hnamemem eprototable[HASHNAMESIZE];
 static struct hnamemem dnaddrtable[HASHNAMESIZE];
+#endif
 static struct hnamemem ipxsaptable[HASHNAMESIZE];
 
 #ifdef _WIN32
@@ -183,7 +187,9 @@ struct h6namemem {
 	struct h6namemem *nxt;
 };
 
+#ifndef __BAREBOX__
 static struct h6namemem h6nametable[HASHNAMESIZE];
+#endif
 
 struct enamemem {
 	u_short e_addr0;
@@ -216,7 +222,9 @@ struct protoidmem {
 	struct protoidmem *p_nxt;
 };
 
+#ifndef __BAREBOX__
 static struct protoidmem protoidtable[HASHNAMESIZE];
+#endif
 
 /*
  * A faster replacement for inet_ntoa().
@@ -251,10 +259,12 @@ intoa(uint32_t addr)
 	return cp + 1;
 }
 
+#ifndef __BAREBOX__
 static uint32_t f_netmask;
 static uint32_t f_localnet;
 #ifdef HAVE_CASPER
 cap_channel_t *capdns;
+#endif
 #endif
 
 /*
@@ -278,7 +288,9 @@ cap_channel_t *capdns;
 const char *
 ipaddr_string(netdissect_options *ndo, const u_char *ap)
 {
+#ifndef __BAREBOX__
 	struct hostent *hp;
+#endif
 	uint32_t addr;
 	struct hnamemem *p;
 
@@ -291,6 +303,7 @@ ipaddr_string(netdissect_options *ndo, const u_char *ap)
 	p->addr = addr;
 	p->nxt = newhnamemem(ndo);
 
+#ifndef __BAREBOX__
 	/*
 	 * Print names unless:
 	 *	(1) -n was given.
@@ -323,6 +336,7 @@ ipaddr_string(netdissect_options *ndo, const u_char *ap)
 			return (p->name);
 		}
 	}
+#endif
 	p->name = strdup(intoa(addr));
 	if (p->name == NULL)
 		(*ndo->ndo_error)(ndo, S_ERR_ND_MEM_ALLOC,
@@ -330,6 +344,7 @@ ipaddr_string(netdissect_options *ndo, const u_char *ap)
 	return (p->name);
 }
 
+#ifndef __BAREBOX__
 /*
  * Return a name for the IP6 address pointed to by ap.  This address
  * is assumed to be in network byte order.
@@ -395,6 +410,7 @@ ip6addr_string(netdissect_options *ndo, const u_char *ap)
 				  "%s: strdup(cp)", __func__);
 	return (p->name);
 }
+#endif
 
 static const char hex[16] = {
 	'0', '1', '2', '3', '4', '5', '6', '7',
@@ -560,6 +576,7 @@ lookup_nsap(netdissect_options *ndo, const u_char *nsap,
 	return tp;
 }
 
+#ifndef __BAREBOX__
 /* Find the hash node that corresponds the protoid 'pi'. */
 
 static struct protoidmem *
@@ -587,6 +604,7 @@ lookup_protoid(netdissect_options *ndo, const u_char *pi)
 
 	return tp;
 }
+#endif
 
 const char *
 mac48_string(netdissect_options *ndo, const uint8_t *ep)
@@ -640,6 +658,7 @@ mac48_string(netdissect_options *ndo, const uint8_t *ep)
 	return (tp->e_name);
 }
 
+#ifndef __BAREBOX__
 const char *
 eui64_string(netdissect_options *ndo, const uint8_t *ep)
 {
@@ -678,6 +697,7 @@ eui64le_string(netdissect_options *ndo, const uint8_t *ep)
 
 	return (tp->bs_name);
 }
+#endif
 
 const char *
 linkaddr_string(netdissect_options *ndo, const uint8_t *ep,
@@ -693,8 +713,10 @@ linkaddr_string(netdissect_options *ndo, const uint8_t *ep,
 	if (type == LINKADDR_MAC48 && len == MAC48_LEN)
 		return (mac48_string(ndo, ep));
 
+#ifndef __BAREBOX__
 	if (type == LINKADDR_FRELAY)
 		return (q922_string(ndo, ep, len));
+#endif
 
 	tp = lookup_bytestring(ndo, ep, len);
 	if (tp->bs_name)
@@ -818,6 +840,7 @@ ipxsap_string(netdissect_options *ndo, u_short port)
 	return (tp->name);
 }
 
+#ifndef __BAREBOX__
 static void
 init_servarray(netdissect_options *ndo)
 {
@@ -1289,6 +1312,7 @@ dnaddr_string(netdissect_options *ndo, u_short dnaddr)
 
 	return(tp->name);
 }
+#endif
 
 /* Return a zero'ed hnamemem struct and cuts down on calloc() overhead */
 struct hnamemem *

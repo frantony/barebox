@@ -56,7 +56,9 @@
 #ifndef _NAMESER_H_
 #define	_NAMESER_H_
 
+#ifndef __BAREBOX__
 #include <sys/types.h>
+#endif
 
 /*
  * Define constants based on rfc883

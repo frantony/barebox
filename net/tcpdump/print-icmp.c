@@ -436,10 +436,12 @@ print_icmp_multipart_ext_object(netdissect_options *ndo, const uint8_t *obj_tptr
 			ND_PRINT("%s", GET_IPADDR_STRING(ipaddr_subobj->ip_addr));
 			offset += 4;
 			break;
+#ifndef __BAREBOX__
 		    case 2:
 			ND_PRINT("%s", GET_IP6ADDR_STRING(ipaddr_subobj->ip_addr));
 			offset += 16;
 			break;
+#endif
 		    default:
 			ND_PRINT("Unknown Address Family Identifier");
 			return -1;

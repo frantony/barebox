@@ -198,7 +198,9 @@ ether_common_print(netdissect_options *ndo, const u_char *p, u_int length,
 	 * Get the length/type field, skip past it, and print it
 	 * if we're printing the link-layer header.
 	 */
+#ifndef __BAREBOX__
 recurse:
+#endif
 	length_type = GET_BE_U_2(p);
 
 	length -= 2;
@@ -210,6 +212,7 @@ recurse:
 	 * Process 802.1AE MACsec headers.
 	 */
 	printed_length = 0;
+#ifndef __BAREBOX__
 	if (length_type == ETHERTYPE_MACSEC) {
 		/*
 		 * MACsec, aka IEEE 802.1AE-2006
@@ -245,6 +248,7 @@ recurse:
 			hdrlen += 2;
 		}
 	}
+#endif
 
 	/*
 	 * Process VLAN tag types.
@@ -331,6 +335,7 @@ recurse:
 		hdrlen += llc_hdrlen;
 		nd_pop_packet_info(ndo);
 	} else if (length_type == ETHERTYPE_JUMBO) {
+#ifndef __BAREBOX__
 		/*
 		 * It's a type field, with the type for Alteon jumbo frames.
 		 * See
@@ -349,7 +354,9 @@ recurse:
 			llc_hdrlen = -llc_hdrlen;
 		}
 		hdrlen += llc_hdrlen;
+#endif
 	} else if (length_type == ETHERTYPE_ARISTA) {
+#ifndef __BAREBOX__
 		if (caplen < 2) {
 			ND_PRINT("[|arista]");
 			return hdrlen + caplen;
@@ -377,6 +384,7 @@ recurse:
 			 if (!ndo->ndo_suppress_default_print)
 				 ND_DEFAULTPRINT(p, caplen);
 		}
+#endif
 	} else {
 		/*
 		 * It's a type field with some other value.
@@ -407,7 +415,9 @@ recurse:
 				ND_DEFAULTPRINT(p, caplen);
 		}
 	}
+#ifndef __BAREBOX__
 invalid:
+#endif
 	return hdrlen;
 }
 
@@ -464,6 +474,7 @@ ether_if_print(netdissect_options *ndo, const struct pcap_pkthdr *h,
 		ether_print(ndo, p, h->len, h->caplen, NULL, NULL);
 }
 
+#ifndef __BAREBOX__
 /*
  * This is the top level routine of the printer.  'p' points
  * to the ether header of the packet, 'h->len' is the length
@@ -516,6 +527,7 @@ netanalyzer_transparent_if_print(netdissect_options *ndo,
 	ndo->ndo_ll_hdr_len +=
 		ether_print(ndo, p + 12, h->len - 12, h->caplen - 12, NULL, NULL);
 }
+#endif
 
 /*
  * Prints the packet payload, given an Ethernet type code for the payload's
@@ -536,15 +548,18 @@ ethertype_print(netdissect_options *ndo,
 		ip_print(ndo, p, length);
 		return (1);
 
+#ifndef __BAREBOX__
 	case ETHERTYPE_IPV6:
 		ip6_print(ndo, p, length);
 		return (1);
+#endif
 
 	case ETHERTYPE_ARP:
 	case ETHERTYPE_REVARP:
 		arp_print(ndo, p, length, caplen);
 		return (1);
 
+#ifndef __BAREBOX__
 	case ETHERTYPE_DN:
 		decnet_print(ndo, p, length, caplen);
 		return (1);
@@ -659,6 +674,7 @@ ethertype_print(netdissect_options *ndo,
 	case ETHERTYPE_MOPDL:
 	case ETHERTYPE_IEEE1905_1:
 		/* default_print for now */
+#endif
 	default:
 		return (0);
 	}

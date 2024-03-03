@@ -30,17 +30,21 @@
 #include "netdissect.h"
 #include "addrtoname.h"
 #include "extract.h"
+#ifndef __BAREBOX__
 #include "appletalk.h"
+#endif
 
 #include "udp.h"
 
 #include "ip.h"
 #include "ip6.h"
 #include "ipproto.h"
+#ifndef __BAREBOX__
 #include "rpc_auth.h"
 #include "rpc_msg.h"
 
 #include "nfs.h"
+#endif
 
 
 struct rtcphdr {
@@ -92,6 +96,7 @@ struct rtcp_rr {
 #define RTCP_PT_BYE	203
 #define RTCP_PT_APP	204
 
+#ifndef __BAREBOX__
 static void
 vat_print(netdissect_options *ndo, const u_char *hdr, u_int length)
 {
@@ -284,6 +289,7 @@ rtcp_print(netdissect_options *ndo, const u_char *hdr)
 	}
 	return (hdr + len);
 }
+#endif
 
 static uint16_t udp_cksum(netdissect_options *ndo, const struct ip *ip,
 		     const struct udphdr *up,
@@ -293,18 +299,22 @@ static uint16_t udp_cksum(netdissect_options *ndo, const struct ip *ip,
 				IPPROTO_UDP);
 }
 
+#ifndef __BAREBOX__
 static uint16_t udp6_cksum(netdissect_options *ndo, const struct ip6_hdr *ip6,
 		      const struct udphdr *up, u_int len)
 {
 	return nextproto6_cksum(ndo, ip6, (const uint8_t *)(const void *)up, len, len,
 				IPPROTO_UDP);
 }
+#endif
 
 static void
 udpipaddr_print(netdissect_options *ndo,
                 const struct ip *ip, const uint16_t sport, const uint16_t dport)
 {
+#ifndef __BAREBOX__
 	const struct ip6_hdr *ip6 = (const struct ip6_hdr *)ip;
+#endif
 
 	if (IP_V(ip) == 4 && GET_U_1(ip->ip_p) == IPPROTO_UDP) {
 		ND_PRINT("%s.%s > %s.%s: ",
@@ -312,12 +322,14 @@ udpipaddr_print(netdissect_options *ndo,
 			udpport_string(ndo, sport),
 			GET_IPADDR_STRING(ip->ip_dst),
 			udpport_string(ndo, dport));
+#ifndef __BAREBOX__
 	} else if (IP_V(ip) == 6 && GET_U_1(ip6->ip6_nxt) == IPPROTO_UDP) {
 		ND_PRINT("%s.%s > %s.%s: ",
 			GET_IP6ADDR_STRING(ip6->ip6_src),
 			udpport_string(ndo, sport),
 			GET_IP6ADDR_STRING(ip6->ip6_dst),
 			udpport_string(ndo, dport));
+#endif
 	} else
 		ND_PRINT("%s > %s: ",
 			udpport_string(ndo, sport), udpport_string(ndo, dport));
@@ -326,16 +338,20 @@ udpipaddr_print(netdissect_options *ndo,
 static void
 udpipaddr_noport_print(netdissect_options *ndo, const struct ip *ip)
 {
+#ifndef __BAREBOX__
 	const struct ip6_hdr *ip6 = (const struct ip6_hdr *)ip;
+#endif
 
 	if (IP_V(ip) == 4 && GET_U_1(ip->ip_p) == IPPROTO_UDP) {
 		ND_PRINT("%s > %s: ",
 			GET_IPADDR_STRING(ip->ip_src),
 			GET_IPADDR_STRING(ip->ip_dst));
+#ifndef __BAREBOX__
 	} else if (IP_V(ip) == 6 && GET_U_1(ip6->ip6_nxt) == IPPROTO_UDP) {
 		ND_PRINT("%s > %s: ",
 			GET_IP6ADDR_STRING(ip6->ip6_src),
 			GET_IP6ADDR_STRING(ip6->ip6_dst));
+#endif
 	}
 }
 
@@ -346,7 +362,9 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 	const struct udphdr *up;
 	const struct ip *ip;
 	const u_char *cp;
+#ifndef __BAREBOX__
 	const u_char *ep = ndo->ndo_snapend;
+#endif
 	uint16_t sport, dport;
 	u_int ulen;
 	uint16_t udp_sum;
@@ -389,11 +407,14 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 	cp = (const u_char *)(up + 1);
 
 	if (ndo->ndo_packettype) {
+#ifndef __BAREBOX__
 		const struct sunrpc_msg *rp;
 		enum sunrpc_msg_type direction;
+#endif
 
 		switch (ndo->ndo_packettype) {
 
+#ifndef __BAREBOX__
 		case PT_VAT:
 			vat_print(ndo, cp, length);
 			break;
@@ -429,11 +450,13 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 		case PT_CNFP:
 			cnfp_print(ndo, cp);
 			break;
+#endif
 
 		case PT_TFTP:
 			tftp_print(ndo, cp, length);
 			break;
 
+#ifndef __BAREBOX__
 		case PT_AODV:
 			aodv_print(ndo, cp, length, IP_V(ip) == 6);
 			break;
@@ -459,17 +482,21 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 		case PT_SOMEIP:
 			someip_print(ndo, cp, length);
 			break;
+#endif
 		case PT_DOMAIN:
 			/* over_tcp: FALSE, is_mdns: FALSE */
 			domain_print(ndo, cp, length, FALSE, FALSE);
 			break;
+#ifndef __BAREBOX__
 		case PT_QUIC:
 			quic_print(ndo, cp);
 			break;
+#endif
 		}
 		return;
 	}
 
+#ifndef __BAREBOX__
 	if (!ndo->ndo_qflag) {
 		const struct sunrpc_msg *rp;
 		enum sunrpc_msg_type direction;
@@ -499,6 +526,7 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 #endif
 		}
 	}
+#endif
 
 	if (ndo->ndo_vflag && !ndo->ndo_Kflag && !fragmented) {
 		/* Check the checksum, if possible. */
@@ -521,6 +549,7 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 				} else
 					ND_PRINT("[udp sum ok] ");
 			}
+#ifndef __BAREBOX__
 		} else if (IP_V(ip) == 6) {
 			/* for IPv6, UDP checksum is mandatory */
 			if (ND_TTEST_LEN(cp, length)) {
@@ -533,6 +562,7 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 				} else
 					ND_PRINT("[udp sum ok] ");
 			}
+#endif
 		}
 	}
 
@@ -545,6 +575,7 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 			bootp_print(ndo, cp, length);
 		else if (IS_SRC_OR_DST_PORT(TFTP_PORT))
 			tftp_print(ndo, cp, length);
+#ifndef __BAREBOX__
 		else if (IS_SRC_OR_DST_PORT(KERBEROS_PORT))
 			krb_print(ndo, (const u_char *)cp);
 		else if (IS_SRC_OR_DST_PORT(NTP_PORT))
@@ -588,9 +619,11 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 			krb_print(ndo, (const u_char *)cp);
 		else if (IS_SRC_OR_DST_PORT(LWRES_PORT))
 			lwres_print(ndo, cp, length);
+#endif
 		else if (IS_SRC_OR_DST_PORT(MULTICASTDNS_PORT))
 			/* over_tcp: FALSE, is_mdns: TRUE */
 			domain_print(ndo, cp, length, FALSE, TRUE);
+#ifndef __BAREBOX__
 		else if (IS_SRC_OR_DST_PORT(ISAKMP_PORT_NATT))
 			 isakmp_rfc3948_print(ndo, cp, length, bp2, IP_V(ip), fragmented, ttl_hl);
 		else if (IS_SRC_OR_DST_PORT(ISAKMP_PORT_USER1) || IS_SRC_OR_DST_PORT(ISAKMP_PORT_USER2))
@@ -684,6 +717,7 @@ udp_print(netdissect_options *ndo, const u_char *bp, u_int length,
 			else
 				ND_PRINT("UDP, length %u", ulen);
 		}
+#endif
 	} else {
 		if (ulen > length && !fragmented)
 			ND_PRINT("UDP, bad length %u > %u",

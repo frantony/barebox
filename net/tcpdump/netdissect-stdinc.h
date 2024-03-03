@@ -39,6 +39,11 @@
 #ifndef netdissect_stdinc_h
 #define netdissect_stdinc_h
 
+#ifdef __BAREBOX__
+#include <common.h>
+#include <linux/byteorder/generic.h>
+#endif
+
 #include "ftmacros.h"
 
 #include <errno.h>
@@ -102,7 +107,9 @@
    * If the target is MS-DOS, we assume we have <inttypes.h> - and support
    * for %zu in the formatted printing functions.
    */
+#ifndef __BAREBOX__
   #include <inttypes.h>
+#endif
 
   #if defined(_MSC_VER)
     /*
@@ -225,6 +232,7 @@ typedef char *caddr_t;
  */
 
 #include <unistd.h>
+#ifndef __BAREBOX__
 #include <netdb.h>
 #include <sys/param.h>
 #include <sys/types.h>			/* concession to AIX */
@@ -235,6 +243,7 @@ typedef char *caddr_t;
 #include <time.h>
 
 #include <arpa/inet.h>
+#endif
 
 /*
  * We should have large file support enabled, if it's available,
@@ -347,10 +356,14 @@ typedef char *caddr_t;
  * anything" warnings (dear Clang: that's not a declaration, it's an
  * empty statement).  GCC, however, has no trouble with this.
  */
+#ifndef __BAREBOX__
 #if __has_attribute(fallthrough) && !defined(__clang__)
 #  define ND_FALL_THROUGH __attribute__ ((fallthrough))
 #else
 #  define ND_FALL_THROUGH
 #endif /*  __has_attribute(fallthrough) */
+#else
+#  define ND_FALL_THROUGH
+#endif
 
 #endif /* netdissect_stdinc_h */

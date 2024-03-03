@@ -31,7 +31,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifndef __BAREBOX__
 #include <setjmp.h>
+#else
+#include <asm/setjmp.h>
+#endif
 
 #include "netdissect-stdinc.h"
 
@@ -40,13 +44,16 @@
 #include "print.h"
 #include "netdissect-alloc.h"
 
+#ifndef __BAREBOX__
 #include "pcap-missing.h"
+#endif
 
 struct printer {
 	if_printer f;
 	int type;
 };
 
+#ifndef __BAREBOX__
 static const struct printer printers[] = {
 #ifdef DLT_APPLE_IP_OVER_IEEE1394
 	{ ap1394_if_print,	DLT_APPLE_IP_OVER_IEEE1394 },
@@ -302,6 +309,7 @@ get_if_printer(int type)
 		printer = unsupported_if_print;
 	return printer;
 }
+#endif
 
 #ifdef ENABLE_INSTRUMENT_FUNCTIONS
 extern int profile_func_level;
@@ -388,10 +396,12 @@ pretty_print_packet(netdissect_options *ndo, const struct pcap_pkthdr *h,
 	 * /usr/include/net/bpf.h and uses 32-bit unsigned types instead of
 	 * the types used in struct timeval.
 	 */
+#ifndef __BAREBOX__
 	struct timeval tvbuf;
 	tvbuf.tv_sec = h->ts.tv_sec;
 	tvbuf.tv_usec = h->ts.tv_usec;
 	ts_print(ndo, &tvbuf);
+#endif
 
 	/*
 	 * Printers must check that they're not walking off the end of
@@ -514,17 +524,17 @@ ndo_error(netdissect_options *ndo, status_exit_codes_t status,
 	va_list ap;
 
 	if (ndo->program_name)
-		(void)fprintf(stderr, "%s: ", ndo->program_name);
+		(void)printf("%s: ", ndo->program_name);
 	va_start(ap, fmt);
-	(void)vfprintf(stderr, fmt, ap);
+	(void)printf(fmt, ap);
 	va_end(ap);
 	if (*fmt) {
 		fmt += strlen(fmt);
 		if (fmt[-1] != '\n')
-			(void)fputc('\n', stderr);
+			(void)printf("\n");
 	}
 	nd_cleanup();
-	exit(status);
+	hang(); /* FIXME */
 	/* NOTREACHED */
 }
 
@@ -535,15 +545,15 @@ ndo_warning(netdissect_options *ndo, FORMAT_STRING(const char *fmt), ...)
 	va_list ap;
 
 	if (ndo->program_name)
-		(void)fprintf(stderr, "%s: ", ndo->program_name);
-	(void)fprintf(stderr, "WARNING: ");
+		(void)printf("%s: ", ndo->program_name);
+	(void)printf("WARNING: ");
 	va_start(ap, fmt);
-	(void)vfprintf(stderr, fmt, ap);
+	(void)printf(fmt, ap);
 	va_end(ap);
 	if (*fmt) {
 		fmt += strlen(fmt);
 		if (fmt[-1] != '\n')
-			(void)fputc('\n', stderr);
+			(void)printf("\n");
 	}
 }
 
@@ -555,12 +565,14 @@ ndo_printf(netdissect_options *ndo, FORMAT_STRING(const char *fmt), ...)
 	int ret;
 
 	va_start(args, fmt);
-	ret = vfprintf(stdout, fmt, args);
+	ret = printf(fmt, args);
 	va_end(args);
 
+#ifndef __BAREBOX__
 	if (ret < 0)
 		ndo_error(ndo, S_ERR_ND_WRITE_FILE,
 			  "Unable to write output: %s", pcap_strerror(errno));
+#endif
 	return (ret);
 }
 
