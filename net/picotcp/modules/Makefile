@@ -11,3 +11,4 @@ obj-$(CONFIG_NET_PICO_SUPPORT_UDP) += pico_udp.o pico_socket_udp.o
 obj-$(CONFIG_NET_PICO_SUPPORT_DHCP_CLIENT) += pico_dhcp_client.o \
 						pico_dhcp_common.o \
 						pico_igmp.o pico_mcast.o
+obj-$(CONFIG_NET_PICO_SUPPORT_DNS_CLIENT) += pico_dns_client.o pico_dns_common.o

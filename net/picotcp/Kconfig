@@ -64,4 +64,9 @@ config CMD_PICOTCP_PICOPING
 	depends on NET_PICO_SUPPORT_ICMP4
 	prompt "picoping command"
 
+config CMD_PICOTCP_PICOHOST
+	bool
+	depends on NET_PICO_SUPPORT_DNS_CLIENT
+	prompt "picohost command"
+
 endif # NET_PICOTCP
