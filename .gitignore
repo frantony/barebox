@@ -38,6 +38,8 @@ binary.0
 Module.symvers
 *.dtb
 *.dtb.*
+*.dtbo
+*.dtbo.S
 
 #
 # Top-level generic files
