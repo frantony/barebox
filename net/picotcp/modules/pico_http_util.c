@@ -5,7 +5,9 @@
    Author: Andrei Carp <andrei.carp@tass.be>
  *********************************************************************/
 
+#ifndef __BAREBOX__
 #include <stdint.h>
+#endif
 #include "pico_config.h"
 #include "pico_stack.h"
 #include "pico_protocol.h"

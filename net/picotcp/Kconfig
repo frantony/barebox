@@ -40,6 +40,10 @@ config NET_PICO_SUPPORT_DNS_CLIENT
 	bool
 	default y
 
+config NET_PICO_SUPPORT_HTTP_CLIENT
+	bool
+	default y
+
 comment "Commands"
 
 config CMD_PICOTCP_TEST_IPV4
