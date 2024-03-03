@@ -6,3 +6,4 @@ obj-$(CONFIG_CMD_PICOTCP_ROUTE) += picotcp_route.o
 obj-$(CONFIG_CMD_PICOTCP_DHCLIENT) += picotcp_dhclient.o
 obj-$(CONFIG_CMD_PICOTCP_PICOPING) += picoping.o
 obj-$(CONFIG_CMD_PICOTCP_PICOHOST) += picohost.o
+obj-$(CONFIG_CMD_PICOTCP_APP_WGET) += app_wget.o
